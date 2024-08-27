@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.texttechnologylab</groupId>
+    <artifactId>DUUIRestService</artifactId>
+    <version>1.0</version>
+
+    <licenses>
+        <license>
+            <name>AGPL-3.0-or-later</name>
+            <url>https://www.gnu.org/licenses/agpl.txt</url>
+            <distribution>repo</distribution>
+            <comments>GNU Affero General Public License v3.0 or later</comments>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Texttechnology Lab</name>
+        <url>https://www.texttechnologylab.org</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>borkowski</id>
+            <name>Cedric Borkowski</name>
+            <email>s2936155@stud.uni-frankfurt.de</email>
+            <!-- <roles>
+                <role>head of department</role>
+            </roles> -->
+        </developer>
+    </developers>
+
+
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <duui.version>1f05fed13b</duui.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/javadoc</outputDirectory>
+                    <reportOutputDirectory>${project.reporting.outputDirectory}/javadoc
+                    </reportOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-4</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>DUUIRestService</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.texttechnologylab.duui.api.Main</mainClass>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!--generate types dynamically -->
+                <groupId>org.apache.uima</groupId>
+                <artifactId>jcasgen-maven-plugin</artifactId>
+                <version>2.9.0</version>
+                <configuration>
+                    <limitToProject>true</limitToProject>
+                    <typeSystemIncludes>
+                        <include>src/main/resources/org/texttechnologylab/types/reproducibleAnnotations.xml
+                        </include>
+                    </typeSystemIncludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!--call it in the generate-source phase -->
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.codehaus.mojo</groupId>-->
+            <!--                <artifactId>build-helper-maven-plugin</artifactId>-->
+            <!--                <version>1.10</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>addToSourceFolder</id>-->
+            <!--                        <goals>-->
+            <!--                            &lt;!&ndash;add the generated sources &ndash;&gt;-->
+            <!--                            <goal>add-source</goal>-->
+            <!--                        </goals>-->
+            <!--                        <phase>process-sources</phase>-->
+            <!--                        <configuration>-->
+            <!--                            <sources>-->
+            <!--                                &lt;!&ndash;default path to generated sources &ndash;&gt;-->
+            <!--                                <source>${project.build.directory}/generated-sources/jcasgen</source>-->
+            <!--                            </sources>-->
+            <!--                        </configuration>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
+        </plugins>
+    </build>
+
+    <!--    <build>-->
+    <!--        <plugins>-->
+    <!--            <plugin>-->
+    <!--                <artifactId>maven-assembly-plugin</artifactId>-->
+    <!--                <configuration>-->
+    <!--                    <archive>-->
+    <!--                        <manifest>-->
+    <!--                            <mainClass>api.Main</mainClass>-->
+    <!--                        </manifest>-->
+    <!--                    </archive>-->
+    <!--                    <descriptorRefs>-->
+    <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+    <!--                    </descriptorRefs>-->
+    <!--                </configuration>-->
+    <!--            </plugin>-->
+    <!--        </plugins>-->
+    <!--    </build>-->
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient</artifactId>
+            <version>0.16.0</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.dropbox.core</groupId>
+            <artifactId>dropbox-core-sdk</artifactId>
+            <version>5.4.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.10.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.texttechnologylab</groupId>
+            <artifactId>DockerUnifiedUIMAInterface</artifactId>
+            <version>${duui.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.opennlp-asl</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/de.tudarmstadt.ukp.dkpro.core/de.tudarmstadt.ukp.dkpro.core.io.text-asl -->
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.io.text-asl</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/de.tudarmstadt.ukp.dkpro.core/de.tudarmstadt.ukp.dkpro.core.tokit-asl -->
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.tokit-asl</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.texttechnologylab</groupId>-->
+        <!--            <artifactId>DockerUnifiedUIMAInterface</artifactId>-->
+        <!--            <version>1.0</version>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.42.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vinhkhuc</groupId>
+            <artifactId>jfasttext</artifactId>
+            <version>0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>4.4.0</version>
+            <classifier>models</classifier>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>4.4.0</version>
+            <classifier>models-german</classifier>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>4.4.0</version>
+            <classifier>models-french</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>2.9.4</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version> <!-- Use the appropriate version -->
+        </dependency>
+    </dependencies>
+
+
+</project>
