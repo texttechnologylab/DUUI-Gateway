@@ -251,8 +251,8 @@
 									<li>
 										<h4 class="h4">Cloud</h4>
 										<p>
-											There are currently two cloud storage providers available to use: Dropbox and
-											Min.io (s3). More will be added in the future. To use your cloud storage
+											There are currently four cloud storage providers available to use: Dropbox and
+											Min.io (s3), Google Drive, and NextCloud. More will be added in the future. To use your cloud storage
 											provider of choice, a connection must be established on your <a
 												class="anchor"
 												href="/account">Account</a
