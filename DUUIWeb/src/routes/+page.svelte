@@ -21,14 +21,14 @@
 	import Processes from '$lib/assets/Screenshots/Processes.png'
 	import { userSession } from '$lib/store'
 	import Link from '$lib/svelte/components/Link.svelte'
-	import { faAmazon, faDropbox, faGithub, faXTwitter } from '@fortawesome/free-brands-svg-icons'
+	import { faAmazon, faDropbox, faGithub, faXTwitter , faGoogleDrive} from '@fortawesome/free-brands-svg-icons'
 	import Fa from 'svelte-fa'
 
 	/**
 	 * Logout the user and redirect to the login page.
 	 */
 	const logout = async () => {
-		const response = await fetch('/account/logout', { method: 'PUT' })
+		const response = await fetch('account/logout', { method: 'PUT' })
 		if (response.ok) {
 			userSession.set(undefined)
 
@@ -60,7 +60,7 @@
 						</div>
 
 						<div class="grid md:grid-cols-2 gap-4">
-							{#if $userSession === undefined}
+							{#if $userSession }
 								<a
 									href="/account/register"
 									class="cta button-primary box-shadow !text-xl !justify-center button-modal shadow-md"
@@ -231,7 +231,15 @@
 						>
 							<Fa size="lg" icon={faCloud} />
 							<p>NextCloud</p>
-							<span class="variant-filled badge hidden md:inline">Development</span>
+						</a>
+
+						<a
+							href="https://drive.google.com/drive/"
+							target="_blank"
+							class="cta button-primary box-shadow !text-xl !justify-start"
+						>
+							<Fa size="lg" icon={faGoogleDrive} />
+							<p>Google Drive</p>
 						</a>
 					</div>
 				</section>

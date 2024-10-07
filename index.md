@@ -1,13 +1,14 @@
 # DUUI Gateway
 
 ## Introduction
-Brief overview of your project
+DUUI Gateway is a powerful frontend and server interface for DUUI, allowing a streamlined
+processing of corpora from various input options, analysis tools, and output options. 
+
+This project is implemented using various technologies from a Svelte based frontend to a Java backend.
 
 ## Tutorial
-Step-by-step guide on how to use your project
+The step-by-step guide for the project can be found on the web page
+or on the project [README](./README.md)
 
 ## JavaDoc
 [View JavaDoc](./javadoc/index.html)
-
-## Additional Resources
-Any other relevant information or links
