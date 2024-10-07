@@ -163,6 +163,7 @@
 
 
     <dependencies>
+
         <dependency>
             <groupId>com.github.dterefe</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
@@ -174,6 +175,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.uima/uimaj-document-annotation -->
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimaj-document-annotation</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+
 
         <dependency>
             <groupId>io.prometheus</groupId>
