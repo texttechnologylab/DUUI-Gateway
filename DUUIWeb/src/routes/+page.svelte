@@ -6,6 +6,7 @@
 		faCheck,
 		faChevronRight,
 		faCloud,
+		faCloudUpload,
 		faGlobe,
 		faPlus,
 		faRecycle,
