@@ -165,9 +165,9 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.github.dterefe</groupId>
+            <groupId>com.github.texttechnologylab</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
-            <version>ca4b35213e0381325750d730da943f9e815c869d</version>
+            <version>42c1e190eb38c13f419904b23a026e4606831e16</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.mongodb</groupId>

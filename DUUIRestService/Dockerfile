@@ -4,22 +4,27 @@ FROM maven:3.8.4-openjdk-17
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app
 
-# Kopieren Sie den gesamten Projektordner in den Container
-COPY . .
+COPY ./pom.xml ./pom.xml
+COPY ./src ./src
+COPY ./config.ini  ./config.ini
 
-# Kompilieren der Java-Dateien
-#RUN mkdir -p ./classes && \
-#    javac -d ./classes $(find ./src/main/java -name "*.java")
+# Install Kubernetes command line tool
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/
+
+# Compile Java project and create the JAR-file
 RUN mvn package
 
-# Erstellen Sie ein ausführbares JAR-File
-#RUN jar cvfe ./target/DUUIRestService-1.0.jar org.texttechnologylab.duui.api.Main -C ./target/classes .
+## Copy relevant files
+#COPY ./target/DUUIRestService.jar  ./target/DUUIRestService.jar
+#COPY ./config.ini  ./config.ini
 
-# Exponieren des Ports 2605 (falls benötigt)
+# Expose port 2605 where the server is addressed to
 EXPOSE 2605
 
-# Setzen des Einstiegspunkts, um die JAR-Datei auszuführen
+# Set entrypoint to the start command for the JAR-file
 ENTRYPOINT ["java", "-jar", "./target/DUUIRestService.jar"]
 
-# Übergeben der Konfigurationsdatei als Argument (passen Sie den Pfad an)
+# Pass the config file as an argument
 CMD ["./config.ini"]
