@@ -40,7 +40,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <duui.version>1f05fed13b</duui.version>
+        <duui.version>1.4.1</duui.version>
     </properties>
 
     <repositories>
@@ -97,6 +97,9 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+
             <plugin>
                 <!--generate types dynamically -->
                 <groupId>org.apache.uima</groupId>
@@ -167,7 +170,7 @@
         <dependency>
             <groupId>com.github.texttechnologylab</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
-            <version>42c1e190eb38c13f419904b23a026e4606831e16</version>
+            <version>${duui.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.mongodb</groupId>

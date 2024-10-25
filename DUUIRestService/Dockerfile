@@ -1,5 +1,5 @@
 # Verwenden Sie das offizielle OpenJDK 17 Image als Basis
-FROM maven:3.8.4-openjdk-17
+FROM maven:3.8.5-openjdk-17
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app
@@ -23,8 +23,8 @@ RUN mvn package
 # Expose port 2605 where the server is addressed to
 EXPOSE 2605
 
-# Set entrypoint to the start command for the JAR-file
+# Setzen des Einstiegspunkts, um die JAR-Datei auszuführen
 ENTRYPOINT ["java", "-jar", "./target/DUUIRestService.jar"]
 
-# Pass the config file as an argument
+# Übergeben der Konfigurationsdatei als Argument (passen Sie den Pfad an)
 CMD ["./config.ini"]

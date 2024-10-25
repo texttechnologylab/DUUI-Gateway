@@ -535,6 +535,7 @@ public class DUUIPipelineController {
             case "DUUIKubernetesDriver" -> new DUUIKubernetesDriver
                 .Component(target)
                 .withScale(scale)
+                .withLabels(useGPU==true ? "gpu=all" : "disktype=all")
                 .build();
             default -> throw new IllegalStateException("Unexpected value: " + driver);
         };
