@@ -94,8 +94,10 @@ public class DUUIMongoDBStorage {
      */
     public static MongoClient getClient() {
         if (mongoClient == null) {
+            System.out.println("Init MongoConnection");
             //mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
             if (getConnectionURI() == null) {
+                System.out.println("Using Connection-Config");
                 StringBuilder sb = new StringBuilder();
                 sb.append("mongodb://");
                 sb.append(config.getMongoUser());
@@ -108,6 +110,7 @@ public class DUUIMongoDBStorage {
 
                 mongoClient = MongoClients.create(sb.toString());
             } else {
+                System.out.println("Using Connection-URI");
                 mongoClient = MongoClients.create(getConnectionURI());
             }
         }

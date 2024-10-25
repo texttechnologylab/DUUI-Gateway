@@ -25,6 +25,6 @@ EXPOSE 2605
 
 # Setzen des Einstiegspunkts, um die JAR-Datei auszuführen
 ENTRYPOINT ["java", "-jar", "./target/DUUIRestService.jar"]
-
+# CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main" -Dexec.args="./config.ini"
 # Übergeben der Konfigurationsdatei als Argument (passen Sie den Pfad an)
 CMD ["./config.ini"]

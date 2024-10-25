@@ -41,6 +41,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <duui.version>1.4.1</duui.version>
+        <uima.version>3.5.0</uima.version>
     </properties>
 
     <repositories>
@@ -51,6 +52,24 @@
     </repositories>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>desc/type/**/*</exclude>
+                    <exclude>org/**/*</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>desc/type/**/*</include>
+                    <include>org/**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -166,7 +185,16 @@
 
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimaj-core</artifactId>
+            <version>${uima.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimafit-core</artifactId>
+            <version>${uima.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.github.texttechnologylab</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>

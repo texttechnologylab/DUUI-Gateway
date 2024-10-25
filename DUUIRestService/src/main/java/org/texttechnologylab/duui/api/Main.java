@@ -7,6 +7,7 @@ import org.texttechnologylab.duui.api.metrics.providers.DUUIHTTPMetrics;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import com.dropbox.core.DbxException;
+import org.apache.uima.fit.util.JCasUtil;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
@@ -53,6 +54,7 @@ public class Main {
         try {
             String configFilePath = args[0];
             config = new Config(configFilePath);
+            System.out.println("Starting DUUI REST Service");
         } catch (ArrayIndexOutOfBoundsException | IOException exception) {
             System.err.println("Create a config (ini, properties, ...) file and pass the path to this file as the first application argument.");
             System.err.println("The config file should contain the following variables: ");

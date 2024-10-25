@@ -517,7 +517,7 @@ public class DUUIPipelineController {
                 .withImageFetching(dockerImageFetching)
                 .withGPU(useGPU)
                 .withScale(scale)
-                .build();
+                .build().withTimeout(3600);
             case "DUUISwarmDriver" -> new DUUISwarmDriver
                 .Component(target)
                 .withScale(scale)
