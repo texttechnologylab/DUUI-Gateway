@@ -16,10 +16,6 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 # Compile Java project and create the JAR-file
 RUN mvn package
 
-## Copy relevant files
-#COPY ./target/DUUIRestService.jar  ./target/DUUIRestService.jar
-#COPY ./config.ini  ./config.ini
-
 # Expose port 2605 where the server is addressed to
 EXPOSE 2605
 

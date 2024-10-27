@@ -2,7 +2,10 @@ package org.texttechnologylab.duui.api.routes.processes;
 
 import com.dropbox.core.DbxException;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
@@ -19,6 +22,7 @@ import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import spark.Request;
 import spark.Response;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -42,16 +46,41 @@ public class DUUIProcessRequestHandler {
     public static String getFolderStructure(Request request, Response response) throws DbxException, ExecutionException, InterruptedException, GeneralSecurityException, IOException {
         String id = request.params(":id");
         String provider = request.params(":provider");
+        boolean reset = request.params(":reset").equals("true");
         IDUUIDocumentHandler handler = getHandler(provider, id);
+        System.out.println(request.params(":reset"));
+        if (reset) {
+            DUUIMongoDBStorage.Users()
+                .findOneAndUpdate(
+                        Filters.eq("_id", new ObjectId(id)),
+                        Updates.unset("connections." + provider.toLowerCase() + ".folder_structure")
+                );
+        }
 
         if (handler instanceof IDUUIFolderPickerApi) {
-            CompletableFuture<IDUUIFolderPickerApi.DUUIFolder> folderStructure =
-                    CompletableFuture.supplyAsync(() -> ((IDUUIFolderPickerApi) handler).getFolderStructure());
-            Map<String, Object> tree = folderStructure.get().toJson();
-            Document document = new Document(tree);
+            Document document = null;
+            Document result = DUUIMongoDBStorage.Users().find(Filters.eq(new ObjectId(id))).first();
+            if (result != null) {
+                System.out.println(result.toJson());
+                Document fs = result.getEmbedded(List.of("connections", provider.toLowerCase(), "folder_structure"), Document.class);
+                if (fs != null) document = fs;
+            }
+
+            if (document == null) {
+                CompletableFuture<IDUUIFolderPickerApi.DUUIFolder> folderStructure =
+                        CompletableFuture.supplyAsync(() -> ((IDUUIFolderPickerApi) handler).getFolderStructure());
+                Map<String, Object> tree = folderStructure.get().toJson();
+                document = new Document(tree);
+
+                DUUIMongoDBStorage.Users()
+                    .findOneAndUpdate(
+                        Filters.eq("_id", new ObjectId(id)),
+                        Updates.set("connections." + provider.toLowerCase() + ".folder_structure", document)
+                    );
+            }
 
             response.status(200);
-//            System.out.println(document.toJson());
+
             return document.toJson();
         }
 
@@ -202,14 +231,14 @@ public class DUUIProcessRequestHandler {
      * Retrieve a limited number of documents from the database.
      * See {@link DUUIDocumentController#findMany(MongoDBFilters)}.
      *
-     * @return A JSON Document containing {@link org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument}s
+     * @return A JSON Document containing {@link DUUIDocument}s
      * and the total count.
      */
     public static String findDocuments(Request request, Response response) {
         String processId = request.params(":id");
         String userID = DUUIRequestHelper.getUserId(request);
 
-        Document process = DUUIProcessController.findOneById(processId);
+        Document process = findOneById(processId);
         if (DUUIRequestHelper.isNullOrEmpty(process)) return DUUIRequestHelper.notFound(response);
 
         Document pipeline = DUUIPipelineController.findOneById(process.getString("pipeline_id"));
