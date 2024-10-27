@@ -1,5 +1,4 @@
 import { API_URL } from '$env/static/private'
-import type { DUUIDocument } from '$lib/duui/io'
 import { error, json, type RequestHandler } from '@sveltejs/kit'
 
 /**
@@ -7,9 +6,8 @@ import { error, json, type RequestHandler } from '@sveltejs/kit'
  */
 export const POST: RequestHandler = async ({ request, cookies, locals, fetch }) => {
 	const data = await request.json()
-	const user = locals.user
 
-	const response = await fetch(`${API_URL}/processes/folderstructure/${user?.oid}/${data.provider}`, {
+	const response = await fetch(`${API_URL}/processes/folderstructure/${data.user}/${data.provider}/${data.reset}`, {
 		method: 'GET',
 		headers: {
 			Authorization: cookies.get('session') || ''
