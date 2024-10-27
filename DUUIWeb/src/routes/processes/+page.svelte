@@ -32,7 +32,7 @@
 		faCheck,
 		faCloud,
 		faCloudUpload,
-		faFileArrowUp, faRefresh
+		faFileArrowUp, faRefresh, faRepeat
 	} from '@fortawesome/free-solid-svg-icons'
 	import Fa from 'svelte-fa'
 	import { FileDropzone, ProgressBar, getToastStore, type TreeViewNode } from '@skeletonlabs/skeleton'
@@ -45,6 +45,9 @@
 	const toastStore = getToastStore()
 
 	let files: FileList
+
+	let inputTree: TreeViewNode | null = null
+	let outputTree: TreeViewNode | null = null
 
 	onMount(() => {
 		const params = $page.url.searchParams
@@ -234,27 +237,30 @@
 	$: $userSession
 
 
-	let inputTree: TreeViewNode = null
-	let outputTree: TreeViewNode = null
 	let fetchingTree = false
 
-	async function getFolderStructure(provider: IOProvider, isInput = true) {
+	async function getFolderStructure(provider: IOProvider, isInput = true, isReset = false) {
 		fetchingTree = true
+
+		let tree: TreeViewNode | null = null
 		const response = await fetch('/api/processes/folderstructure',
 			{
 				method: 'POST',
-				body: JSON.stringify({provider: provider, user: $userSession?.oid})
+				body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset})
 			})
-		let tree = null
+
 		if (response.ok) {
 			tree = await response.json()
 		}
 
-		if (isInput) {
-			inputTree = tree
-		} else {
-			outputTree = tree
+		if (tree) {
+			if (isInput) {
+				inputTree = tree
+			} else {
+				outputTree = tree
+			}
 		}
+
 		fetchingTree = false
 	}
 
@@ -413,7 +419,7 @@
 										label="Source"
 										options={IO_INPUT}
 										bind:value={$processSettingsStore.input.provider}
-										on:change={() => getFolderStructure($processSettingsStore.input.provider, true)}
+										on:change={() => getFolderStructure($processSettingsStore.input.provider, true, false)}
 									/>
 								</div>
 								{#if !equals($processSettingsStore.input.provider, IO.Text)}
@@ -505,13 +511,24 @@
 												: ''}
 										/>
 									{:else }
-										<FolderStructure
-											tree={inputTree}
-											label="Folder Picker"
-											name="inputPaths"
-											isMultiple={true}
-											bind:value={$processSettingsStore.input.path}
-										/>
+										<div class="flex w-full">
+											<div class="w-11/12">
+												<FolderStructure
+													tree={inputTree}
+													label="Folder Picker"
+													name="inputPaths"
+													isMultiple={true}
+													bind:value={$processSettingsStore.input.path}
+												/>
+											</div>
+											<div class="w-1/12" >
+												<span class="form-label text-start">Refresh</span>
+												<button class="p-3 mt-1 ml-3 rounded-md hover:bg-primary-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
+														on:click={() => getFolderStructure($processSettingsStore.input.provider, true, true)}>
+													<Fa icon={faRepeat} />
+												</button>
+											</div>
+										</div>
 									{/if}
 									<Tip>Do not include Apps/Docker Unified UIMA Interface in your path!</Tip>
 								</div>
@@ -634,7 +651,7 @@
 										label="Target"
 										options={IO_OUTPUT}
 										bind:value={$processSettingsStore.output.provider}
-										on:change={() => getFolderStructure($processSettingsStore.output.provider, false)}
+										on:change={() => getFolderStructure($processSettingsStore.output.provider, false, false)}
 									/>
 								</div>
 								{#if equals($processSettingsStore.output.provider, IO.Dropbox)
@@ -672,13 +689,24 @@
 												: ''}
 										/>
 									{:else}
-										<FolderStructure
-											tree={outputTree}
-											label="Folder Picker"
-											name="outputPaths"
-											isMultiple={false}
-											bind:value={$processSettingsStore.output.path}
-										/>
+										<div class="flex w-full">
+											<div class="w-11/12">
+												<FolderStructure
+													tree={outputTree}
+													label="Folder Picker"
+													name="outputPaths"
+													isMultiple={false}
+													bind:value={$processSettingsStore.output.path}
+												/>
+											</div>
+											<div class="w-1/12">
+												<span class="form-label text-start">Refresh</span>
+												<button class="p-3 mt-1 ml-3 rounded-md hover:bg-primary-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
+														on:click={() => getFolderStructure($processSettingsStore.output.provider, false, true)}>
+													<Fa icon={faRepeat} />
+												</button>
+											</div>
+										</div>
 									{/if}
 									<Tip>Do not include Apps/Docker Unified UIMA Interface in your path!</Tip>
 								</div>
