@@ -48,6 +48,32 @@
 
 	let inputTree: TreeViewNode | null = null
 	let outputTree: TreeViewNode | null = null
+	let fetchingTree = false
+
+	async function getFolderStructure(provider: IOProvider, isInput = true, isReset = false) {
+		fetchingTree = true
+
+		let tree: TreeViewNode | null = null
+		const response = await fetch('/api/processes/folderstructure',
+				{
+					method: 'POST',
+					body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset})
+				})
+
+		if (response.ok) {
+			tree = await response.json()
+		}
+
+		if (tree) {
+			if (isInput) {
+				inputTree = tree
+			} else {
+				outputTree = tree
+			}
+		}
+
+		fetchingTree = false
+	}
 
 	onMount(() => {
 		const params = $page.url.searchParams
@@ -99,6 +125,9 @@
 			(params.get('input_file_extension') as FileExtension) ||
 			$processSettingsStore.input.file_extension
 
+		if ($processSettingsStore.input.provider)
+			getFolderStructure($processSettingsStore.input.provider, true, false)
+
 		$processSettingsStore.output.provider =
 			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
 		$processSettingsStore.output.path =
@@ -108,6 +137,9 @@
 		$processSettingsStore.output.file_extension =
 			(params.get('output_file_extension') as FileExtension) ||
 			$processSettingsStore.output.file_extension
+
+		if ($processSettingsStore.output.provider)
+			getFolderStructure($processSettingsStore.output.provider, false, false)
 
 		if ($processSettingsStore.input.provider === IO.File) {
 			$processSettingsStore.input.path = ''
@@ -235,34 +267,6 @@
 		isValidFileUpload(fileStorage)
 	$: uploadBucketIsValid = isValidS3BucketName(fileStorage.path)
 	$: $userSession
-
-
-	let fetchingTree = false
-
-	async function getFolderStructure(provider: IOProvider, isInput = true, isReset = false) {
-		fetchingTree = true
-
-		let tree: TreeViewNode | null = null
-		const response = await fetch('/api/processes/folderstructure',
-			{
-				method: 'POST',
-				body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset})
-			})
-
-		if (response.ok) {
-			tree = await response.json()
-		}
-
-		if (tree) {
-			if (isInput) {
-				inputTree = tree
-			} else {
-				outputTree = tree
-			}
-		}
-
-		fetchingTree = false
-	}
 
 
 </script>
