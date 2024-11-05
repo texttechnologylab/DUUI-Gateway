@@ -85,10 +85,6 @@ public class Methods {
             });
         });
 
-        post("/feedback", DUUIUserController::insertFeedback);
-        get("/feedback", DUUIUserController::getFeedback);
-        delete("/feedback", DUUIUserController::deleteFeedback);
-
         /* Components */
         path("/components", () -> {
             before("/*", (request, response) -> {

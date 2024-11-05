@@ -174,7 +174,6 @@
 			<svelte:fragment slot="trail">
 				<div class="hidden lg:flex items-center gap-8 font-heading-token">
 					{#if $userSession}
-						<Link href="/feedback">Feedback</Link>
 						<Popup>
 							<svelte:fragment slot="trigger">
 								<button

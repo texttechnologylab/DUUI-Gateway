@@ -14,7 +14,7 @@ export const PUT = async ({ request, locals, fetch }) => {
 		method: 'PUT',
 		body: JSON.stringify(await request.json())
 	})
-	console.log(response)
+
 	return response
 }
 

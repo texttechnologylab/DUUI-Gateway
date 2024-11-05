@@ -703,45 +703,4 @@ public class DUUIUserController {
             .append("url", Main.config.getDropboxRedirectUrl())
             .toJson();
     }
-
-    public static String insertFeedback(Request request, Response response) {
-        long timestamp = Instant.now().toEpochMilli();
-
-        DUUIMongoDBStorage
-            .Feedback()
-            .insertOne(
-                Document.parse(request.body())
-                    .append("timestamp", timestamp));
-
-        response.status(200);
-        return "Thank you for your feedback!";
-    }
-
-    /**
-     * Retrieve all feedback from the database. Only required during the evaluation.
-     *
-     * @return a json object containing a list of feedback.
-     */
-    public static String getFeedback(Request request, Response response) {
-        return new Document("feedback", DUUIMongoDBStorage
-            .Feedback()
-            .find()
-            .projection(Projections.exclude("_id", "name"))
-            .into(new ArrayList<>()))
-            .toJson();
-    }
-
-    /**
-     * Deletes all feedback from the database. Only required during the evaluation.
-     *
-     * @return a json object containing a message with the number of deleted documents.
-     */
-    public static String deleteFeedback(Request request, Response response) {
-        DeleteResult result = DUUIMongoDBStorage
-            .Feedback()
-            .deleteMany(Filters.exists("_id"));
-
-        return new Document("message", String.format("Deleted %d documents.", result.getDeletedCount()))
-            .toJson();
-    }
 }
