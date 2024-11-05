@@ -6,7 +6,7 @@
 		faArrowRightFromBracket,
 		faArrowRightToBracket,
 		faBars,
-		faBook,
+		faBook, faBookBible,
 		faChevronDown,
 		faLayerGroup,
 		faMapSigns,
@@ -58,6 +58,7 @@
 	import 'highlight.js/styles/github-dark.css'
 	import { onMount } from 'svelte'
 	import ProcessDrawer from './processes/[oid]/ProcessDrawer.svelte'
+	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
 
 	export let data
 	let { user, theme } = data
@@ -131,7 +132,8 @@
 		promptModal: { ref: PromptModal },
 		confirmModal: { ref: ConfirmModal },
 		helpModal: { ref: HelpModal },
-		templateModal: { ref: TemplateModal }
+		templateModal: { ref: TemplateModal },
+		citeModal: {ref: CiteModal}
 	}
 	const modalStore = getModalStore()
 </script>
@@ -223,6 +225,18 @@
 								>
 									<Fa icon={faMapSigns} />
 									<span>Help</span>
+								</button>
+								<button
+										class="button-neutral border-none !gap-8"
+										on:click={() => {
+										modalStore.trigger({
+											type: 'component',
+											component: 'citeModal'
+										})
+									}}
+								>
+									<Fa icon={faBookBible} />
+									<span>How To Cite</span>
 								</button>
 							</div>
 						</svelte:fragment>

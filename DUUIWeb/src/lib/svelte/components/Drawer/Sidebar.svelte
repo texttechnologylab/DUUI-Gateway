@@ -12,6 +12,7 @@
 		faBars,
 		faBook,
 		faClipboardQuestion,
+		faBookBible,
 		faGlobe,
 		faHome,
 		faLayerGroup,
@@ -90,6 +91,19 @@
 		>
 			<Fa icon={faMapSigns} />
 			<span>Help</span>
+		</button>
+
+		<button
+				class="flex-center-4 transition-300 hover:text-primary-500"
+				on:click={() => {
+				modalStore.trigger({
+					type: 'component',
+					component: 'citeModal'
+				})
+			}}
+		>
+			<Fa icon={faBookBible} />
+			<span>How To Cite</span>
 		</button>
 
 		{#if $userSession}
