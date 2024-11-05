@@ -12,21 +12,6 @@
 
 <div class="gap-4 flex flex-col items-start justify-center">
 	{#if equals(component.driver, DUUIDockerDriver)}
-		<div class="space-y-1">
-			<label for="slider" class="flex items-center">
-				<SlideToggle
-					background="bg-surface-100-800-token"
-					active="bg-primary-500"
-					rounded="rounded-full"
-					border="bordered-soft"
-					name="slider"
-					bind:checked={component.options.use_GPU}
-				>
-					<span class="form-label">Use GPU</span>
-				</SlideToggle>
-			</label>
-			<p>When checked, allows Docker to utilize the GPU.</p>
-		</div>
 
 		<div class="space-y-1">
 			<label for="slider" class="flex items-center">
