@@ -114,6 +114,49 @@ const register = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 	})
 }
 
+const change = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+	const data = await event.request.json()
+
+	const email = data.email
+	const password1 = data.password1
+	const password2 = data.password2
+
+	if (!email || !password1 || !password2) {
+		return fail(400, {
+			error: 'Invalid credentials.'
+		})
+	}
+
+	const response = await fetch(`${API_URL}/users/auth/login/${email}`, {
+		method: 'GET'
+	})
+
+	if (response.status === 404) {
+		if (password1 !== password2) {
+			return fail(422, {
+				error: 'Passwords do not match'
+			})
+		}
+
+		const encryptedPassword = await bcrypt.hash(password1.toString(), 10)
+		const session = crypto.randomUUID()
+
+		const postResponse = await fetch(`${API_URL}/users`, {
+			method: 'POST',
+
+			body: JSON.stringify({
+				email: email,
+				password: encryptedPassword,
+				session: session,
+				role: 'User'
+			})
+		})
+
+		const { user } = await postResponse.json()
+		return json({ user: user })
+	}
+}
+
 /**
  * Handle different form requests from the /auth paths.
  */

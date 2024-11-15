@@ -37,7 +37,6 @@
 	export let data
 	let { user, dropbBoxURL, googleDriveURL, theme, users } = data
 
-	let email: string = $userSession?.email || ''
 
 	const themes = Object.keys(COLORS)
 
@@ -46,6 +45,11 @@
 		$userSession.connections = user.connections
 
 	}
+
+	let email: string = $userSession?.email || ''
+	let userPassword = ''
+	let userPassword2 = ''
+	let passwordError = false
 
 	$: isDropboxConnected =
 		!!$userSession?.connections.dropbox.access_token &&
@@ -114,6 +118,19 @@
 			toastStore.trigger(successToast('Update successful'))
 		}
 		return response
+	}
+
+	const updatePassword = async (data: object) => {
+
+		if (userPassword !== userPassword2 && userPassword.length > 0) {
+			passwordError = true
+			return
+		}
+
+		passwordError = false
+
+		await updateUser({"password": userPassword})
+
 	}
 
 	const deleteAccount = async () => {
@@ -410,6 +427,8 @@
 				<div class="section-wrapper p-8 space-y-8">
 					<h2 class="h3">Profile</h2>
 					<Text label="E-Mail" name="email" readonly={true} bind:value={email} />
+					<Secret label="Password" name="password" disabled={false} bind:value={userPassword} />
+					<Secret label="Repeat Password" name="password2" disabled={false} style={passwordError ? "text-red-500 border-4 border-red-400 rounded-lg px-2 py-1" : ""} bind:value={userPassword2} />
 
 					<div class="label">
 						<p class="form-label">Theme</p>
@@ -442,10 +461,16 @@
 						</RadioGroup>
 					</div>
 					<hr class="hr !w-full" />
-					<button class="button-error" on:click={deleteAccount}>
-						<Fa icon={faTrash} />
-						<span>Delete Account</span>
-					</button>
+					<div class="grid md:flex justify-between gap-4">
+						<button class="button-primary" on:click={updatePassword}>
+							<Fa icon={faRefresh} />
+							<span>Update Password</span>
+						</button>
+						<button class="button-error" on:click={deleteAccount}>
+							<Fa icon={faTrash} />
+							<span>Delete Account</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		{:else if tab === 1}

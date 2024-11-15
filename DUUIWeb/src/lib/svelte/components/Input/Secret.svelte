@@ -3,6 +3,7 @@
 	A component that can be used to hide sensitive information like API keys and passwords.
 -->
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 	import Fa from 'svelte-fa'
 
@@ -16,11 +17,12 @@
 	let hidden: boolean = true
 	export let disabled: boolean = false
 
+
 	const toggleVisibility = () => {
 		hidden = !hidden
 	}
 
-	const cipher: string = 'x'.repeat(value ? 16 : 0)
+	const cipher = () => {return 'x'.repeat(value ? 16 : 0)}
 </script>
 
 <label class="label flex flex-col {style}">
@@ -37,9 +39,9 @@
 			<input
 				{disabled}
 				class="pl-12 bg-transparent border-0 grow p-3 input-wrapper"
-				type="text"
+				type="password"
 				{name}
-				value={cipher}
+				value={cipher()}
 				readonly
 			/>
 		{:else}
