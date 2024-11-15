@@ -72,6 +72,7 @@ public class Methods {
             get("", DUUIUserController::fetchUsers);
             post("", DUUIUserController::insertOne);
             put("/:id", DUUIUserController::updateOne);
+            put("/:id/reset-password", DUUIUserController::resetPasswordNoToken);
             put("/reset-password", DUUIUserController::resetPassword);
             put("/recover-password", DUUIUserController::recoverPassword);
             delete("/:id", DUUIUserController::deleteOne);

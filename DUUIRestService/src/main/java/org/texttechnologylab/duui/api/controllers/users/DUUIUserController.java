@@ -353,7 +353,29 @@ public class DUUIUserController {
      * @param passwordResetToken the password reset token send with the email.
      */
     private static void sendPasswordResetEmail(String email, String passwordResetToken) {
+
+        String emailContent = String.format("""
+                Dear User,
+               
+                Thank you for registering with us! To complete your registration, please verify your email address by using the code below:
+                
+                **Your Verification Code:** %s
+                
+                Simply enter this code in the verification section of our website or app to confirm your email address.
+                
+                If you did not create an account using this email address, please disregard this message.
+                
+                Thank you for being a part of our community!
+                
+                Best regards,
+                
+                Texttechnology Lab
+                https://www.texttechnologylab.org/
+                
+                """, passwordResetToken);
+
         System.out.printf("Sending email to %s with token %s%n", email, passwordResetToken);
+
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
@@ -380,19 +402,51 @@ public class DUUIUserController {
         long expiresAt = user.getLong("reset_token_expiration");
         if (expiresAt > System.currentTimeMillis())
             return badRequest(response,
-                "You password reset duration has expired. Please request another reset.");
+                    "You password reset duration has expired. Please request another reset.");
 
         DUUIMongoDBStorage
-            .Users()
-            .findOneAndUpdate(
-                Filters.eq(user.getObjectId("_id")),
-                Updates.combine(
-                    Updates.set("password", password),
-                    Updates.set("password_reset_token", null),
-                    Updates.set("reset_token_expiration", null)));
+                .Users()
+                .findOneAndUpdate(
+                        Filters.eq(user.getObjectId("_id")),
+                        Updates.combine(
+                                Updates.set("password", password),
+                                Updates.set("password_reset_token", null),
+                                Updates.set("reset_token_expiration", null)));
 
         return new Document("message", "Password has been updated")
-            .append("email", user.getString("email")).toJson();
+                .append("email", user.getString("email")).toJson();
+    }
+
+    /**
+     * Reset the password of the user and store the new one without.
+     *
+     * @return a confirmation message and the user email.
+     */
+    public static String resetPasswordNoToken(Request request, Response response) {
+        Document body = Document.parse(request.body());
+
+        String id = request.params(":id");
+
+        String password = body.getString("password");
+        if (password.isEmpty())
+            return missingField(response, password);
+
+        Document user = getUserById(id);
+        if (user.isEmpty())
+            return notFound(response);
+
+        DUUIMongoDBStorage
+                .Users()
+                .findOneAndUpdate(
+                        Filters.eq(user.getObjectId("_id")),
+                        Updates.combine(
+                                Updates.set("password", password),
+                                Updates.set("password_reset_token", null),
+                                Updates.set("reset_token_expiration", null)));
+
+        return new Document("message", "Password has been updated")
+                .append("session", user.getString("session"))
+                .append("email", user.getString("email")).toJson();
     }
 
     /**
