@@ -117,44 +117,36 @@ const register = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 const change = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 	const data = await event.request.json()
 
-	const email = data.email
+	const pid = data.oid
 	const password1 = data.password1
 	const password2 = data.password2
 
-	if (!email || !password1 || !password2) {
+	if (!pid || !password1 || !password2) {
 		return fail(400, {
 			error: 'Invalid credentials.'
 		})
 	}
 
-	const response = await fetch(`${API_URL}/users/auth/login/${email}`, {
-		method: 'GET'
+	if (password1 !== password2) {
+		return fail(422, {
+			error: 'Passwords do not match'
+		})
+	}
+
+	const encryptedPassword = await bcrypt.hash(password1.toString(), 10)
+
+	const response = await fetch(`${API_URL}/users/${pid}/reset-password`, {
+		method: 'PUT',
+		body: JSON.stringify({
+			password: encryptedPassword
+		})
 	})
 
-	if (response.status === 404) {
-		if (password1 !== password2) {
-			return fail(422, {
-				error: 'Passwords do not match'
-			})
-		}
+	const update = await response.json()
 
-		const encryptedPassword = await bcrypt.hash(password1.toString(), 10)
-		const session = crypto.randomUUID()
+	console.log(update)
 
-		const postResponse = await fetch(`${API_URL}/users`, {
-			method: 'POST',
-
-			body: JSON.stringify({
-				email: email,
-				password: encryptedPassword,
-				session: session,
-				role: 'User'
-			})
-		})
-
-		const { user } = await postResponse.json()
-		return json({ user: user })
-	}
+	return json({ user: update })
 }
 
 /**
@@ -179,6 +171,9 @@ export const POST: RequestHandler = async (event) => {
 				break
 			case 'recover':
 				return json('Success')
+			case 'change':
+				authenticationResult = await change(event)
+				break
 			default:
 				error(404, 'Unknown endpoint')
 		}

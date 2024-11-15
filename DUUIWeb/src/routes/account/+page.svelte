@@ -2,7 +2,7 @@
 
 	import { page } from '$app/stores'
 	import { COLORS } from '$lib/config.js'
-	import { successToast } from '$lib/duui/utils/ui.js'
+	import { errorToast, successToast } from '$lib/duui/utils/ui.js'
 	import { userSession } from '$lib/store.js'
 	import Dropdown from '$lib/svelte/components/Input/Dropdown.svelte'
 	import Secret from '$lib/svelte/components/Input/Secret.svelte'
@@ -122,14 +122,28 @@
 
 	const updatePassword = async (data: object) => {
 
-		if (userPassword !== userPassword2 && userPassword.length > 0) {
-			passwordError = true
-			return
+		const request = {
+			method: 'POST',
+			body: JSON.stringify({
+				oid: $userSession?.oid,
+				password1: userPassword,
+				password2: userPassword2
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
 		}
 
-		passwordError = false
+		const response = await fetch('/auth/change', request)
 
-		await updateUser({"password": userPassword})
+
+		if (response.ok) {
+			toastStore.trigger(successToast('Update successful'))
+			passwordError = false
+		} else {
+			toastStore.trigger(errorToast(await response.json()))
+			if (response.status === 422) passwordError = true
+		}
 
 	}
 
