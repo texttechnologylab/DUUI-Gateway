@@ -24,15 +24,8 @@ interface UserProperties {
 	}
 	connections: {
 		key: string | null
-		dropbox: {
-			access_token: string | null
-			refresh_token: string | null
-		}
-		minio: {
-			endpoint: string | null
-			access_key: string | null
-			secret_key: string | null
-		}
+		dropbox: OAuthConnections
+		minio: MinioConnections
 		mongoDB: {
 			uri: string | null
 			host: string | null
@@ -40,17 +33,45 @@ interface UserProperties {
 			username: string | null
 			password: string | null
 		}
-		nextcloud?: {
-			uri: string | null
-			username: string | null
-			password: string | null
-		}
-		google?: {
-			access_token: string | null
-			refresh_token: string | null
-		}
+		nextcloud?: NextCloudConnections
+		google?: OAuthConnections
 	}
 }
+
+export type ServiceConnections = {
+	[name: string]: OAuthConnectionDetails | MinioConnectionDetails | NextcloudConnectionDetails;
+};
+
+export type OAuthConnections = {
+	[name: string]: OAuthConnectionDetails;
+};
+export type MinioConnections = {
+	[name: string]: MinioConnectionDetails;
+};
+export type NextCloudConnections = {
+	[name: string]: NextcloudConnectionDetails;
+};
+
+export type OAuthConnectionDetails = {
+	alias: string
+	access_token: string | null
+	refresh_token: string | null
+};
+
+export type MinioConnectionDetails = {
+	alias: string
+	endpoint: string | null
+	access_key: string | null
+	secret_key: string | null
+};
+
+export type NextcloudConnectionDetails = {
+	alias: string
+	uri: string | null
+	username: string | null
+	password: string | null
+}
+
 
 // Types related to the pagination of tables
 type PaginationSettings = {

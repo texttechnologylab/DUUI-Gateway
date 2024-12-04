@@ -45,15 +45,20 @@ public class DUUIProcessRequestHandler {
 
     public static String getFolderStructure(Request request, Response response) throws DbxException, ExecutionException, InterruptedException, GeneralSecurityException, IOException {
         String id = request.params(":id");
-        String provider = request.params(":provider");
+        String provider = request.params(":provider") != null ? request.params(":provider") : "";
+        String providerId = request.params(":providerId") != null ? request.params(":providerId") : "";
         boolean reset = request.params(":reset").equals("true");
-        IDUUIDocumentHandler handler = getHandler(provider, id);
-        System.out.println(request.params(":reset"));
+
+        if (provider.isEmpty() || providerId.isEmpty())
+            return DUUIRequestHelper.badRequest(response, "The provider and provider-id cannot be empty");
+
+        IDUUIDocumentHandler handler = getHandler(provider, providerId, id);
+
         if (reset) {
             DUUIMongoDBStorage.Users()
                 .findOneAndUpdate(
                         Filters.eq("_id", new ObjectId(id)),
-                        Updates.unset("connections." + provider.toLowerCase() + ".folder_structure")
+                        Updates.unset("connections." + provider.toLowerCase() + "." + providerId + ".folder_structure")
                 );
         }
 
@@ -61,8 +66,7 @@ public class DUUIProcessRequestHandler {
             Document document = null;
             Document result = DUUIMongoDBStorage.Users().find(Filters.eq(new ObjectId(id))).first();
             if (result != null) {
-                System.out.println(result.toJson());
-                Document fs = result.getEmbedded(List.of("connections", provider.toLowerCase(), "folder_structure"), Document.class);
+                Document fs = result.getEmbedded(List.of("connections", provider.toLowerCase(), providerId, "folder_structure"), Document.class);
                 if (fs != null) document = fs;
             }
 
@@ -75,7 +79,7 @@ public class DUUIProcessRequestHandler {
                 DUUIMongoDBStorage.Users()
                     .findOneAndUpdate(
                         Filters.eq("_id", new ObjectId(id)),
-                        Updates.set("connections." + provider.toLowerCase() + ".folder_structure", document)
+                        Updates.set("connections." + provider.toLowerCase() + "." + providerId + ".folder_structure", document)
                     );
             }
 

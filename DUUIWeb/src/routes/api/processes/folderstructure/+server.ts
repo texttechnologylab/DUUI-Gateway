@@ -1,5 +1,5 @@
 import { API_URL } from '$env/static/private'
-import { error, json, type RequestHandler } from '@sveltejs/kit'
+import {error, fail, json, type RequestHandler} from '@sveltejs/kit'
 
 /**
  * Sends a get request to the backend to retrieve the folder structure of a database.
@@ -7,7 +7,7 @@ import { error, json, type RequestHandler } from '@sveltejs/kit'
 export const POST: RequestHandler = async ({ request, cookies, locals, fetch }) => {
 	const data = await request.json()
 
-	const response = await fetch(`${API_URL}/processes/folderstructure/${data.user}/${data.provider}/${data.reset}`, {
+	const response = await fetch(`${API_URL}/processes/folderstructure/${data.user}/${data.provider}/${data.reset}/${data.providerId}`, {
 		method: 'GET',
 		headers: {
 			Authorization: cookies.get('session') || ''

@@ -511,11 +511,11 @@ public class DUUIProcessController {
      * @return the created DocumentHandler.
      * @throws DbxException if incorrect credentials for Dropbox are provided.
      */
-    public static IDUUIDocumentHandler getHandler(String provider, String userId) throws DbxException, GeneralSecurityException, IOException {
+    public static IDUUIDocumentHandler getHandler(String provider, String providerId, String userId) throws DbxException, GeneralSecurityException, IOException {
         Document user = DUUIUserController.getUserById(userId);
 
         if (provider.equalsIgnoreCase(Provider.DROPBOX)) {
-            Document credentials = DUUIUserController.getDropboxCredentials(user);
+            Document credentials = DUUIUserController.getDropboxCredentials(user, providerId);
 
             return new DUUIDropboxDocumentHandler(
                 new DbxRequestConfig("DUUI"),
@@ -528,7 +528,7 @@ public class DUUIProcessController {
                 )
             );
         } else if (provider.equalsIgnoreCase(Provider.MINIO)) {
-            Document credentials = DUUIUserController.getMinioCredentials(user);
+            Document credentials = DUUIUserController.getMinioCredentials(user, providerId);
             return new DUUIMinioDocumentHandler(
                 credentials.getString("endpoint"),
                 credentials.getString("access_key"),
@@ -537,7 +537,7 @@ public class DUUIProcessController {
         } else if (provider.equalsIgnoreCase(Provider.FILE)) {
             return new DUUILocalDocumentHandler();
         } else if (provider.equalsIgnoreCase(Provider.NEXTCLOUD)) {
-            Document credentials = DUUIUserController.getNextCloudCredentials(user);
+            Document credentials = DUUIUserController.getNextCloudCredentials(user, providerId);
             System.out.println("URI: " + credentials.getString("uri"));
             System.out.println("USERNAME: " + credentials.getString("username"));
             System.out.println("PASSWORD: " + credentials.getString("password"));
@@ -546,7 +546,7 @@ public class DUUIProcessController {
                         credentials.getString("username"),
                         credentials.getString("password"));
         } else if (provider.equalsIgnoreCase(Provider.GOOGLE)) {
-            Document credentials = DUUIUserController.getGoogleCredentials(user);
+            Document credentials = DUUIUserController.getGoogleCredentials(user, providerId);
             GoogleCredential credential = new GoogleCredential()
                     .setAccessToken(credentials.getString("access_token"));
 

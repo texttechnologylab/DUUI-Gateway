@@ -43,8 +43,9 @@
 
 	const download = async () => {
 		downloading = true
+		const extraSlash = output.path.endsWith("/") ? "" : "/"
 		const response = await fetch(
-			`/api/files/download?provider=${output.provider}&path=${output.path}/${_document.name.replace(
+			`/api/files/download?provider=${output.provider}}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
 				input.file_extension,
 				output.file_extension
 			)}`,
@@ -75,7 +76,7 @@
 			URLIn = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
 			break
 		case IO.Minio:
-			URLIn = $userSession?.connections.minio.endpoint || ''
+			URLIn = $userSession?.connections.minio[input.provider_id].endpoint || ''
 			break
 		default:
 			URLIn = ''
@@ -86,7 +87,7 @@
 			URLOut = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
 			break
 		case IO.Minio:
-			URLOut = $userSession?.connections.minio.endpoint || ''
+			URLOut = $userSession?.connections.minio[output.provider_id].endpoint || ''
 			break
 		default:
 			URLOut = ''

@@ -1,5 +1,6 @@
 <script lang="ts">
 
+	import { v4 as uuidv4 } from 'uuid'
 	import { page } from '$app/stores'
 	import { COLORS } from '$lib/config.js'
 	import { errorToast, successToast } from '$lib/duui/utils/ui.js'
@@ -14,7 +15,7 @@
 		faCheck,
 		faFilePen,
 		faFileText,
-		faLink,
+		faLink, faPlus,
 		faRefresh,
 		faTrash,
 		faUser,
@@ -30,6 +31,8 @@
 	} from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
+	import type {MinioConnectionDetails, NextcloudConnectionDetails, OAuthConnectionDetails} from "../../app";
+	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
@@ -43,7 +46,6 @@
 	if (user && $userSession) {
 		$userSession.preferences = user.preferences
 		$userSession.connections = user.connections
-
 	}
 
 	let email: string = $userSession?.email || ''
@@ -51,32 +53,50 @@
 	let userPassword2 = ''
 	let passwordError = false
 
-	$: isDropboxConnected =
-		!!$userSession?.connections.dropbox.access_token &&
-		!!$userSession.connections.dropbox.refresh_token
+	let minioConnections: {[name: string]:  MinioConnectionDetails} = $userSession?.connections.minio
+	let nextcloudConnections: {[name: string]:  NextcloudConnectionDetails} = $userSession?.connections.nextcloud
+	let googledriveConnections: {[name: string]:  OAuthConnectionDetails} = $userSession?.connections.google
+	let dropboxConnections: {[name: string]:  OAuthConnectionDetails} = $userSession?.connections.dropbox
 
-	$: isMinioConnected =
-		!!$userSession?.connections.minio.endpoint &&
-		!!$userSession?.connections.minio.access_key &&
-		!!$userSession?.connections.minio.secret_key
+	let newNextcloud = {
+		alias: "",
+		uri: "",
+		username: "",
+		password: ""
+	}
 
-	let minioAccessKey: string = $userSession?.connections.minio.access_key || ''
-	let minioEndpoint: string = $userSession?.connections.minio.endpoint || ''
-	let minioSecretKey: string = $userSession?.connections.minio.secret_key || ''
+	let newDropboxConnection = {
+		name: uuidv4(),
+		alias: ""
+	}
 
-	$: isNextCloudConnected =
-		!!$userSession?.connections.nextcloud &&
-		!!$userSession?.connections.nextcloud.uri &&
-		!!$userSession?.connections.nextcloud.username &&
-		!!$userSession?.connections.nextcloud.password
+	let newGoogleConnection = {
+		name: uuidv4(),
+		alias: ""
+	}
 
-	let nextcloudEndpoint: string = $userSession?.connections.nextcloud?.uri || ''
-	let nextcloudUsername: string = $userSession?.connections.nextcloud?.username || ''
-	let nextcloudPassword: string = $userSession?.connections.nextcloud?.password || ''
+	let newMinioConnections = {
+		alias: "",
+		endpoint: "",
+		access_key: "",
+		secret_key: ""
+	}
 
-	$: isGoogleDriveConnected =
-		!!$userSession?.connections.google &&
-		!!$userSession?.connections.google.access_token
+
+
+	$: isDropboxConnected = Object.keys($userSession?.connections.dropbox).length > 0
+
+	$: isMinioConnected = (name: string) =>  $userSession?.connections.minio[name].alias
+			&& $userSession?.connections.minio[name].endpoint
+			&& $userSession?.connections.minio[name].access_key
+			&& $userSession?.connections.minio[name].secret_key
+
+	$: isNextCloudConnected = (name: string) =>  $userSession?.connections.nextcloud[name].alias
+			&& $userSession?.connections.nextcloud[name].uri
+			&& $userSession?.connections.nextcloud[name].username
+			&& $userSession?.connections.nextcloud[name].password
+
+	$: isGoogleDriveConnected = Object.keys($userSession?.connections.google).length > 0
 
 	$: hasApiKey = !!$userSession?.connections.key
 
@@ -111,7 +131,7 @@
 
 	const updateUser = async (data: object) => {
 		let req = { method: 'PUT', body: JSON.stringify(data) }
-		console.log(req)
+
 		const response = await fetch('/api/users', req)
 
 		if (response.ok) {
@@ -208,11 +228,12 @@
 		}
 	}
 
-	const startDropboxOauth = () => {
+	const startDropboxOauth = (alias: string) => {
+		localStorage.setItem("currentDropboxConnectionAlias", alias)
 		window.location.href = dropbBoxURL.toString()
 	}
 
-	const deleteDropboxAccess = async () => {
+	const deleteDropboxAccess = async (name: string) => {
 		const confirm = await showConfirmationModal(
 			{
 				title: 'Delete Access for Dropbox',
@@ -225,22 +246,22 @@
 
 		if (!confirm) return
 
+		delete dropboxConnections[name]
 		const response = await updateUser({
-			'connections.dropbox.access_token': null,
-			'connections.dropbox.refresh_token': null
+			['connections.dropbox']: dropboxConnections
 		})
 
-		if (response.ok && $userSession) {
-			$userSession.connections.dropbox.access_token = null
-			$userSession.connections.dropbox.refresh_token = null
+		if (response.ok && $userSession?.connections.dropbox) {
+			dropboxConnections = $userSession?.connections.dropbox
 		}
 	}
 
-	const startGoogleDriveAccess = async () => {
+	const startGoogleDriveAccess = async (alias: string) => {
+		localStorage.setItem("currentGoogleDriveConnectionAlias", alias)
 		window.location.href = googleDriveURL
 	}
 
-	const deleteGoogleDriveAccess = async () => {
+	const deleteGoogleDriveAccess = async (name: string) => {
 		const confirm = await showConfirmationModal(
 			{
 				title: 'Delete Access for Google Drive',
@@ -253,18 +274,17 @@
 
 		if (!confirm) return
 
+		delete googledriveConnections[name]
 		const response = await updateUser({
-			'connections.google.access_token': null,
-			'connections.google.refresh_token': null
+			'connections.google': googledriveConnections
 		})
 
 		if (response.ok && $userSession && $userSession.connections.google) {
-			$userSession.connections.google.access_token = null
-			$userSession.connections.google.refresh_token = null
+			googledriveConnections = $userSession?.connections.google
 		}
 	}
 
-	const revokeMinioAccess = async () => {
+	const revokeMinioAccess = async (name: string) => {
 		const confirm = await showConfirmationModal(
 			{
 				title: 'Delete Access for Min.io',
@@ -276,25 +296,19 @@
 
 		if (!confirm) return
 
+		delete minioConnections[name]
 		const response = await updateUser({
-			'connections.minio.endpoint': null,
-			'connections.minio.access_key': null,
-			'connections.minio.secret_key': null
+			'connections.minio': minioConnections
 		})
 
 		if (response.ok) {
-			minioEndpoint = ''
-			minioAccessKey = ''
-			minioSecretKey = ''
-
 			if ($userSession) {
-				$userSession.connections.minio.endpoint = null
-				$userSession.connections.minio.access_key = null
-				$userSession.connections.minio.secret_key = null
+				minioConnections = $userSession?.connections.minio
 			}
 		}
 	}
-	const revokeNextcloudAccess = async () => {
+
+	const revokeNextcloudAccess = async (name: string) => {
 		const confirm = await showConfirmationModal(
 			{
 				title: 'Delete Access for NextCloud',
@@ -306,22 +320,13 @@
 
 		if (!confirm) return
 
+		delete nextcloudConnections[name]
 		const response = await updateUser({
-			'connections.nextcloud.uri': null,
-			'connections.nextcloud.username': null,
-			'connections.nextcloud.password': null
+			'connections.nextcloud': nextcloudConnections
 		})
 
 		if (response.ok) {
-			nextcloudEndpoint = ''
-			nextcloudUsername = ''
-			nextcloudPassword = ''
-
-			if ($userSession && $userSession.connections.nextcloud) {
-				$userSession.connections.nextcloud.uri = null
-				$userSession.connections.nextcloud.username = null
-				$userSession.connections.nextcloud.password = null
-			}
+			nextcloudConnections = $userSession?.connections.nextcloud
 		}
 	}
 
@@ -542,119 +547,188 @@
 				<div class="section-wrapper p-8 grid grid-rows-[auto_1fr_auto] gap-8">
 					<h2 class="h3 scroll-mt-16" id="dropbox">Dropbox</h2>
 					<div class="space-y-8">
-						{#if isDropboxConnected}
-							<div>
+						<div>
+							{#if isDropboxConnected}
 								<p>Your Dropbox account has been connected successfully.</p>
 								<p>
 									The folder <span class="badge px-2 mx-2 variant-soft-primary"
 										>Apps/Docker Unified UIMA Interface</span
 									> has been created.
 								</p>
-							</div>
-							<div>
-								<p class="flex-center-4">
-									<Fa icon={faCheck} size="lg" class="text-primary-500" />
-									<span>
-										Read files and folders contained in your <strong>Dropbox Account</strong>
-									</span>
-								</p>
-								<p class="flex-center-4 mb-4">
-									<Fa icon={faCheck} size="lg" class="text-primary-500" />
-									<span>Create files and folders in your <strong>Dropbox Account</strong> </span>
-								</p>
-							</div>
-							<div class="grid md:flex justify-between gap-4">
-								<button class="button-neutral" on:click={startDropboxOauth}>
-									<Fa icon={faLink} />
-									<span>Reconnect</span>
-								</button>
-								<button class="button-error" on:click={deleteDropboxAccess}>
-									<Fa icon={faXmarkCircle} />
-									<span>Delete</span>
-								</button>
-							</div>
-						{:else}
-							<p class="mb-8">
-								By connecting Dropbox and DUUI you can directly read and write data from and to your
-								Dropbox storage. After a succesfull OAuth2 authorization at <span class="font-bold"
-									>Dropbox</span
+							{:else}
+								<p class="mb-8">
+									By connecting Dropbox and DUUI you can directly read and write data from and to your
+									Dropbox storage. After a succesfull OAuth2 authorization at <span class="font-bold"
+								>Dropbox</span
 								> an app folder called DUUI is created in your storage that is used as the root folder
-								for read and write operations.
+									for read and write operations.
+								</p>
+							{/if}
+						</div>
+						<div>
+							<p class="flex-center-4">
+								<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
+								<span>
+									Read files and folders contained in your <strong>Dropbox Account</strong>
+								</span>
 							</p>
-							<div class="space-y-2">
-								<p class="flex items-center gap-[22px]">
-									<Fa icon={faFileText} size="lg" class="text-primary-500" />
-									<span
-										>Read files and folders contained in your <strong>Dropbox Storage</strong>
-									</span>
-								</p>
-								<p class="flex-center-4 mb-4">
-									<Fa icon={faFilePen} size="lg" class="text-primary-500" />
-									<span>Create files and folders in your <strong>Dropbox Storage</strong> </span>
-								</p>
+							<p class="flex-center-4 mb-4">
+								<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
+								<span>Create files and folders in your <strong>Dropbox Account</strong> </span>
+							</p>
+						</div>
+						{#each Object.entries(dropboxConnections) as [name, _]}
+							<div class="bordered-soft rounded-md overflow-hidden">
+								<div class="space-y-4 p-4">
+									<TextInput
+										label="Alias"
+										style="grow"
+										name={name}
+										bind:value={dropboxConnections.name.alias}
+									/>
+									<div class="grid md:flex justify-between gap-4">
+										<button class="button-neutral" on:click={() => {
+											updateUser({
+												['connections.dropbox.' + name]: {
+													alias: dropboxConnections.name.alias,
+												}
+											})
+										}}>
+											<Fa icon={faLink} />
+											<span>Save</span>
+										</button>
+										<button class="button-error" on:click={() => deleteDropboxAccess(name)}>
+											<Fa icon={faXmarkCircle} />
+											<span>Delete</span>
+										</button>
+									</div>
+								</div>
 							</div>
-							<button class="button-neutral" on:click={startDropboxOauth}>
+						{/each}
+						<div class="space-y-2">
+							<h3>Add New Connection</h3>
+							<div class="grid md:flex justify-between gap-4 mb-4">
+								<TextInput
+									label="Alias"
+									style="grow"
+									name="newDropboxAlias"
+									bind:value={newDropboxConnection.alias}
+								/>
+							</div>
+							<button class="button-neutral" on:click={() => startDropboxOauth(newDropboxConnection.alias)}>
 								<Fa icon={faLink} />
 								<span>Connect</span>
 							</button>
-						{/if}
+						</div>
+						<p class="text-surface-500 dark:text-surface-200">
+							Visit
+							<a
+								href="https://help.dropbox.com/de-de/integrations/third-party-apps"
+								target="_blank"
+								class="anchor">Dropbox Apps</a
+							>
+							for further reading.
+						</p>
 					</div>
-					<p class="text-surface-500 dark:text-surface-200">
-						Visit
-						<a
-							href="https://help.dropbox.com/de-de/integrations/third-party-apps"
-							target="_blank"
-							class="anchor">Dropbox Apps</a
-						>
-						for further reading.
-					</p>
 				</div>
 				<div class="section-wrapper p-8 grid grid-rows-[auto_1fr_auto] gap-8">
 					<h2 class="h3 scroll-mt-16" id="minio">Minio / AWS</h2>
-					<div class="space-y-4">
-						{#if isMinioConnected}
-							<p>Your account has been connected to Minio / AWS successfully.</p>
-						{:else}
-							<p>Enter your AWS credentials below to establish a connection.</p>
-						{/if}
-						<Text
-							help="The correct endpoint is the s3 API endpoint. Do not use the Minio Console endpoint!"
-							label="Endpoint"
-							style="grow"
-							name="endpoint"
-							bind:value={minioEndpoint}
-						/>
-						<Secret label="Username (Access Key)" name="accessKey" bind:value={minioAccessKey} />
-						<Secret label="Password (Secret Key)" name="secretKey" bind:value={minioSecretKey} />
-					</div>
-					<div class="grid md:flex justify-between gap-4">
-						<button
-							class="button-neutral"
-							disabled={!minioEndpoint || !minioAccessKey || !minioSecretKey}
-							on:click={() => {
-								updateUser({
-									'connections.minio.endpoint': minioEndpoint,
-									'connections.minio.access_key': minioAccessKey,
-									'connections.minio.secret_key': minioSecretKey
-								})
 
-								if ($userSession) {
-									$userSession.connections.minio.endpoint = minioEndpoint
-									$userSession.connections.minio.access_key = minioAccessKey
-									$userSession.connections.minio.secret_key = minioSecretKey
-								}
-							}}
-						>
-							<Fa icon={isMinioConnected ? faRefresh : faLink} />
-							<span>{isMinioConnected ? 'Update' : 'Connect'}</span>
-						</button>
-						{#if isMinioConnected}
-							<button class="button-error" on:click={revokeMinioAccess}>
-								<Fa icon={faXmarkCircle} />
-								<span>Delete</span>
+					{#if Object.keys($userSession?.connections.minio).length > 1}
+						<p>Your account has been connected to Minio / AWS successfully.</p>
+					{:else}
+						<p>Enter your AWS credentials below to establish a connection.</p>
+					{/if}
+					{#each Object.entries(minioConnections) as [name, _]}
+						<div class="bordered-soft rounded-md overflow-hidden">
+							<div class="space-y-4 p-4">
+								<Text
+										label="Alias"
+										style="grow"
+										name={name}
+										bind:value={minioConnections[name].alias}
+								/>
+								<Text
+									help="The correct endpoint is the s3 API endpoint. Do not use the Minio Console endpoint!"
+									label="Endpoint"
+									style="grow"
+									name="endpoint"
+									bind:value={minioConnections[name].endpoint}
+								/>
+								<Secret label="Username (Access Key)" name="accessKey" bind:value={minioConnections[name].access_key} />
+								<Secret label="Password (Secret Key)" name="secretKey" bind:value={minioConnections[name].secret_key} />
+							</div>
+
+
+							<div class="grid md:flex justify-between gap-4">
+								<button
+									class="button-neutral"
+									disabled={!minioConnections[name].endpoint || !minioConnections[name].access_key || !minioConnections[name].secret_key}
+									on:click={() => {
+										updateUser({
+											['connections.minio.' + name]: {
+												endpoint: minioConnections[name].endpoint,
+												access_key: minioConnections[name].access_key,
+												secret_key: minioConnections[name].secret_key
+											}
+										})
+
+									}}
+								>
+									<Fa icon={isMinioConnected(name) ? faRefresh : faLink} />
+									<span>{'Update'}</span>
+								</button>
+								{#if isMinioConnected(name)}
+									<button class="button-error" on:click={() => revokeMinioAccess(name)}>
+										<Fa icon={faXmarkCircle} />
+										<span>Delete</span>
+									</button>
+								{/if}
+							</div>
+						</div>
+					{/each}
+					<div class="bordered-soft rounded-md overflow-hidden p-4">
+						<div class="space-y-4 mb-4">
+							<Text
+									label="Alias"
+									style="grow"
+									name="newAlias"
+									bind:value={newMinioConnections.alias}
+							/>
+							<Text
+									label="Endpoint"
+									style="grow"
+									name="endpoint"
+									bind:value={newMinioConnections.endpoint}
+							/>
+							<Secret label="Username (Access Key)" name="accessKey" bind:value={newMinioConnections.access_key} />
+							<Secret label="Password (Secret Key)" name="secretKey" bind:value={newMinioConnections.secret_key} />
+						</div>
+						<div class="grid md:flex justify-between gap-4">
+							<button
+									class="button-neutral"
+									disabled={!newMinioConnections.endpoint || !newMinioConnections.access_key || !newMinioConnections.secret_key || !newMinioConnections.alias}
+									on:click={() => {
+										let newMinioId  = uuidv4()
+										updateUser({
+
+											['connections.nextcloud.' + newMinioId]: {
+												alias: newMinioConnections.alias,
+												endpoint: newMinioConnections.endpoint,
+												access_key: newMinioConnections.access_key,
+												secret_key: newMinioConnections.secret_key
+											}
+										})
+										minioConnections[newMinioId] = newMinioConnections
+										newMinioConnections = { alias: "", endpoint: "", secret_key: "", access_key: "" }
+									}}
+							>
+								<Fa icon={faLink} />
+								<span>{'Connect'}</span>
 							</button>
-						{/if}
+						</div>
 					</div>
+
 					<p class="text-surface-500 dark:text-surface-200">
 						Visit
 						<a href="https://min.io/" target="_blank" class="anchor">Minio</a>
@@ -663,50 +737,100 @@
 				</div>
 				<div class="section-wrapper p-8 grid grid-rows-[auto_1fr_auto] gap-8">
 					<h2 class="h3 scroll-mt-16" id="nextcloud">NextCloud</h2>
-					<div class="space-y-4">
-						{#if isNextCloudConnected}
-							<p>Your account has been connected to NextCloud successfully.</p>
+						{#if Object.keys($userSession?.connections.nextcloud).length > 1}
+							<p>Your accounts has been connected to NextCloud successfully.</p>
 						{:else}
 							<p>Enter your NextCloud credentials below to establish a connection.</p>
 						{/if}
-<!--							help="The correct endpoint is the s3 API endpoint. Do not use the Minio Console endpoint!"-->
-						<Text
-							label="Endpoint"
-							style="grow"
-							name="endpoint"
-							bind:value={nextcloudEndpoint}
-						/>
-						<Secret label="Username (Access Key)" name="accessKey" bind:value={nextcloudUsername} />
-						<Secret label="Password (Secret Key)" name="secretKey" bind:value={nextcloudPassword} />
-					</div>
-					<div class="grid md:flex justify-between gap-4">
-						<button
-							class="button-neutral"
-							disabled={!nextcloudEndpoint || !nextcloudUsername || !nextcloudPassword}
-							on:click={() => {
-								updateUser({
-									'connections.nextcloud.uri': nextcloudEndpoint,
-									'connections.nextcloud.username': nextcloudUsername,
-									'connections.nextcloud.password': nextcloudPassword
-								})
 
-								if ($userSession && $userSession.connections.nextcloud) {
-									$userSession.connections.nextcloud.uri = nextcloudEndpoint
-									$userSession.connections.nextcloud.username = nextcloudUsername
-									$userSession.connections.nextcloud.password = nextcloudPassword
-								}
-							}}
-						>
-							<Fa icon={isNextCloudConnected ? faRefresh : faLink} />
-							<span>{isNextCloudConnected ? 'Update' : 'Connect'}</span>
-						</button>
-						{#if isNextCloudConnected}
-							<button class="button-error" on:click={revokeNextcloudAccess}>
-								<Fa icon={faXmarkCircle} />
-								<span>Delete</span>
+					{#each Object.entries($userSession?.connections.nextcloud) as [name, _]}
+						<div class="bordered-soft rounded-md overflow-hidden p-4">
+							<div class="space-y-4 mb-4">
+								<Text
+									label="Alias"
+									style="grow"
+									name={name}
+									bind:value={nextcloudConnections[name].alias}
+								/>
+								<Text
+									label="Endpoint"
+									style="grow"
+									name="endpoint"
+									bind:value={nextcloudConnections[name].uri}
+								/>
+								<Secret label="Username (Access Key)" name="accessKey" bind:value={nextcloudConnections[name].username} />
+								<Secret label="Password (Secret Key)" name="secretKey" bind:value={nextcloudConnections[name].password} />
+							</div>
+							<div class="grid md:flex justify-between gap-4">
+								<button
+									class="button-neutral"
+									disabled={!isNextCloudConnected(name)}
+									on:click={() => {
+										updateUser({
+											['connections.nextcloud.' + name]: {
+												alias: nextcloudConnections[name].alias,
+												uri: nextcloudConnections[name].uri,
+												username: nextcloudConnections[name].username,
+												password: nextcloudConnections[name].password
+											}
+										})
+									}}
+								>
+									<Fa icon={isNextCloudConnected(name) ? faRefresh : faLink} />
+									<span>{isNextCloudConnected(name) ? 'Update' : 'Connect'}</span>
+								</button>
+								{#if isNextCloudConnected(name)}
+									<button class="button-error" on:click={() => revokeNextcloudAccess(name)}>
+										<Fa icon={faXmarkCircle} />
+										<span>Delete</span>
+									</button>
+								{/if}
+							</div>
+						</div>
+					{/each}
+					<div class="bordered-soft rounded-md overflow-hidden p-4">
+						<div class="space-y-4 mb-4">
+							<Text
+									label="Alias"
+									style="grow"
+									name="newAlias"
+									bind:value={newNextcloud.alias}
+							/>
+							<Text
+									label="Endpoint"
+									style="grow"
+									name="endpoint"
+									bind:value={newNextcloud.uri}
+							/>
+							<Secret label="Username (Access Key)" name="accessKey" bind:value={newNextcloud.username} />
+							<Secret label="Password (Secret Key)" name="secretKey" bind:value={newNextcloud.password} />
+						</div>
+						<div class="grid md:flex justify-between gap-4">
+							<button
+									class="button-neutral"
+									disabled={!newNextcloud.uri || !newNextcloud.username || !newNextcloud.password || !newNextcloud.alias}
+									on:click={() => {
+										let newId  = uuidv4()
+										updateUser({
+
+											['connections.nextcloud.' + newId]: {
+												alias: newNextcloud.alias,
+												uri: newNextcloud.uri,
+												username: newNextcloud.username,
+												password: newNextcloud.password
+											}
+										})
+										nextcloudConnections[newId] = newNextcloud
+										newNextcloud = { alias: "", uri: "", password: "", username: "" }
+									}}
+							>
+								<Fa icon={faLink} />
+								<span>{'Connect'}</span>
 							</button>
-						{/if}
+						</div>
 					</div>
+
+
 <!--					<p class="text-surface-500 dark:text-surface-200">-->
 <!--						Visit-->
 <!--						<a href="https://min.io/" target="_blank" class="anchor">NextCloud</a>-->
@@ -725,50 +849,73 @@
 								> has been created.
 								</p>
 							</div>
-							<div>
-								<p class="flex-center-4">
-									<Fa icon={faCheck} size="lg" class="text-primary-500" />
-									<span
-									>Read files and folders contained in your <strong>Google Drive Account</strong>
-									</span>
-								</p>
-								<p class="flex-center-4 mb-4">
-									<Fa icon={faCheck} size="lg" class="text-primary-500" />
-									<span>Create files and folders in your <strong>Google Drive Account</strong> </span>
-								</p>
-							</div>
-							<div class="grid md:flex justify-between gap-4">
-								<button class="button-neutral" on:click={startGoogleDriveAccess}>
-									<Fa icon={faLink} />
-									<span>Reconnect</span>
-								</button>
-								<button class="button-error" on:click={deleteGoogleDriveAccess}>
-									<Fa icon={faXmarkCircle} />
-									<span>Delete</span>
-								</button>
-							</div>
 						{:else}
-							<p class="mb-8">
-								By connecting Google Drive and DUUI you can directly read and write data from and to your
-								Google Drive storage.
-							</p>
-							<div class="space-y-2">
-								<p class="flex items-center gap-[22px]">
-									<Fa icon={faFileText} size="lg" class="text-primary-500" />
-									<span
-									>Read files and folders contained in your <strong>Google Drive Storage</strong>
-									</span>
-								</p>
-								<p class="flex-center-4 mb-4">
-									<Fa icon={faFilePen} size="lg" class="text-primary-500" />
-									<span>Create files and folders in your <strong>Google Drive Storage</strong> </span>
+							<div>
+								<p class="mb-8">
+									By connecting GoogleDrive and DUUI you can directly read and write data from and to your
+									GoogleDrive storage. After a succesfull OAuth2 authorization at <span class="font-bold"
+								>GoogleDrive</span
+								> an app folder called DUUI is created in your storage that is used as the root folder
+									for read and write operations.
 								</p>
 							</div>
-								<button class="button-neutral" on:click={startGoogleDriveAccess}>
-									<Fa icon={faLink} />
-									<span>Connect</span>
-								</button>
 						{/if}
+						<div>
+							<p class="flex-center-4">
+								<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
+								<span
+								>Read files and folders contained in your <strong>Google Drive Account</strong>
+								</span>
+							</p>
+							<p class="flex-center-4 mb-4">
+								<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
+								<span>Create files and folders in your <strong>Google Drive Account</strong> </span>
+							</p>
+						</div>
+						{#each Object.entries(googledriveConnections) as [name, _]}
+							<div class="bordered-soft rounded-md overflow-hidden">
+								<TextInput
+										label="Alias"
+										style="grow"
+										name={name}
+										placeholder="Input alias "
+										bind:value={googledriveConnections.name.alias}
+								/>
+								<div class="grid md:flex justify-between gap-4">
+									<button class="button-neutral" on:click={() => {
+									updateUser({
+										['connections.google.' + name]: {
+											alias: googledriveConnections.name.alias,
+										}
+									})
+								}}>
+										<Fa icon={faLink} />
+										<span>Save</span>
+									</button>
+									<button class="button-error" on:click={() => deleteGoogleDriveAccess(name)}>
+										<Fa icon={faXmarkCircle} />
+										<span>Delete</span>
+									</button>
+								</div>
+							</div>
+						{/each}
+
+						<div class="space-y-2">
+							<h3>Add New Connection</h3>
+							<div class="grid md:flex justify-between gap-4 mb-4">
+								<TextInput
+										label="Alias"
+										style="grow"
+										name="newGoogleAlias"
+										placeholder="Input alias "
+										bind:value={newGoogleConnection.alias}
+								/>
+							 </div>
+							<button class="button-neutral" on:click={() => startGoogleDriveAccess(newGoogleConnection.alias)}>
+								<Fa icon={faLink} />
+								<span>Connect</span>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

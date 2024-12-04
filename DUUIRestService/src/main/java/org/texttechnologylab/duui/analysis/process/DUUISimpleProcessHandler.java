@@ -143,7 +143,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         output = new DUUIDocumentProvider(process.get("output", Document.class));
 
         try {
-            inputHandler = DUUIProcessController.getHandler(input.getProvider(), getUserID());
+            inputHandler = DUUIProcessController.getHandler(input.getProvider(), input.getProviderId(), getUserID());
         } catch (IllegalArgumentException | DbxException | GeneralSecurityException | IOException  exception) {
             onException(exception);
         }
@@ -151,7 +151,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         try {
             outputHandler = input.equals(output)
                 ? inputHandler
-                : DUUIProcessController.getHandler(output.getProvider(), getUserID());
+                : DUUIProcessController.getHandler(output.getProvider(), output.getProviderId(), getUserID());
             if (outputHandler != null && output.getProvider().equals(Provider.DROPBOX)) {
                 DUUIDropboxDocumentHandler dropboxDataReader = (DUUIDropboxDocumentHandler) outputHandler;
                 dropboxDataReader

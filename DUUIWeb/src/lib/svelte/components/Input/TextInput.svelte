@@ -6,7 +6,7 @@
 
 	export let label: string = ''
 	export let name: string = ''
-	export let value: string = ''
+	export let value: string | null | undefined = ''
 
 	export let required: boolean = false
 	export let readonly: boolean = false

@@ -13,6 +13,8 @@
 		isValidInput,
 		isValidOutput,
 		isValidS3BucketName,
+		isValidCloudProvider,
+		getCloudProviderAliases,
 		type FileExtension,
 		type IOProvider
 	} from '$lib/duui/io.js'
@@ -46,18 +48,28 @@
 
 	let files: FileList
 
+	let inputAliases: Record<string, string> = {}
+	let outputAliases: Record<string, string> = {}
+
 	let inputTree: TreeViewNode | null = null
 	let outputTree: TreeViewNode | null = null
 	let fetchingTree = false
 
-	async function getFolderStructure(provider: IOProvider, isInput = true, isReset = false) {
+	async function getFolderStructure(provider: IOProvider, isInput = true, isReset = false, providerId: string) {
 		fetchingTree = true
 
 		let tree: TreeViewNode | null = null
+
+		if (!providerId || providerId === '') {
+			fetchingTree = false
+			return;
+		}
+		let aliases = isInput ? inputAliases : outputAliases
+
 		const response = await fetch('/api/processes/folderstructure',
 				{
 					method: 'POST',
-					body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset})
+					body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset, providerId: aliases[providerId.toLowerCase()]})
 				})
 
 		if (response.ok) {
@@ -74,6 +86,20 @@
 
 		fetchingTree = false
 	}
+
+	function setAliases(isInput: boolean) {
+
+		if (isInput) {
+			inputAliases =
+					!user.connections[$processSettingsStore.input.provider.toLowerCase()] ? {} :
+							getCloudProviderAliases(user.connections[$processSettingsStore.input.provider.toLowerCase()])
+		} else {
+			outputAliases =
+					!user.connections[$processSettingsStore.output.provider.toLowerCase()] ? {} :
+							getCloudProviderAliases(user.connections[$processSettingsStore.output.provider.toLowerCase()])
+		}
+	}
+
 
 	onMount(() => {
 		const params = $page.url.searchParams
@@ -125,8 +151,12 @@
 			(params.get('input_file_extension') as FileExtension) ||
 			$processSettingsStore.input.file_extension
 
-		if ($processSettingsStore.input.provider)
-			getFolderStructure($processSettingsStore.input.provider, true, false)
+
+		if (isValidCloudProvider($processSettingsStore.input)) {
+			setAliases(true)
+			$processSettingsStore.input.provider_id = Object.keys(inputAliases)[0] || ""
+			getFolderStructure($processSettingsStore.input.provider, true, false, $processSettingsStore.input.provider_id)
+		}
 
 		$processSettingsStore.output.provider =
 			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
@@ -138,8 +168,11 @@
 			(params.get('output_file_extension') as FileExtension) ||
 			$processSettingsStore.output.file_extension
 
-		if ($processSettingsStore.output.provider)
-			getFolderStructure($processSettingsStore.output.provider, false, false)
+		if (isValidCloudProvider($processSettingsStore.output)) {
+			setAliases(false)
+			$processSettingsStore.output.provider_id = Object.keys(outputAliases)[0] || ""
+			getFolderStructure($processSettingsStore.output.provider, false, false, $processSettingsStore.output.provider_id)
+		}
 
 		if ($processSettingsStore.input.provider === IO.File) {
 			$processSettingsStore.input.path = ''
@@ -230,9 +263,17 @@
 			$processSettingsStore.input.content = ''
 		}
 
+		if ($processSettingsStore.input.provider_id !== "") {
+			$processSettingsStore.input.provider_id = inputAliases[$processSettingsStore.input.provider_id]
+		}
+
 		if ($processSettingsStore.output.provider === IO.None) {
 			$processSettingsStore.output.path = ''
 			$processSettingsStore.output.content = ''
+		}
+
+		if ($processSettingsStore.output.provider_id !== "") {
+			$processSettingsStore.output.provider_id = outputAliases[$processSettingsStore.output.provider_id]
 		}
 
 		const response = await fetch('/api/processes', {
@@ -368,7 +409,8 @@
 								<Fa icon={faCheck} class="text-success-500" size="2x" />
 							{/if}
 						</div>
-						{#if $processSettingsStore.input.provider === IO.Minio && !$userSession?.connections.minio.endpoint}
+						{#if $processSettingsStore.input.provider === IO.Minio &&
+							Object.keys($userSession?.connections.minio).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Minio you must first connect your <a
@@ -380,7 +422,8 @@
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.input.provider === IO.Dropbox && !$userSession?.connections.dropbox.refresh_token}
+						{#if $processSettingsStore.input.provider === IO.Dropbox &&
+							Object.keys($userSession?.connections.dropbox).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Dropbox you must first connect your <a
@@ -392,7 +435,8 @@
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.input.provider === IO.NextCloud && !$userSession?.connections.nextcloud}
+						{#if $processSettingsStore.input.provider === IO.NextCloud &&
+							Object.keys($userSession?.connections.nextcloud).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use NextCloud you must first connect your <a
@@ -404,7 +448,8 @@
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.input.provider === IO.Google && !$userSession?.connections.google?.refresh_token}
+						{#if $processSettingsStore.input.provider === IO.Google &&
+							Object.keys($userSession?.connections.google).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Google you must first connect your <a
@@ -423,15 +468,42 @@
 										label="Source"
 										options={IO_INPUT}
 										bind:value={$processSettingsStore.input.provider}
-										on:change={() => getFolderStructure($processSettingsStore.input.provider, true, false)}
+										on:change={() => {
+											if (!isValidCloudProvider($processSettingsStore.input)) return
+
+											setAliases(true)
+											$processSettingsStore.input.provider_id = Object.keys(inputAliases)[0]
+											getFolderStructure(
+													$processSettingsStore.input.provider,
+													true,
+													false,
+													$processSettingsStore.input.provider_id
+											)
+										}}
 									/>
 								</div>
 								{#if !equals($processSettingsStore.input.provider, IO.Text)}
+									{#if $processSettingsStore.input.provider_id && isValidCloudProvider($processSettingsStore.input)}
+										<Dropdown
+											label="Connection Alias"
+											name="input-alias"
+											options={Object.keys(inputAliases) || [""]}
+											bind:value={$processSettingsStore.input.provider_id}
+											on:change={() =>
+												getFolderStructure(
+														$processSettingsStore.input.provider,
+														true,
+														false,
+														$processSettingsStore.input.provider_id
+												)}
+										/>
+									{/if}
 									<Dropdown
 										label="File extension"
 										name="input-extension"
 										options={INPUT_EXTENSIONS}
 										bind:value={$processSettingsStore.input.file_extension}
+
 									/>
 								{/if}
 							</div>
@@ -528,7 +600,7 @@
 											<div class="w-1/12" >
 												<span class="form-label text-start">Refresh</span>
 												<button class="p-3 mt-1 ml-3 rounded-md hover:bg-primary-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
-														on:click={() => getFolderStructure($processSettingsStore.input.provider, true, true)}>
+														on:click={() => getFolderStructure($processSettingsStore.input.provider, true, true, $processSettingsStore.input.provider_id)}>
 													<Fa icon={faRepeat} />
 												</button>
 											</div>
@@ -595,50 +667,50 @@
 							? '!border-success-500 '
 							: '!border-error-500'}"
 					>
-						{#if $processSettingsStore.output.provider === IO.Minio && !$userSession?.connections.minio.endpoint}
+						{#if $processSettingsStore.output.provider === IO.Minio &&
+						Object.keys($userSession?.connections.minio).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Minio you must first connect your <a
 										class="anchor"
 										target="_blank"
-										href="/account#minio">Account</a
-									>
+										href="/account#minio">Account</a> and set an alias for your connection.
 								</p>
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.output.provider === IO.Dropbox && !$userSession?.connections.dropbox.refresh_token}
+						{#if $processSettingsStore.output.provider === IO.Dropbox &&
+							Object.keys($userSession?.connections.dropbox).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Dropbox you must first connect your <a
 										class="anchor"
 										href="/account#dropbox"
-										target="_blank">Account</a
-									>
+										target="_blank">Account</a> and set an alias for your connection.
 								</p>
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.output.provider === IO.NextCloud && !$userSession?.connections.nextcloud}
+						{#if $processSettingsStore.output.provider === IO.NextCloud &&
+							Object.keys($userSession?.connections.nextcloud).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use NextCloud you must first connect your <a
 										class="anchor"
 										href="/account#nextcloud"
-										target="_blank">Account</a
-									>
+										target="_blank">Account</a> and set an alias for your connection.
 								</p>
 							</div>
 						{/if}
 
-						{#if $processSettingsStore.output.provider === IO.Google && !$userSession?.connections.google?.refresh_token}
+						{#if $processSettingsStore.output.provider === IO.Google &&
+							Object.keys($userSession?.connections.google).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Google you must first connect your <a
 										class="anchor"
 										href="/account#google"
-										target="_blank">Account</a
-									>
+										target="_blank">Account</a> and set an alias for your connection.
 								</p>
 							</div>
 						{/if}
@@ -655,14 +727,33 @@
 										label="Target"
 										options={IO_OUTPUT}
 										bind:value={$processSettingsStore.output.provider}
-										on:change={() => getFolderStructure($processSettingsStore.output.provider, false, false)}
+										on:change={() => {
+											if (!isValidCloudProvider($processSettingsStore.output)) return
+
+											setAliases(false)
+											$processSettingsStore.output.provider_id = Object.keys(outputAliases)[0]
+											getFolderStructure($processSettingsStore.output.provider,
+																false,
+																false,
+																$processSettingsStore.output.provider_id)
+
+										}}
+
 									/>
 								</div>
-								{#if equals($processSettingsStore.output.provider, IO.Dropbox)
-									|| equals($processSettingsStore.output.provider, IO.Minio)
-									|| equals($processSettingsStore.output.provider, IO.NextCloud)
-									|| equals($processSettingsStore.output.provider, IO.Google)
-								}
+								{#if $processSettingsStore.output.provider_id && isValidCloudProvider($processSettingsStore.output)}
+
+									<Dropdown
+										label="Connection Alias"
+										name="output-alias"
+										options={Object.keys(outputAliases) || [""]}
+										bind:value={$processSettingsStore.output.provider_id}
+										on:change={() =>
+											getFolderStructure($processSettingsStore.output.provider,
+																false,
+																false,
+																$processSettingsStore.output.provider_id)}
+									/>
 									<Dropdown
 										label="File extension"
 										name="output-extension"
@@ -687,8 +778,8 @@
 										<TextInput
 											label="Relative path"
 											name="inputPath"
-											bind:value={$processSettingsStore.input.path}
-											error={$processSettingsStore.input.path === '/'
+											bind:value={$processSettingsStore.output.path}
+											error={$processSettingsStore.output.path === '/'
 												? 'Provide an empty path to select the root folder.'
 												: ''}
 										/>
@@ -706,7 +797,7 @@
 											<div class="w-1/12">
 												<span class="form-label text-start">Refresh</span>
 												<button class="p-3 mt-1 ml-3 rounded-md hover:bg-primary-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
-														on:click={() => getFolderStructure($processSettingsStore.output.provider, false, true)}>
+														on:click={() => getFolderStructure($processSettingsStore.output.provider, false, true, $processSettingsStore.output.provider_id)}>
 													<Fa icon={faRepeat} />
 												</button>
 											</div>

@@ -20,6 +20,11 @@ public class DUUIDocumentProvider {
     private final String provider;
 
     /**
+     * The id of the data provider connection
+     */
+    private final String providerId;
+
+    /**
      * Optional. The path from where to read data if the provider is not {@link Provider}
      */
     private final String path;
@@ -36,13 +41,15 @@ public class DUUIDocumentProvider {
 
     public DUUIDocumentProvider(Document document) {
         provider = document.getString("provider");
+        providerId = document.getString("provider_id");
         path = document.getString("path");
         content = document.getString("content");
         fileExtension = document.getString("file_extension");
     }
 
-    public DUUIDocumentProvider(String provider, String path, String content, String fileExtension) {
+    public DUUIDocumentProvider(String provider, String providerId, String path, String content, String fileExtension) {
         this.provider = provider;
+        this.providerId = providerId;
         this.path = path;
         this.content = content;
         this.fileExtension = fileExtension;
@@ -67,6 +74,7 @@ public class DUUIDocumentProvider {
     public Document toDocument() {
         return new Document()
             .append("provider", provider)
+            .append("provider_id", providerId)
             .append("path", path)
             .append("content", content)
             .append("file_extension", fileExtension);
@@ -103,5 +111,9 @@ public class DUUIDocumentProvider {
 
     public boolean isDatabaseProvider() {
         return provider.equalsIgnoreCase(Provider.MONGODB);
+    }
+
+    public String getProviderId() {
+        return providerId;
     }
 }

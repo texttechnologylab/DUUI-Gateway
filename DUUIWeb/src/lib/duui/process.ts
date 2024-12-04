@@ -62,13 +62,15 @@ export const blankSettings = () => {
 			provider: IO.Text,
 			path: '',
 			content: 'Sample Text.',
-			file_extension: '.txt' as FileExtension
+			file_extension: '.txt' as FileExtension,
+			provider_id: ""
 		},
 		output: {
 			provider: IO.None,
 			path: '',
 			content: '',
-			file_extension: '.txt' as FileExtension
+			file_extension: '.txt' as FileExtension,
+			provider_id: ""
 		},
 		settings: {
 			language: 'Unspecified',

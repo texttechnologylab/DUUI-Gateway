@@ -4,11 +4,6 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.drive.DriveScopes;
-import com.mongodb.client.result.DeleteResult;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIGoogleDriveDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
@@ -63,18 +58,19 @@ public class DUUIUserController {
      * @param user The user to retrieve the credentials for.
      * @return a {@link Document} containing the credentials.
      */
-    public static Document getDropboxCredentials(Document user) {
+    public static Document getDropboxCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
             .Users()
             .find(Filters.eq(user.getObjectId("_id")))
-            .projection(Projections.include("connections.dropbox"))
+            .projection(Projections.include("connections.dropbox." + providerId))
             .first();
 
         if (isNullOrEmpty(projection)) {
             return new Document();
         }
 
-        return projection.get("connections", Document.class).get("dropbox", Document.class);
+        return projection.get("connections", Document.class).get("dropbox", Document.class)
+                .get(providerId, Document.class);
     }
 
     /**
@@ -83,39 +79,41 @@ public class DUUIUserController {
      * @param user The user to retrieve the credentials for.
      * @return a {@link Document} containing the credentials.
      */
-    public static Document getMinioCredentials(Document user) {
+    public static Document getMinioCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
             .Users()
             .find(Filters.eq(user.getObjectId("_id")))
-            .projection(Projections.include("connections.minio"))
+            .projection(Projections.include("connections.minio." + providerId))
             .first();
 
         if (isNullOrEmpty(projection)) {
             return new Document();
         }
 
-        return projection.get("connections", Document.class).get("minio", Document.class);
+        return projection.get("connections", Document.class).get("minio", Document.class)
+                .get(providerId, Document.class);
     }
 
-    public static Document getNextCloudCredentials(Document user) {
+    public static Document getNextCloudCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
                 .Users()
                 .find(Filters.eq(user.getObjectId("_id")))
-                .projection(Projections.include("connections.nextcloud"))
+                .projection(Projections.include("connections.nextcloud." + providerId))
                 .first();
 
         if (isNullOrEmpty(projection)) {
             return new Document();
         }
 
-        return projection.get("connections", Document.class).get("nextcloud", Document.class);
+        return projection.get("connections", Document.class).get("nextcloud", Document.class)
+                .get(providerId, Document.class);
     }
 
-    public static Document getGoogleCredentials(Document user) {
+    public static Document getGoogleCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
                 .Users()
                 .find(Filters.eq(user.getObjectId("_id")))
-                .projection(Projections.include("connections.google"))
+                .projection(Projections.include("connections.google." + providerId))
                 .first();
 
 
@@ -123,7 +121,8 @@ public class DUUIUserController {
             return new Document();
         }
 
-        Document credentials = projection.get("connections", Document.class).get("google", Document.class);
+        Document credentials = projection.get("connections", Document.class).get("google", Document.class)
+                .get(providerId, Document.class);
 
         try {
             String accessToken = refreshAccessToken(
@@ -135,13 +134,14 @@ public class DUUIUserController {
                 .Users()
                 .updateOne(
                     Filters.eq(user.getObjectId("_id")),
-                        Updates.set("connections.google.access_token", accessToken)
+                        Updates.set("connections.google." + providerId + ".access_token", accessToken)
                 );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return projection.get("connections", Document.class).get("google", Document.class);
+        return projection.get("connections", Document.class).get("google", Document.class)
+                .get(providerId, Document.class);
     }
 
     /**
@@ -255,7 +255,7 @@ public class DUUIUserController {
         }
 
         Document body = Document.parse(request.body());
-        System.out.println(body.toJson());
+
         String email = body.getString("email");
         if (email.isEmpty())
             return missingField(response, "email");
@@ -279,10 +279,10 @@ public class DUUIUserController {
             .append("reset_token_expiration", null)
             .append("connections", new Document("key", null)
                 .append("worker_count", role.equalsIgnoreCase(Role.ADMIN) ? 10000 : 500)
-                .append("dropbox", new Document("access_token", null).append("refresh_token", null))
-                .append("minio", new Document("endpoint", null).append("access_key", null).append("secret_key", null))
-                .append("nextcloud", new Document("uri", null).append("username", null).append("password", null))
-                .append("google", new Document("access_token", null).append("refresh_token", null))
+                .append("dropbox", new Document())
+                .append("minio", new Document())
+                .append("nextcloud", new Document())
+                .append("google", new Document())
             );
 
         DUUIMongoDBStorage
@@ -362,7 +362,7 @@ public class DUUIUserController {
                 **Your Verification Code:** %s
                 
                 Simply enter this code in the verification section of our website or app to confirm your email address.
-                
+                    
                 If you did not create an account using this email address, please disregard this message.
                 
                 Thank you for being a part of our community!
@@ -515,7 +515,7 @@ public class DUUIUserController {
 
 
         for (Map.Entry<String, Object> entry : body.entrySet()) {
-            if (!ALLOWED_UPDATES.contains(entry.getKey()) && !entry.getKey().contains("nextcloud") && !entry.getKey().contains("google")) {
+            if (!ALLOWED_UPDATES.contains(entry.getKey()) && !entry.getKey().contains("connections")) {
                 response.status(400);
                 return new Document("error", "Bad Request")
                     .append("message",
@@ -655,11 +655,13 @@ public class DUUIUserController {
     /**
      * Finish the Dropbox OAuth 2.0 process given a code returned after accepting the connection with DUUI.
      *
-     * @return the user with updated dropbox credentials. See {@link DUUIUserController#getDropboxCredentials(Document)}.
+     * @return the user with updated dropbox credentials. See {@link DUUIUserController#getDropboxCredentials(Document, String)}.
      */
     public static String finishDropboxOAuthFromCode(Request request, Response response) {
         String code = request.queryParamOrDefault("code", null);
-        if (isNullOrEmpty(code)) return badRequest(response, "Missing code query parameter");
+        String providerId = ObjectId.get().toString();
+
+        if (isNullOrEmpty(code) || isNullOrEmpty(providerId)) return badRequest(response, "Missing code query parameter");
 
         DbxRequestConfig config = new DbxRequestConfig("Docker Unified UIMA interface");
         DbxAppInfo info = new DbxAppInfo(Main.config.getDropboxKey(), Main.config.getDropboxSecret());
@@ -674,8 +676,8 @@ public class DUUIUserController {
                 .updateOne(
                     Filters.eq(new ObjectId(getUserId(request))),
                     Updates.combine(
-                        Updates.set("connections.dropbox.access_token", accessToken),
-                        Updates.set("connections.dropbox.refresh_token", refreshToken)
+                        Updates.set("connections.dropbox." + providerId + ".access_token", accessToken),
+                        Updates.set("connections.dropbox." + providerId + ".refresh_token", refreshToken)
                     )
                 );
 
@@ -692,7 +694,9 @@ public class DUUIUserController {
 
     public static String finishGoogleOAuthFromCode(Request request, Response response) {
         String code = request.queryParamOrDefault("code", null);
-        if (isNullOrEmpty(code)) return badRequest(response, "Missing code query parameter");
+        String providerId = ObjectId.get().toString();
+
+        if (isNullOrEmpty(code) || isNullOrEmpty(providerId)) return badRequest(response, "Missing code query parameter");
 
         try {
 
@@ -714,8 +718,8 @@ public class DUUIUserController {
                 .updateOne(
                         Filters.eq(new ObjectId(getUserId(request))),
                         Updates.combine(
-                            Updates.set("connections.google.access_token", accessToken),
-                            Updates.set("connections.google.refresh_token", refreshToken)
+                            Updates.set("connections.google." + providerId + ".access_token", accessToken),
+                            Updates.set("connections.google." + providerId + ".refresh_token", refreshToken)
                         )
                 );
 
@@ -730,9 +734,6 @@ public class DUUIUserController {
             response.status(500);
             return "Failed";
         }
-    }
-
-    public static void main(String[] args) throws IOException {
     }
 
     public static String refreshAccessToken(String refreshToken, String clientId, String clientSecret) throws IOException {

@@ -5,9 +5,10 @@ import { API_URL } from '$env/static/private'
  */
 export async function GET({ url, cookies, fetch }) {
 	const provider = url.searchParams.get('provider')
+	const providerId = url.searchParams.get('provider_id')
 	const path = url.searchParams.get('path')
 
-	const response = await fetch(`${API_URL}/files?provider=${provider}&path=${path}`, {
+	const response = await fetch(`${API_URL}/files?provider=${provider}}&provider_id=${providerId}&path=${path}`, {
 		method: 'GET',
 
 		headers: {

@@ -4,6 +4,7 @@
 
 import { equals } from '$lib/duui/utils/text'
 import type { DUUIEvent } from './monitor'
+import type {ServiceConnections, User} from "../../app";
 
 export interface DUUIDocument {
 	oid: string
@@ -32,6 +33,7 @@ export type DUUIDocumentProvider = {
 	path: string
 	content: string
 	file_extension: FileExtension
+	provider_id: string;
 }
 
 export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'NextCloud' | 'Google'| 'None'
@@ -52,10 +54,6 @@ export const INPUT_EXTENSIONS: string[] = ['.txt', '.xmi', '.gz']
 
 export const IO_OUTPUT: string[] = ['Dropbox', 'Minio', 'NextCloud', 'Google', 'None']
 export const OUTPUT_EXTENSIONS: string[] = ['.txt', '.xmi']
-
-export const isCloudProvider = (provider: string) => {
-	return [equals(provider, IO.Dropbox) || equals(provider, IO.Minio)]
-}
 
 /**
  * Check if the input and output for the process are valid. This also includes checking
@@ -85,6 +83,9 @@ export const isValidIO = (
  * @returns whether the input settings are valid.
  */
 export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user: User): boolean => {
+
+	if (!isValidCloudProvider(input)) return false
+
 	if (equals(input.provider, IO.Text)) {
 		return !!input.content && input.content.length > 0
 	}
@@ -94,17 +95,14 @@ export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user:
 	}
 
 	if (equals(input.provider, IO.Minio)) {
-		if (!user?.connections.minio.endpoint) return false
+		if (!user?.connections.minio[input.provider_id].endpoint) return false
 		return isValidS3BucketName(input.path || '').length === 0
 	}
 
-	if (
-		equals(input.provider, IO.Dropbox) &&
-		(input.path === '/' || !user?.connections.dropbox.refresh_token)
-	)
-		return false
+	return !(equals(input.provider, IO.Dropbox) &&
+		(input.path === '/' || !user?.connections.dropbox[input.provider_id].refresh_token));
 
-	return true
+
 }
 
 /**
@@ -132,16 +130,38 @@ export const isValidFileUpload = (storage: { provider: IO; path: string }) => {
  * @returns whether the output settings are valid.
  */
 export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean => {
+
+	if (!isValidCloudProvider(output)) return false
+
 	if (equals(output.provider, IO.Minio)) {
-		if (!user?.connections.minio.endpoint) return false
+		if (!user?.connections.minio[output.provider_id].endpoint) return false
 		return isValidS3BucketName(output.path || '').length === 0
 	}
 
 	if (equals(output.provider, IO.Dropbox)) {
-		return !(['/', ''].includes(output.path) || user?.connections.dropbox.refresh_token === null)
+		return !(['/', ''].includes(output.path) || user?.connections.dropbox[output.provider_id].refresh_token === null)
 	}
 
 	return true
+}
+
+export const isValidCloudProvider = (provider: DUUIDocumentProvider) => {
+	return equals(provider.provider.toString(), IO.Minio) ||
+		equals(provider.provider.toString(), IO.Dropbox) ||
+		equals(provider.provider.toString(), IO.NextCloud) ||
+		equals(provider.provider.toString(), IO.Google)
+}
+
+export const getCloudProviderAliases = (connections: ServiceConnections) : Record<string, string> => {
+	const inverted: Record<string, string> = {};
+
+	for (const [name, details] of Object.entries(connections)) {
+		if (details.alias) {
+			inverted[details.alias] = name;
+		}
+	}
+
+	return inverted;
 }
 
 /**
