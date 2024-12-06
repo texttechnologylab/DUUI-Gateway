@@ -153,9 +153,12 @@ public class Methods {
                 return DUUIMetricsManager.export();
             }
         );
+        path("/files", () -> {
 
-        get("/files", Main::downloadFile);
-        post("/files", Main::uploadFile);
+            get("", Main::downloadFile);
+            get("/preprocess", Main::preprocessCas);
+            post("", Main::uploadFile);
+        });
     }
 
 }

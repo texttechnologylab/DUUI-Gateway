@@ -1,5 +1,22 @@
 package org.texttechnologylab.duui.api;
 
+import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.uima.UIMAFramework;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.impl.XmiCasDeserializer;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
+import org.apache.uima.util.InvalidXMLException;
+import org.apache.uima.util.XMLInputSource;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
 import org.texttechnologylab.duui.api.metrics.DUUIMetricsManager;
@@ -16,6 +33,7 @@ import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDoc
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.xml.sax.SAXException;
 import spark.Request;
 import spark.Response;
 
@@ -23,14 +41,14 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.Part;
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -154,10 +172,11 @@ public class Main {
 
         boolean storeFiles = request.queryParamOrDefault("store", "false").equals("true");
         if (storeFiles) {
-            String provider = request.queryParamOrDefault("provider", "");
             String path = request.queryParamOrDefault("path", "");
+            String provider = request.queryParamOrDefault("provider", "");
+            String providerId = request.queryParamOrDefault("provider_id", "");
 
-            IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, DUUIRequestHelper.getUserId(request));
+            IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, providerId, DUUIRequestHelper.getUserId(request));
             if (handler != null) {
                 DUUILocalDocumentHandler localHandler = new DUUILocalDocumentHandler();
                 List<DUUIDocument> paths = localHandler.listDocuments(root.toString(), "", true);
@@ -170,6 +189,85 @@ public class Main {
         return new Document("path", root.toString()).toJson();
     }
 
+    public static String preprocessCas(Request request, Response response) {
+        String userId = DUUIRequestHelper.getUserId(request);
+        String provider = request.queryParamOrDefault("provider", null);
+        String providerId = request.queryParamOrDefault("provider_id", null);
+        String path = request.queryParamOrDefault("path", null);
+        String pipelineId = request.queryParamOrDefault("pipeline_id", null);
+
+        if (DUUIRequestHelper.isNullOrEmpty(provider))
+            return DUUIRequestHelper.badRequest(response, "Missing provider in query params.");
+        if (DUUIRequestHelper.isNullOrEmpty(path))
+            return DUUIRequestHelper.badRequest(response, "Missing path in query params.");
+        if (DUUIRequestHelper.isNullOrEmpty(pipelineId))
+            return DUUIRequestHelper.badRequest(response, "Missing pipeline.");
+        if (!path.endsWith("xmi") && !path.endsWith("gz")) {
+            response.status(400);
+            return "Invalid file format.";
+        }
+
+
+        try {
+            DUUIComposer composer = DUUIPipelineController.getReusablePipelines().get(pipelineId);
+
+            if (composer == null) {
+                boolean success = DUUIPipelineController.instantiate(pipelineId);
+                if (!success) {
+                    response.status(500);
+                    return "Pipeline instantiation failed.";
+                }
+            }
+
+            composer = DUUIPipelineController.getReusablePipelines().get(pipelineId);
+
+            IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, providerId, userId);
+            if (handler == null) return DUUIRequestHelper.notFound(response);
+
+            InputStream file = DUUIProcessController.downloadFile(handler, path);
+
+            if (path.endsWith(CompressorStreamFactory.GZIP)) {
+                file = new CompressorStreamFactory()
+                        .createCompressorInputStream(
+                                CompressorStreamFactory.GZIP,
+                                file
+                        );
+            }
+
+            TypeSystemDescription desc = composer.fromInstantiatedPipeline();
+
+            JCas jcas = JCasFactory.createJCas(desc);
+            XmiCasDeserializer.deserialize(file,  jcas.getCas(), true);
+            Set<String> annotationNames = new HashSet<>();
+
+            List<Document> processed = JCasUtil.select(jcas, Annotation.class).stream()
+                .sorted(Comparator.comparingInt(Annotation::getBegin))
+                .peek(annotation -> annotationNames.add(annotation.getType().getName()))
+                .map(annotation -> new Document()
+                    .append("annotationType", annotation.getType().getName())
+                    .append("begin", annotation.getBegin())
+                    .append("end", annotation.getEnd())
+                ).toList();
+
+
+            response.status(200);
+
+            return new Document("preprocessed", processed)
+                    .append("text", jcas.getDocumentText())
+                    .append("annotationNames", annotationNames)
+                    .toJson();
+        } catch (DbxException | IOException | GeneralSecurityException e) {
+            response.status(500);
+            return "The file could not be downloaded.";
+        } catch (Exception e) {
+            response.status(500);
+            return "Document processing failed." + e.getClass() + ": " + e.getMessage();
+        }
+
+    }
+
+
+
     /**
      * Download a file given a cloud provider and a path.
      *
@@ -178,6 +276,7 @@ public class Main {
     public static String downloadFile(Request request, Response response) {
         String userId = DUUIRequestHelper.getUserId(request);
         String provider = request.queryParamOrDefault("provider", null);
+        String providerId = request.queryParamOrDefault("provider_id", null);
         String path = request.queryParamOrDefault("path", null);
 
         if (DUUIRequestHelper.isNullOrEmpty(provider))
@@ -186,7 +285,7 @@ public class Main {
             return DUUIRequestHelper.badRequest(response, "Missing path in query params.");
 
         try {
-            IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, userId);
+            IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, providerId, userId);
             if (handler == null) return DUUIRequestHelper.notFound(response);
 
             InputStream file = DUUIProcessController.downloadFile(handler, path);

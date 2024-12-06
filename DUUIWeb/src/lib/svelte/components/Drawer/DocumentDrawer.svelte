@@ -10,7 +10,14 @@
 	import { formatFileSize, includes } from '$lib/duui/utils/text'
 	import { errorToast, getStatusIcon } from '$lib/duui/utils/ui'
 	import { isDarkModeStore, userSession } from '$lib/store'
-	import { faChevronDown, faClose, faDownload, faRefresh } from '@fortawesome/free-solid-svg-icons'
+	import {
+		faCheck,
+		faChevronDown,
+		faChevronLeft, faChevronRight,
+		faClose,
+		faDownload,
+		faRefresh
+	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
@@ -20,6 +27,7 @@
 	} from '../../../../routes/processes/[oid]/chart'
 	import Number from '../Input/Number.svelte'
 	import Search from '../Input/Search.svelte'
+	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
 
 	const drawerStore = getDrawerStore()
 
@@ -69,6 +77,85 @@
 		}
 
 		downloading = false
+	}
+
+	type Annotation = {
+		begin: number
+		end: number
+		annotationType: string
+	}
+
+	type ProcessedAnnotation = {
+		text: string
+		annotationType?: string
+	}
+
+	let selectedAnnotation: string
+	let documentText: string
+	let annotationNames: string[]
+	let unprocessedAnnotations: Annotation[]
+	let processedAnnotations: ProcessedAnnotation[]
+	let processingText = false
+
+
+	function getHighlightedText(text: string, annotations: Annotation[], selectedType:string) {
+		processingText = true
+
+		const parts: ProcessedAnnotation[] = [];
+		let currentIndex = 0;
+
+		Object.values(annotations)
+				.filter((annotation) => annotation.annotationType === selectedType)
+				.forEach(({ begin, end, annotationType }) => {
+					if (currentIndex < begin) {
+						parts.push({ text: text.slice(currentIndex, begin) });
+					}
+					parts.push({
+						text: text.slice(begin, end),
+						annotationType
+					});
+					currentIndex = end;
+				});
+
+		if (currentIndex < text.length) {
+			parts.push({ text: text.slice(currentIndex) });
+		}
+
+		processingText = false
+
+		return parts;
+	}
+
+	const preprocessDocument = async () => {
+		processingText = true
+		const extraSlash = output.path.endsWith("/") ? "" : "/"
+		const response = await fetch(
+				`/api/files/preprocess?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
+						input.file_extension,
+						output.file_extension
+				)}&pipeline_id=${pipeline.oid}`,
+				{
+					method: 'GET'
+				}
+		)
+
+		if (response.ok) {
+			const json = await response.json()
+
+			documentText = json.text
+			annotationNames = json.annotationNames
+			unprocessedAnnotations = json.preprocessed
+			selectedAnnotation = annotationNames[0]
+
+			processedAnnotations = getHighlightedText(json.text, unprocessedAnnotations, selectedAnnotation)
+			console.log(processedAnnotations)
+
+
+		} else {
+			toastStore.trigger(errorToast(await response.text()))
+		}
+
+		processingText = false
 	}
 
 	switch (input.provider) {
@@ -172,6 +259,17 @@
 						<span>Download</span>
 					</button>
 				{/if}
+				{#if processingText}
+					<button class="button-neutral opacity-50">
+						<Fa icon={faRefresh} spin />
+						<span>Processing Document</span>
+					</button>
+				{:else}
+					<button class="button-neutral" on:click={preprocessDocument}>
+						<Fa icon={faDownload} />
+						<span>Read Document</span>
+					</button>
+				{/if}
 			{/if}
 			<button class="button-neutral" on:click={drawerStore.close}>
 				<Fa icon={faClose} />
@@ -244,6 +342,38 @@
 				<p>{formatMilliseconds(_document.duration || 0)}</p>
 			</div>
 		</div> -->
+		{#if selectedAnnotation}
+			<div class="p-4 flex flex-col gap-4">
+				<h2 class="h2">Document</h2>
+				<Dropdown
+						name="annotationNames"
+						label="Annotations"
+						placement="bottom-start"
+						offset={0}
+						bind:value={selectedAnnotation}
+						on:change={() =>
+							processedAnnotations = getHighlightedText(documentText, unprocessedAnnotations, selectedAnnotation)}
+						style=""
+						options={annotationNames}
+				/>
+				<hr class="border-t border-gray-300 my-4 rounded-md">
+				<div class="p-8 py-4 border-b border-color flex justify-between items-center gap-8">
+					<div class="flex flex-col items-start justify-center gap-2">
+						<div class="h-64 overflow-y-auto">
+							{#each processedAnnotations as part}
+								{#if part.annotationType}
+									<span class="bg-amber-500 px-1 rounded"> {part.text}</span>
+								{:else}
+									<span>{part.text}</span>
+								{/if}
+							{/each}
+						</div>
+					</div>
+				</div>
+			</div>
+			<hr class="border-t border-gray-300 my-4 rounded-md">
+		{/if}
+
 		<div class="p-4 flex flex-col gap-4 border-b border-color">
 			{#if _document.annotations && Object.entries(_document.annotations).length > 0}
 				<h2 class="h2">Annotations</h2>

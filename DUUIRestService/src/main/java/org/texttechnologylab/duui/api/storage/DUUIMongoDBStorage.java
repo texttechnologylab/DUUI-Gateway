@@ -1,5 +1,6 @@
 package org.texttechnologylab.duui.api.storage;
 
+import com.mongodb.client.model.Filters;
 import org.texttechnologylab.duui.api.Config;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
