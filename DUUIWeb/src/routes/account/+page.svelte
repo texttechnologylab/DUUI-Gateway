@@ -38,7 +38,7 @@
 	const modalStore = getModalStore()
 
 	export let data
-	let { user, dropbBoxURL, googleDriveURL, theme, users } = data
+	let { user, dropbBoxURL, googleDriveURL, theme, users, newDropboxConnectionId, newGoogleConnectionId } = data
 
 
 	const themes = Object.keys(COLORS)
@@ -138,6 +138,24 @@
 			toastStore.trigger(successToast('Update successful'))
 		}
 		return response
+	}
+
+	if ($userSession.connections.dropbox[newDropboxConnectionId]) {
+		updateUser({
+			['connections.dropbox.' + newDropboxConnectionId]: {
+				alias: localStorage.getItem("currentDropboxConnectionAlias"),
+			}
+		})
+		$userSession.connections.dropbox[newDropboxConnectionId].alias = localStorage.getItem("currentDropboxConnectionAlias")
+	}
+
+	if ($userSession.connections.google[newGoogleConnectionId]) {
+		updateUser({
+			['connections.google.' + newGoogleConnectionId]: {
+				alias: localStorage.getItem("currentGoogleConnectionAlias"),
+			}
+		})
+		$userSession.connections.google[newGoogleConnectionId].alias = localStorage.getItem("currentGoogleConnectionAlias")
 	}
 
 	const updatePassword = async (data: object) => {

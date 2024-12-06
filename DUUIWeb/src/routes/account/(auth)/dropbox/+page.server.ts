@@ -5,9 +5,8 @@ import type { PageServerLoad } from './$types'
 export const load: PageServerLoad = async ({ url, cookies, fetch }) => {
 	const code = url.searchParams.get('code')
 	const name = uuidv4()
-	const alias = localStorage.getItem("currentDropboxConnectionAlias")
 
-	const response = await fetch(`${API_URL}/users/auth/dropbox?code=${code}&name=${name}&alias=${alias}`, {
+	const response = await fetch(`${API_URL}/users/auth/dropbox?code=${code}&name=${name}`, {
 		method: 'PUT',
 		headers: {
 			Authorization: cookies.get('session') || ''
@@ -15,6 +14,7 @@ export const load: PageServerLoad = async ({ url, cookies, fetch }) => {
 	})
 
 	return {
-		success: response.ok
+		success: response.ok,
+		name
 	}
 }

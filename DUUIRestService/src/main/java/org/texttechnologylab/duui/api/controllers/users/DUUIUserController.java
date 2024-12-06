@@ -677,7 +677,8 @@ public class DUUIUserController {
                     Filters.eq(new ObjectId(getUserId(request))),
                     Updates.combine(
                         Updates.set("connections.dropbox." + providerId + ".access_token", accessToken),
-                        Updates.set("connections.dropbox." + providerId + ".refresh_token", refreshToken)
+                        Updates.set("connections.dropbox." + providerId + ".refresh_token", refreshToken),
+                        Updates.set("connections.dropbox." + providerId + ".alias", "")
                     )
                 );
 
@@ -719,7 +720,8 @@ public class DUUIUserController {
                         Filters.eq(new ObjectId(getUserId(request))),
                         Updates.combine(
                             Updates.set("connections.google." + providerId + ".access_token", accessToken),
-                            Updates.set("connections.google." + providerId + ".refresh_token", refreshToken)
+                            Updates.set("connections.google." + providerId + ".refresh_token", refreshToken),
+                            Updates.set("connections.google." + providerId + ".alias", "")
                         )
                 );
 

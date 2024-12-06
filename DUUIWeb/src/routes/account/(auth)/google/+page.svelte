@@ -4,10 +4,10 @@
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
 	export let data
-	const { success } = data
+	const { success, name } = data
 
 	onMount(() => {
-		goto('/account?tab=1&success=' + success)
+		goto(`/account?tab=1&success=${success}&currentGoogleConnectionAlias=${name}`)
 	})
 </script>
 
