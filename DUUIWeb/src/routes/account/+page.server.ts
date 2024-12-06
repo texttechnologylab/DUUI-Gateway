@@ -10,6 +10,10 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		redirect(302, handleLoginRedirect(url))
 	}
 
+	const labels = await fetch(`${API_URL}/users/labels`, {
+		method: 'GET'
+	})
+
 	// Retrieve the Dropbox OAuth 2.0 credentials from the backend.
 	// These correspond to the properties set in the config file.
 	const response = await fetch(`${API_URL}/users/auth/dropbox`, {

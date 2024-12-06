@@ -294,6 +294,63 @@ public class DUUIUserController {
         return new Document("user", newUser).toJson();
     }
 
+
+
+    public static String insertLabel(Request request, Response response) {
+        String driver = request.params(":driver");
+        String label = request.params(":label");
+
+        DUUIMongoDBStorage.Globals().updateOne(
+            Filters.exists("labels."),
+            Updates.set("labels." + ObjectId.get(), new Document()
+                .append("label", label)
+                .append("driver", driver)
+            )
+        );
+
+        response.status(201);
+
+        return new Document("message", "Successfully inserted.").toJson();
+    }
+
+    public static String updateLabel(Request request, Response response) {
+        String driver = request.params(":driver");
+        String label = request.params(":label");
+        String labelId = request.params(":labelId");
+
+        DUUIMongoDBStorage.Globals().updateOne(
+            Filters.exists("labels." + labelId),
+            Updates.combine(
+                Updates.set("labels." + labelId + ".label", label),
+                Updates.set("labels." + labelId + ".driver", driver)
+            )
+        );
+
+        response.status(200);
+
+        return new Document("message", "Successfully updated.").toJson();
+    }
+
+    public static String deleteLabel(Request request, Response response) {
+        String labelId = request.params(":labelId");
+
+        DUUIMongoDBStorage.Globals().updateOne(
+                Filters.exists("labels." + labelId), // Ensure the driver exists
+                Updates.unset("labels." + labelId)
+        );
+
+        response.status(201);
+
+        return new Document("message", "Successfully deleted").toJson();
+    }
+
+    public static String getLabels(Request request, Response response) {
+
+        Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
+
+        return labels.toJson();
+    }
+
     /**
      * Delete a user from the database.
      * TODO: Move request part to {@link org.texttechnologylab.duui.api.routes.users.DUUIUsersRequestHandler}.

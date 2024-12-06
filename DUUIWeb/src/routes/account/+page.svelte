@@ -100,6 +100,65 @@
 
 	$: hasApiKey = !!$userSession?.connections.key
 
+	let newLabel: string
+	let newLabelDriver: string
+	let labels: {[id: string]: {label:string, driver: string}} = {}
+
+	const updateLabel = async (labelId: string) => {
+		let req = {
+			method: 'PUT', body: JSON.stringify({
+				labelId: labelId,
+				label: labels.lableid.label,
+				driver: labels.lableid.driver,
+			})
+		}
+
+		const response = await fetch('/api/users/labels', req)
+
+		if (response.ok) {
+			toastStore.trigger(successToast('Update successful'))
+		}
+
+		return response
+
+	}
+
+	const insertLabel = async () => {
+		let req = {
+			method: 'PUT', body: JSON.stringify({
+				label: newLabel,
+				driver: newLabelDriver,
+			})
+		}
+
+		const response = await fetch('/api/users/labels', req)
+
+		if (response.ok) {
+			toastStore.trigger(successToast('Inserted successfully'))
+		}
+
+		return response
+
+	}
+
+	const deleteLabel = async (labelId: string) => {
+		let req = {
+			method: 'PUT', body: JSON.stringify({
+				labelId
+			})
+		}
+
+		const response = await fetch('/api/users/labels', req)
+
+		if (response.ok) {
+			toastStore.trigger(successToast('Deleted successfully'))
+		}
+
+		return response
+
+	}
+
+
 	$: {
 		try {
 			const body = document.body
@@ -454,6 +513,16 @@
 				>
 					<Fa icon={faUserTie} />
 					<span>Admin</span>
+				</button>
+
+				<button
+						on:click={() => {
+						setTab(3)
+					}}
+						class="button-neutral border-none {tab === 3 ? '!variant-filled-primary' : ''}"
+				>
+					<Fa icon={faUserTie} />
+					<span>Globals</span>
 				</button>
 			{/if}
 		</div>
@@ -978,6 +1047,76 @@
 							</div>
 						{/each}
 					</div>
+				</div>
+			{/if}
+
+		{:else if tab === 3}
+			{#if users && $userSession?.role === 'Admin'}
+				<div class="section-wrapper p-8 space-y-4">
+
+					<h3 class="h3">Labels</h3>
+
+					<div class="bordered-soft rounded-md overflow-hidden">
+						<div
+								class="grid grid-cols-[1fr_1fr_128px] lg:grid-cols-[1fr_1fr_1fr_128px] bg-surface-100-800-token"
+						>
+							<p class="p-4 break-words max-w-[10ch] md:max-w-none">Label</p>
+						</div>
+
+						{#each Object.entries(labels) as [labelId, label]}
+							<div
+									class="grid grid-cols-[1fr_1fr_128px] lg:grid-cols-[1fr_1fr_1fr_128px] items-stretch border-t border-color"
+							>
+								<TextInput
+										label=""
+										style="grow"
+										name={labelId}
+										bind:value={labels.labelId.label}
+								/>
+								<Dropdown
+										name={labelId}
+										offset={0}
+										bind:value={labels.labelId.driver}
+										style="button-menu px-4 py-2 !self-stretch h-full"
+										border="border-y-0 !border-x border-color"
+										options={['DUUIKubernetesDriver', 'DUUIDockerDriver', 'DUUISwarmDriver']}
+								/>
+								<button
+										class="button-neutral !justify-center !border-y-0 !rounded-none !border-x border-color"
+										on:click={() => updateLabel(labelId)}
+								>
+									<Fa icon={faRefresh} />
+								</button>
+								<button
+										class="button-neutral !justify-center !border-none !rounded-none"
+										on:click={() => deleteLabel(labelId)}
+								>
+									<Fa icon={faTrash} />
+								</button>
+							</div>
+						{/each}
+						<Text
+								label=""
+								style="grow"
+								name="newLabel"
+								bind:value={newLabel}
+						/>
+						<Dropdown
+								name="newLableDriverDropdown"
+								offset={0}
+								bind:value={newLabelDriver}
+								style="button-menu px-4 py-2 !self-stretch h-full"
+								border="border-y-0 !border-x border-color"
+								options={['DUUIKubernetesDriver', 'DUUIDockerDriver', 'DUUISwarmDriver']}
+						/>
+						<button
+								class="button-neutral !justify-center !border-none !rounded-none"
+								on:click={() => insertLabel()}
+						>
+							<Fa icon={faPlus} />
+						</button>
+					</div>
+
 				</div>
 			{/if}
 		{/if}

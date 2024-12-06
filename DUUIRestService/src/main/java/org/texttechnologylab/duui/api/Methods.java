@@ -68,6 +68,12 @@ public class Methods {
         path("/users", () -> {
             before("/*", (request, response) -> DUUIHTTPMetrics.incrementUsersRequests());
 
+            path("/labels", () -> {
+                put("/:driver/:label", DUUIUserController::insertLabel);
+                put("/:driver/:label/:labelId", DUUIUserController::updateLabel);
+                delete("/:labelId", DUUIUserController::deleteLabel);
+                get("", DUUIUserController::getLabels);
+            });
             get("/:id", DUUIUserController::fetchUser);
             get("", DUUIUserController::fetchUsers);
             post("", DUUIUserController::insertOne);

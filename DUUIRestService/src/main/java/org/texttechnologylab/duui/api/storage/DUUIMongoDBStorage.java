@@ -162,8 +162,19 @@ public class DUUIMongoDBStorage {
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("events");
     }
 
-    public static MongoCollection<Document> Feedback() {
-        return getClient().getDatabase(config.getMongoDatabase()).getCollection("feedback");
+    public static MongoCollection<Document> Globals() {
+
+        MongoCollection<Document> collection = getClient().getDatabase(config.getMongoDatabase())
+                .getCollection("globals");
+
+        Document existingDocument = collection.find(Filters.exists("labels")).first();
+
+        if (existingDocument == null) {
+            Document initialData = new Document("labels", new Document());
+            collection.insertOne(initialData);
+        }
+
+        return collection;
     }
 
     /**
