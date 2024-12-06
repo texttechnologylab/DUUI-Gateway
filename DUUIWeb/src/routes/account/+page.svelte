@@ -275,7 +275,7 @@
 	}
 
 	const startGoogleDriveAccess = async (alias: string) => {
-		localStorage.setItem("currentGoogleDriveConnectionAlias", alias)
+		localStorage.setItem("currentGoogleConnectionAlias", alias)
 		window.location.href = googleDriveURL
 	}
 
@@ -602,13 +602,14 @@
 										label="Alias"
 										style="grow"
 										name={name}
-										bind:value={dropboxConnections.name.alias}
+										bind:value={dropboxConnections[name].alias}
 									/>
 									<div class="grid md:flex justify-between gap-4">
-										<button class="button-neutral" on:click={() => {
+										<button class="button-neutral" disabled={!dropboxConnections[name].alias}
+												on:click={() => {
 											updateUser({
 												['connections.dropbox.' + name]: {
-													alias: dropboxConnections.name.alias,
+													alias: dropboxConnections[name].alias,
 												}
 											})
 										}}>
@@ -633,7 +634,7 @@
 									bind:value={newDropboxConnection.alias}
 								/>
 							</div>
-							<button class="button-neutral" on:click={() => startDropboxOauth(newDropboxConnection.alias)}>
+							<button class="button-neutral" disabled={!newDropboxConnection.alias} on:click={() => startDropboxOauth(newDropboxConnection.alias)}>
 								<Fa icon={faLink} />
 								<span>Connect</span>
 							</button>
@@ -897,13 +898,14 @@
 										style="grow"
 										name={name}
 										placeholder="Input alias "
-										bind:value={googledriveConnections.name.alias}
+										bind:value={googledriveConnections[name].alias}
 								/>
 								<div class="grid md:flex justify-between gap-4">
-									<button class="button-neutral" on:click={() => {
+									<button class="button-neutral" disabled={!googledriveConnections[name].alias}
+											on:click={() => {
 									updateUser({
 										['connections.google.' + name]: {
-											alias: googledriveConnections.name.alias,
+											alias: googledriveConnections[name].alias,
 										}
 									})
 								}}>
@@ -929,7 +931,7 @@
 										bind:value={newGoogleConnection.alias}
 								/>
 							 </div>
-							<button class="button-neutral" on:click={() => startGoogleDriveAccess(newGoogleConnection.alias)}>
+							<button class="button-neutral" disabled={!newGoogleConnection.alias} on:click={() => startGoogleDriveAccess(newGoogleConnection.alias)}>
 								<Fa icon={faLink} />
 								<span>Connect</span>
 							</button>
