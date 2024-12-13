@@ -716,7 +716,7 @@ public class DUUIUserController {
      */
     public static String finishDropboxOAuthFromCode(Request request, Response response) {
         String code = request.queryParamOrDefault("code", null);
-        String providerId = ObjectId.get().toString();
+        String providerId = request.queryParamOrDefault("name", null);
 
         if (isNullOrEmpty(code) || isNullOrEmpty(providerId)) return badRequest(response, "Missing code query parameter");
 
@@ -752,7 +752,7 @@ public class DUUIUserController {
 
     public static String finishGoogleOAuthFromCode(Request request, Response response) {
         String code = request.queryParamOrDefault("code", null);
-        String providerId = ObjectId.get().toString();
+        String providerId = request.queryParamOrDefault("name", null);
 
         if (isNullOrEmpty(code) || isNullOrEmpty(providerId)) return badRequest(response, "Missing code query parameter");
 

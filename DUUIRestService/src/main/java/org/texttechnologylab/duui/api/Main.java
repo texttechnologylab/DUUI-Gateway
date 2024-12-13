@@ -209,17 +209,6 @@ public class Main {
 
 
         try {
-            DUUIComposer composer = DUUIPipelineController.getReusablePipelines().get(pipelineId);
-
-            if (composer == null) {
-                boolean success = DUUIPipelineController.instantiate(pipelineId);
-                if (!success) {
-                    response.status(500);
-                    return "Pipeline instantiation failed.";
-                }
-            }
-
-            composer = DUUIPipelineController.getReusablePipelines().get(pipelineId);
 
             IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, providerId, userId);
             if (handler == null) return DUUIRequestHelper.notFound(response);
@@ -234,9 +223,7 @@ public class Main {
                         );
             }
 
-            TypeSystemDescription desc = composer.fromInstantiatedPipeline();
-
-            JCas jcas = JCasFactory.createJCas(desc);
+            JCas jcas = JCasFactory.createJCas();
             XmiCasDeserializer.deserialize(file,  jcas.getCas(), true);
             Set<String> annotationNames = new HashSet<>();
 

@@ -7,7 +7,7 @@
 	const { success, name } = data
 
 	onMount(() => {
-		goto(`/account?tab=1&success=${success}&currentGoogleConnectionAlias=${name}`)
+		goto(`/account?tab=1&success=${success}&newGoogleConnectionId=${name}`)
 	})
 </script>
 

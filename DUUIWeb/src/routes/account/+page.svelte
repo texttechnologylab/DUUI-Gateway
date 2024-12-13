@@ -361,6 +361,32 @@
 		}
 	}
 
+	{
+		if ($userSession.connections.dropbox[$page.url.searchParams.get("newDropboxConnectionId")]) {
+			updateUser({
+				['connections.dropbox.' + $page.url.searchParams.get("newDropboxConnectionId") + '.alias']:
+						localStorage.getItem("currentDropboxConnectionAlias")
+			})
+			$userSession.connections.dropbox[$page.url.searchParams.get("newDropboxConnectionId")].alias =
+					localStorage.getItem("currentDropboxConnectionAlias")
+
+			$page.url.searchParams.delete("newDropboxConnectionId")
+			window.location.href = $page.url.href
+		}
+
+		if ($userSession.connections.google[$page.url.searchParams.get("newGoogleConnectionId")]) {
+			updateUser({
+				['connections.google.' + $page.url.searchParams.get("newGoogleConnectionId") + '.alias']:
+					localStorage.getItem("currentGoogleConnectionAlias")
+			})
+			$userSession.connections.google[$page.url.searchParams.get("newGoogleConnectionId")].alias =
+					localStorage.getItem("currentGoogleConnectionAlias")
+
+			$page.url.searchParams.delete("newGoogleConnectionId")
+			window.location.href = $page.url.href
+		}
+	}
+
 	const revokeMinioAccess = async (name: string) => {
 		const confirm = await showConfirmationModal(
 			{

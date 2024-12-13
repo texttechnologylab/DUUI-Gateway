@@ -99,9 +99,11 @@ export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user:
 		return isValidS3BucketName(input.path || '').length === 0
 	}
 
-	return !(equals(input.provider, IO.Dropbox) &&
-		(input.path === '/' || !user?.connections.dropbox[input.provider_id].refresh_token));
+	if (equals(input.provider, IO.Dropbox)) {
+		return (input.path === '/' || !user?.connections.dropbox[input.provider_id])
+	}
 
+	return true
 
 }
 
@@ -138,9 +140,9 @@ export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean
 		return isValidS3BucketName(output.path || '').length === 0
 	}
 
-	if (equals(output.provider, IO.Dropbox)) {
-		return !(['/', ''].includes(output.path) || user?.connections.dropbox[output.provider_id].refresh_token === null)
-	}
+	// if (equals(output.provider, IO.Dropbox)) {
+	// 	return !(['/', ''].includes(output.path) || user?.connections.dropbox[output.provider_id] === null)
+	// }
 
 	return true
 }

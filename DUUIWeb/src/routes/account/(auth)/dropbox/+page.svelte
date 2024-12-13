@@ -7,7 +7,7 @@
 	const { success, name } = data
 
 	onMount(() => {
-		goto(`/account?tab=1&success=${success}&dropboxConnectionId=${name}`)
+		goto(`/account?tab=1&success=${success}&newDropboxConnectionId=${name}`)
 	})
 </script>
 
