@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Executors;
@@ -392,6 +393,16 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         if (updater != null) {
             updater.cancel(true);
         }
+
+        try {
+            Optional<String> emailContent = DUUIProcessController.getProcessSummaryForEmail(getProcessID());
+            if (emailContent.isPresent()) {
+                // TODO: Send E-Mail
+            }
+        } catch (IOException ignored) {
+
+        }
+        
         threadCount = 0;
         interrupt();
     }

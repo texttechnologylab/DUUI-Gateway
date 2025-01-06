@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"/>
+    <title>Document</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+            margin: 0;
+        }
+
+        .key-fact {
+            gap: 5rem;
+            border-left: 5px solid #006c98;
+            padding-left: 1rem;
+        }
+
+        .key {
+            opacity: 65%;
+            padding: 0;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .fact {
+            font-size: 1.25em;
+            font-weight: bold;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container-small {
+            display: grid;
+            gap: 1rem;
+        }
+
+        a {
+            color: #006c98;
+        }
+
+        .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+
+            padding: 0.75rem 2rem;
+
+            background-color: #006c98;
+            color: white;
+
+            border-radius: 0.2em;
+
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+
+            transition: all;
+            transition-duration: 300ms;
+        }
+
+        .button:hover {
+            filter: brightness(115%);
+        }
+
+        .space-y-4 > * {
+            margin-block: 1rem;
+        }
+
+        .wrapper {
+            max-width: 768px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>Pipeline execution completed</h1>
+    <div class="space-y-4">
+        <p>
+            Your
+            <a
+                    href="https://duui.texttechnologylab.org/pipelines/{@PIPELINE_ID}"
+                    target="_blank"
+            >Pipeline ({@PIPELINE_NAME})</a
+            >
+            has completed with status: {@PIPELINE_STATUS} after {@DURATION}. <br/>
+            The output has been written to {@CONNECTOR}.
+        </p>
+        <div class="container-small">
+            <div class="key-fact">
+                <p class="key">Total Documents</p>
+                <p class="fact">{@DOCUMENT_COUNT}</p>
+            </div>
+            <div class="key-fact">
+                <p class="key">
+                    Number completed Documents
+                </p>
+                <p class="fact">{@COMPLETED_COUNT}</p>
+            </div>
+            <div class="key-fact">
+                <p class="key">
+                    Number failed Documents
+                </p>
+                <p class="fact">{@FAILED_COUNT}</p>
+            </div>
+            <div class="key-fact">
+                <p class="key">Number of skipped Documents</p>
+                <p class="fact">{@SKIPPED_COUNT}</p>
+            </div>
+        </div>
+        <a
+                class="button"
+                href="https://duui.texttechnologylab.org/processes/{@PROCESS_ID}"
+                target="_blank"
+        >See detailed results</a
+        >
+    </div>
+</div>
+</body>
+</html>
