@@ -4,8 +4,13 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
+import org.texttechnologylab.duui.analysis.document.Provider;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
+import org.texttechnologylab.duui.api.routes.users.DUUIUsersRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import com.dropbox.core.*;
 import com.mongodb.client.model.Filters;
@@ -595,6 +600,102 @@ public class DUUIUserController {
         Document user = DUUIUserController.getUserById(id, __updatedFields);
         DUUIMongoDBStorage.convertObjectIdToString(user);
         return new Document("user", user).toJson();
+    }
+
+    /**
+     * Verify and insert new connection details.
+     *
+     * @return the updated user only including the updated and defaults fields.
+     */
+    public static String insertNewConnection(Request request, Response response) {
+        if (invalidRequestOrigin(request.ip())) {
+            response.status(401);
+            return "Unauthorized";
+        }
+
+        Document body = Document.parse(request.body());
+//        System.out.println(body.toJson());
+
+        String id = request.params(":id");
+        String provider = request.params(":provider").toLowerCase();
+
+        String connKey = "connections." + provider + ".";
+        System.out.println(connKey);
+        Document connectionDetails = null;
+
+        for (String key : body.keySet()) {
+            if (key.startsWith(connKey)) {
+                connKey = key;
+                connectionDetails = body.get(key, Document.class);
+            }
+        }
+
+        if (connectionDetails == null) {
+            response.status(400);
+            return new Document("error", "Bad Request")
+                .append("message", "Connection details are missing.").toJson();
+        }
+
+
+        if (provider.equalsIgnoreCase(Provider.MINIO)) {
+            try {
+                DUUIMinioDocumentHandler handler = new DUUIMinioDocumentHandler(
+                        connectionDetails.getString("endpoint"),
+                        connectionDetails.getString("access_key"),
+                        connectionDetails.getString("secret_key"));
+                System.out.println(handler);
+            } catch (Exception e) {
+                response.status(400);
+                return new Document("error", "Bad Request")
+                    .append("message", String.format(
+                            """
+                                Connection details are invalid: %s
+                                Endpoint: %s
+                                AccessKey: %s
+                                SecretKey: %s
+                            """, e.getMessage(),
+                            connectionDetails.getString("endpoint"),
+                            connectionDetails.getString("access_key"),
+                            connectionDetails.getString("secret_key")
+                        )
+                    ).toJson();
+            }
+
+        }
+        else if (provider.equalsIgnoreCase(Provider.NEXTCLOUD)) {
+            try {
+                DUUINextcloudDocumentHandler handler =  new DUUINextcloudDocumentHandler(
+                    connectionDetails.getString("uri"),
+                    connectionDetails.getString("username"),
+                    connectionDetails.getString("password"));
+                System.out.println(handler);
+            } catch (Exception e) {
+                response.status(400);
+                return new Document("error", "Bad Request")
+                    .append("message", String.format(
+                            """
+                                Connection details are invalid: %s
+                                URI: %s
+                                USERNAME: %s
+                                PASSWORD: %s
+                            """, e.getMessage(),
+                            connectionDetails.getString("uri"),
+                            connectionDetails.getString("username"),
+                            connectionDetails.getString("password")
+                        )
+                    ).toJson();
+            }
+        }
+
+
+        Document update = new Document("$set", new Document(connKey, connectionDetails));
+        DUUIMongoDBStorage
+                .Users()
+                .findOneAndUpdate(Filters.eq(new ObjectId(id)), update);
+
+        Document user = DUUIUserController.getUserById(id, List.of(connKey));
+        DUUIMongoDBStorage.convertObjectIdToString(user);
+        return connectionDetails.toJson();
     }
 
     /**

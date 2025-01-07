@@ -82,6 +82,9 @@ public class Methods {
             put("/reset-password", DUUIUserController::resetPassword);
             put("/recover-password", DUUIUserController::recoverPassword);
             delete("/:id", DUUIUserController::deleteOne);
+            path("/connections", () -> {
+                put("/:id/:provider", DUUIUserController::insertNewConnection);
+            });
             path("/auth", () -> {
                 get("/login/:email", DUUIUserController::fetchLoginCredentials);
                 get("/", DUUIUserController::authorizeUser);

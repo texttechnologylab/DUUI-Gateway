@@ -31,7 +31,12 @@
 	} from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
-	import type {MinioConnectionDetails, NextcloudConnectionDetails, OAuthConnectionDetails} from "../../app";
+	import type {
+		MinioConnectionDetails,
+		NextcloudConnectionDetails,
+		OAuthConnectionDetails,
+		ServiceConnections
+	} from "../../app";
 	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 
 	const toastStore = getToastStore()
@@ -84,7 +89,7 @@
 
 
 
-	$: isDropboxConnected = Object.keys($userSession?.connections.dropbox).length > 0
+	$: isDropboxConnected = !$userSession ? false : Object.keys($userSession?.connections.dropbox).length > 0
 
 	$: isMinioConnected = (name: string) =>  $userSession?.connections.minio[name].alias
 			&& $userSession?.connections.minio[name].endpoint
@@ -96,7 +101,7 @@
 			&& $userSession?.connections.nextcloud[name].username
 			&& $userSession?.connections.nextcloud[name].password
 
-	$: isGoogleDriveConnected = Object.keys($userSession?.connections.google).length > 0
+	$: isGoogleDriveConnected = !$userSession ? false : Object.keys($userSession?.connections.google).length > 0
 
 	$: hasApiKey = !!$userSession?.connections.key
 
@@ -186,6 +191,31 @@
 			const result = await response.json()
 			theme = +result.theme
 		}
+	}
+
+	function checkAliasExists(connections: ServiceConnections, alias: string, name: string = ""): boolean {
+		for (const [key, details] of Object.entries(connections)) {
+			let isSameName = name === "" ? false :  name === key
+			if (details.alias === alias && !isSameName) {
+				toastStore.trigger(errorToast('This alias is already in use. Please choose a different one.'));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	const insertConnection = async (provider: string, data: object, updateVar = () => {return;}) => {
+		let req = { method: 'PUT', body: JSON.stringify(data) }
+
+		const response = await fetch(`/api/users/connections?provider=${provider}`, req)
+
+		if (response.ok) {
+			updateVar()
+			toastStore.trigger(successToast('Update successful'))
+		} else {
+			toastStore.trigger(errorToast('ERROR: \n' + JSON.stringify(await response.json())))
+		}
+		return response
 	}
 
 	const updateUser = async (data: object) => {
@@ -702,11 +732,14 @@
 									<div class="grid md:flex justify-between gap-4">
 										<button class="button-neutral" disabled={!dropboxConnections[name].alias}
 												on:click={() => {
-											updateUser({
-												['connections.dropbox.' + name]: {
-													alias: dropboxConnections[name].alias,
-												}
-											})
+													if (checkAliasExists(dropboxConnections, dropboxConnections[name].alias, name))
+														return;
+
+													updateUser({
+														['connections.dropbox.' + name]: {
+															alias: dropboxConnections[name].alias,
+														}
+													})
 										}}>
 											<Fa icon={faLink} />
 											<span>Save</span>
@@ -729,7 +762,12 @@
 									bind:value={newDropboxConnection.alias}
 								/>
 							</div>
-							<button class="button-neutral" disabled={!newDropboxConnection.alias} on:click={() => startDropboxOauth(newDropboxConnection.alias)}>
+							<button class="button-neutral" disabled={!newDropboxConnection.alias} on:click={() => {
+									if (checkAliasExists(dropboxConnections, newDropboxConnection.alias))
+										return;
+									startDropboxOauth(newDropboxConnection.alias)
+								}
+								}>
 								<Fa icon={faLink} />
 								<span>Connect</span>
 							</button>
@@ -779,7 +817,9 @@
 									class="button-neutral"
 									disabled={!minioConnections[name].endpoint || !minioConnections[name].access_key || !minioConnections[name].secret_key}
 									on:click={() => {
-										updateUser({
+										if (checkAliasExists(minioConnections, minioConnections[name].alias, name))
+											return;
+										insertConnection("minio", {
 											['connections.minio.' + name]: {
 												endpoint: minioConnections[name].endpoint,
 												access_key: minioConnections[name].access_key,
@@ -823,18 +863,23 @@
 									class="button-neutral"
 									disabled={!newMinioConnections.endpoint || !newMinioConnections.access_key || !newMinioConnections.secret_key || !newMinioConnections.alias}
 									on:click={() => {
-										let newMinioId  = uuidv4()
-										updateUser({
+										if (checkAliasExists(minioConnections, newMinioConnections.alias))
+											return;
 
-											['connections.nextcloud.' + newMinioId]: {
+										let newMinioId  = uuidv4()
+										const updateVar = () => {
+											minioConnections[newMinioId] = newMinioConnections
+											newMinioConnections = { alias: "", endpoint: "", secret_key: "", access_key: "" }
+										}
+										insertConnection("minio", {
+											['connections.minio.' + newMinioId]: {
 												alias: newMinioConnections.alias,
 												endpoint: newMinioConnections.endpoint,
 												access_key: newMinioConnections.access_key,
 												secret_key: newMinioConnections.secret_key
 											}
-										})
-										minioConnections[newMinioId] = newMinioConnections
-										newMinioConnections = { alias: "", endpoint: "", secret_key: "", access_key: "" }
+										}, updateVar)
+
 									}}
 							>
 								<Fa icon={faLink} />
@@ -880,7 +925,9 @@
 									class="button-neutral"
 									disabled={!isNextCloudConnected(name)}
 									on:click={() => {
-										updateUser({
+										if (checkAliasExists(nextcloudConnections, nextcloudConnections[name].alias, name))
+											return;
+										insertConnection("nextcloud", {
 											['connections.nextcloud.' + name]: {
 												alias: nextcloudConnections[name].alias,
 												uri: nextcloudConnections[name].uri,
@@ -924,18 +971,23 @@
 									class="button-neutral"
 									disabled={!newNextcloud.uri || !newNextcloud.username || !newNextcloud.password || !newNextcloud.alias}
 									on:click={() => {
-										let newId  = uuidv4()
-										updateUser({
+										if (checkAliasExists(nextcloudConnections, newNextcloud.alias))
+											return;
 
+										let newId  = uuidv4()
+										const updateVar = () => {
+											nextcloudConnections[newId] = newNextcloud
+											newNextcloud = { alias: "", uri: "", password: "", username: "" }
+										}
+										insertConnection("nextcloud", {
 											['connections.nextcloud.' + newId]: {
 												alias: newNextcloud.alias,
 												uri: newNextcloud.uri,
 												username: newNextcloud.username,
 												password: newNextcloud.password
 											}
-										})
-										nextcloudConnections[newId] = newNextcloud
-										newNextcloud = { alias: "", uri: "", password: "", username: "" }
+										}, updateVar)
+
 									}}
 							>
 								<Fa icon={faLink} />
@@ -998,11 +1050,14 @@
 								<div class="grid md:flex justify-between gap-4">
 									<button class="button-neutral" disabled={!googledriveConnections[name].alias}
 											on:click={() => {
-									updateUser({
-										['connections.google.' + name]: {
-											alias: googledriveConnections[name].alias,
-										}
-									})
+										if (checkAliasExists(googledriveConnections, googledriveConnections[name].alias, name))
+											return;
+
+										updateUser({
+											['connections.google.' + name]: {
+												alias: googledriveConnections[name].alias,
+											}
+										})
 								}}>
 										<Fa icon={faLink} />
 										<span>Save</span>
@@ -1026,7 +1081,11 @@
 										bind:value={newGoogleConnection.alias}
 								/>
 							 </div>
-							<button class="button-neutral" disabled={!newGoogleConnection.alias} on:click={() => startGoogleDriveAccess(newGoogleConnection.alias)}>
+							<button class="button-neutral" disabled={!newGoogleConnection.alias} on:click={() => {
+								if (checkAliasExists(googledriveConnections, newGoogleConnection.alias))
+									return;
+								startGoogleDriveAccess(newGoogleConnection.alias)
+							}}>
 								<Fa icon={faLink} />
 								<span>Connect</span>
 							</button>
