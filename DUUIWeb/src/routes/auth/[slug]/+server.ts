@@ -144,8 +144,6 @@ const change = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 
 	const update = await response.json()
 
-	console.log(update)
-
 	return json({ user: update })
 }
 

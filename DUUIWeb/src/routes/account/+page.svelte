@@ -229,32 +229,23 @@
 		return response
 	}
 
-	if ($userSession.connections.dropbox[newDropboxConnectionId]) {
-		updateUser({
-			['connections.dropbox.' + newDropboxConnectionId]: {
-				alias: localStorage.getItem("currentDropboxConnectionAlias"),
-			}
-		})
-		$userSession.connections.dropbox[newDropboxConnectionId].alias = localStorage.getItem("currentDropboxConnectionAlias")
-	}
+	const updatePassword = async (pwd1: string | null | undefined =null, pwd2: string | null | undefined =null, oid: string | null | undefined =null) => {
 
-	if ($userSession.connections.google[newGoogleConnectionId]) {
-		updateUser({
-			['connections.google.' + newGoogleConnectionId]: {
-				alias: localStorage.getItem("currentGoogleConnectionAlias"),
-			}
-		})
-		$userSession.connections.google[newGoogleConnectionId].alias = localStorage.getItem("currentGoogleConnectionAlias")
-	}
+		if (!oid) {
+			oid = $userSession?.oid
+		}
 
-	const updatePassword = async (data: object) => {
+		if (!pwd1 || !pwd2) {
+			pwd1 = userPassword
+			pwd2 = userPassword2
+		}
 
 		const request = {
 			method: 'POST',
 			body: JSON.stringify({
-				oid: $userSession?.oid,
-				password1: userPassword,
-				password2: userPassword2
+				oid: oid,
+				password1: pwd1,
+				password2: pwd2
 			}),
 			headers: {
 				'Content-Type': 'application/json'
@@ -583,7 +574,7 @@
 			{/if}
 		</div>
 	</div>
-	<div class="md:min-w-[800px] max-w-4xl space-y-4">
+	<div class="md:min-w-[800px] space-y-4">
 		{#if tab === 0}
 			<div class="space-y-4">
 				<div class="section-wrapper p-8 space-y-8">
@@ -624,7 +615,7 @@
 					</div>
 					<hr class="hr !w-full" />
 					<div class="grid md:flex justify-between gap-4">
-						<button class="button-primary" on:click={updatePassword}>
+						<button class="button-primary" on:click={() => updatePassword(userPassword, userPassword2)}>
 							<Fa icon={faRefresh} />
 							<span>Update Password</span>
 						</button>
@@ -1095,44 +1086,64 @@
 			</div>
 		{:else if tab === 2}
 			{#if users && $userSession?.role === 'Admin'}
-				<div class="section-wrapper p-8 space-y-4">
+				<div class="section-wrapper p-8 space-y-4 w-full">
 					<h3 class="h3">Users</h3>
 
-					<div class="bordered-soft rounded-md overflow-hidden">
-						<div
-							class="grid grid-cols-[1fr_1fr_128px] lg:grid-cols-[1fr_1fr_1fr_128px] bg-surface-100-800-token"
-						>
-							<p class="p-4 break-words max-w-[10ch] md:max-w-none">Email</p>
-							<p class="p-4">Role</p>
-							<p class="hidden lg:block p-4">Workers</p>
-						</div>
-
-						{#each users as _user}
+					<div class="bordered-soft rounded-md overflow-hidden max-w-full">
+						<div class="overflow-x-auto">
 							<div
-								class="grid grid-cols-[1fr_1fr_128px] lg:grid-cols-[1fr_1fr_1fr_128px] items-stretch border-t border-color"
+									class="grid w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] bg-surface-100-800-token gap-0.5 p-2"
 							>
-								<p class="px-4 py-2 self-center">{_user.email}</p>
-								<Dropdown
-									name={_user.email}
-									offset={0}
-									on:change={() => updateRole(_user)}
-									bind:value={_user.role}
-									style="button-menu px-4 py-2 !self-stretch h-full"
-									border="border-y-0 !border-x border-color"
-									options={['User', 'Admin', 'Trial']}
-								/>
-								<p class="hidden lg:block px-4 py-2 self-center">{_user.worker_count}</p>
-								<button
-									class="px-4 py-2 button-menu !justify-center hover:!variant-soft-error transition-300 border-color border-l"
-									on:click={() => deleteUser(_user)}
-								>
-									<Fa icon={faTrash} />
-									<span class="hidden md:inline">Delete</span>
-								</button>
+								<p class="p-4 break-words max-w-[10ch] md:max-w-none">Email</p>
+								<p class="p-4 hidden lg:block p-4 text-center">Role</p>
+								<p class="p-4 hidden lg:block p-4 text-center">Workers</p>
+								<p class="p-4 hidden lg:block p-4 text-center">Password</p>
 							</div>
-						{/each}
+
+							{#each users as _user}
+								<div
+										class="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] lg:grid-cols-[1fr_1fr_1fr_auto_auto_auto]  border-t border-color gap-0.5 p-1"
+								>
+									<p class="px-4 py-2 self-center">{_user.email}</p>
+									<Dropdown
+											name={_user.email}
+											offset={0}
+											on:change={() => updateRole(_user)}
+											bind:value={_user.role}
+											style="button-menu px-4 py-2 !self-stretch h-full"
+											border="border-y-0 !border-x border-color"
+											options={['User', 'Admin', 'Trial']}
+									/>
+									<p class="hidden lg:block px-4 py-2 self-center">{_user.worker_count}</p>
+									<Secret
+											class="px-4 py-2 self-center"
+											name="password"
+											style="button-menu px-4 py-2 !self-stretch h-full border-y-0 !border-x border-color"
+											disabled={false}
+											bind:value={_user.password}
+									/>
+									<button
+											class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-primary transition-300 !border-r-0 !border-l-0 !border-x border-color"
+											on:click={() => updatePassword(_user.password, _user.password, _user.oid)}
+									>
+<!--											on:click={() => alert(JSON.stringify(_user))}-->
+
+										<Fa icon={faRefresh} />
+										<span>Update Password</span>
+									</button>
+									<button
+											class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-error transition-300 border-l !border-r-0 !border-x border-color"
+											on:click={() => deleteUser(_user)}
+									>
+										<Fa icon={faTrash} />
+										<span class="hidden md:inline">Delete</span>
+									</button>
+								</div>
+							{/each}
+						</div>
 					</div>
 				</div>
+
 			{/if}
 
 		{:else if tab === 3}
