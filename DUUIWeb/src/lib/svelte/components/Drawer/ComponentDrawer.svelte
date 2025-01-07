@@ -36,6 +36,7 @@
 	import TextInput from '../Input/TextInput.svelte'
 	import Popup from '../Popup.svelte'
 	import Tip from '../Tip.svelte'
+	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
 	const { cloneDeep } = pkg
 
 	const drawerStore = getDrawerStore()
@@ -50,6 +51,31 @@
 	let parameters: Map<string, string> = new Map(Object.entries(component.parameters))
 	const dispatcher = createEventDispatcher()
 
+	let labels: string[]
+	component.options.labels = component.options.labels ? component.options.labels : []
+	let chosenLabels: Map<string, string> = new Map()
+	for (let l=0; l<component.options.labels.length; l++) {
+		chosenLabels.set(component.options.labels[l], component.options.labels[l])
+	}
+
+	const fetchDriverLabels = async () => {
+		const response = await fetch(`/api/users/labels/?driver=${component.driver}`, {
+			method: 'GET'
+		})
+
+		if (response.ok) {
+			const result = await response.json()
+			labels = result["labels"]
+
+			if (!labels || !labels.length) {
+				component.options.labels = []
+			}
+		}
+	}
+
+	fetchDriverLabels()
+
+
 	const onUpdate = async () => {
 		if (!inEditor) {
 			component.parameters = Object.fromEntries(parameters)
@@ -61,6 +87,11 @@
 			if (response.ok) {
 				toastStore.trigger(successToast('Component updated successfully'))
 				parameters = new Map(Object.entries(component.parameters))
+				chosenLabels = new Map()
+				for (let l=0; l<component.options.labels.length; l++) {
+					chosenLabels.set(component.options.labels[l], component.options.labels[l])
+				}
+				chosenLabels = chosenLabels
 			}
 
 			dispatcher('updated', { ...component })
@@ -374,6 +405,12 @@
 			<ComponentOptions {component} />
 		</div>
 
+		{#if labels && labels.length > 0}
+			<div class="space-y-2 ">
+				<h4 class="h4">Labels</h4>
+				<JsonDropdownInput bind:dropdownList={labels} bind:target={component.options.labels} bind:data={chosenLabels}/>
+			</div>
+		{/if}
 		<div class="space-y-4 border-t border-color pt-4">
 			<h4 class="h4">Parameters</h4>
 			<JsonInput bind:data={parameters} />

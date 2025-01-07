@@ -5,19 +5,34 @@ import {error} from '@sveltejs/kit'
  * Sends a put request to the backend to update or insert a label.
  * The requesting user must be an admin.
  */
-export const PUT = async ({ request, locals, fetch }) => {
+export const GET = async ({ request, locals, url }) => {
+	const user = locals.user
+	const driver = url.searchParams.get('driver')
+
+	return await fetch(`${API_URL}/users/labels/driver-filter/${driver}`, {
+		method: 'GET'
+	})
+
+}
+
+
+export const PUT = async ({ request, locals }) => {
 	const data = await request.json()
 	const user = locals.user
+
+	if (data.driver === "" || data.label === "") {
+		return error(400, { message: 'The label and driver are required.' })
+	}
 
 	if (!user || user.role !== 'Admin') {
 		return error(401, { message: 'Unauthorized' })
 	}
 
-	let routeString = `${API_URL}/users/labels/${data.driver}/${data.label}/`
-
-	if (data.labelId) routeString += `/${data.labelId}`
+	let labelId = data.labelId ? "/" + data.labelId : ''
+	let operation = data.labelId ? "update/" : "insert/"
 
 	return await fetch(routeString, {
+	return await fetch(`${API_URL}/users/labels/${operation}${data.driver}/${data.label}${labelId}`, {
 		method: 'PUT',
 		body: JSON.stringify({})
 	})
@@ -35,8 +50,8 @@ export const DELETE = async ({ cookies, locals, request }) => {
 		return error(401, { message: 'Unauthorized' })
 	}
 
-	return await fetch(`${API_URL}/users/labels/${data.labelId}`, {
+	return await fetch(`${API_URL}/users/labels`, {
 		method: 'DELETE',
-		body: JSON.stringify({})
+		body: JSON.stringify(data["labels"])
 	})
 }

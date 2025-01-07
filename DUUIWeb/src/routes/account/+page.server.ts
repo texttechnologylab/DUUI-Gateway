@@ -10,9 +10,12 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		redirect(302, handleLoginRedirect(url))
 	}
 
-	const labels = await fetch(`${API_URL}/users/labels`, {
+	let labels: {[id: string]: {label:string, driver: string}} = await(await fetch(`${API_URL}/users/labels`, {
 		method: 'GET'
-	})
+	})).json()
+
+	labels = labels !== null || labels ?  labels["labels"] : {}
+
 
 	// Retrieve the Dropbox OAuth 2.0 credentials from the backend.
 	// These correspond to the properties set in the config file.
@@ -105,17 +108,12 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		return await response.json()
 	}
 
-	const newDropboxConnectionId = url.searchParams.get('dropboxConnectionId') || ""
-	const newGoogleConnectionId = url.searchParams.get('googleConnectionId') || ""
-	
-
 	return {
 		dropbBoxURL: dropbBoxURL,
 		googleDriveURL: googleDriveURL,
 		user: (await fetchProfile()).user,
 		theme: +(cookies.get('theme') || '0'),
 		users: (await fetchUsers()).users,
-		newDropboxConnectionId,
-		newGoogleConnectionId
+		labels: labels
 	}
 }

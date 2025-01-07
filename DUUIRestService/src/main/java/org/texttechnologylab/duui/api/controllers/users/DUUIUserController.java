@@ -4,6 +4,8 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
@@ -13,9 +15,6 @@ import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineControll
 import org.texttechnologylab.duui.api.routes.users.DUUIUsersRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import com.dropbox.core.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
 
@@ -305,17 +305,18 @@ public class DUUIUserController {
         String driver = request.params(":driver");
         String label = request.params(":label");
 
-        DUUIMongoDBStorage.Globals().updateOne(
-            Filters.exists("labels."),
-            Updates.set("labels." + ObjectId.get(), new Document()
+        String newLabelId = UUID.randomUUID().toString();
+
+        Document update = new Document("$set", new Document("labels." + newLabelId, new Document()
                 .append("label", label)
                 .append("driver", driver)
-            )
-        );
+        ));
+        Document result = DUUIMongoDBStorage.Globals()
+                .findOneAndUpdate(Filters.exists("labels"), update);
 
         response.status(201);
 
-        return new Document("message", "Successfully inserted.").toJson();
+        return new Document("label_id", newLabelId).toJson();
     }
 
     public static String updateLabel(Request request, Response response) {
@@ -337,12 +338,15 @@ public class DUUIUserController {
     }
 
     public static String deleteLabel(Request request, Response response) {
-        String labelId = request.params(":labelId");
+        Document body = Document.parse(request.body());
 
-        DUUIMongoDBStorage.Globals().updateOne(
-                Filters.exists("labels." + labelId), // Ensure the driver exists
-                Updates.unset("labels." + labelId)
-        );
+        UpdateResult result = DUUIMongoDBStorage.Globals()
+                .updateOne(
+                        Filters.exists("labels"),
+                        Updates.set("labels", body)
+                );
+
+        System.out.println(result.getModifiedCount());
 
         response.status(201);
 
@@ -354,6 +358,26 @@ public class DUUIUserController {
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
 
         return labels.toJson();
+    }
+
+    public static String getDriverLabels(Request request, Response response) {
+
+        String driver = request.params(":driver");
+
+        return new Document("labels", filterLabelsByDriver(driver)).toJson();
+    }
+
+    public static List<String> filterLabelsByDriver(String driver) {
+        Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
+        if (labels == null) return Collections.emptyList();
+
+        labels = labels.get("labels", Document.class);
+        return labels
+            .values().stream()
+            .filter(l -> Objects.equals(((Document) l).getString("driver"), driver))
+//                .filter(l -> ((Document) l).getString("permission") == role)
+            .map(l -> ((Document) l).getString("label"))
+            .toList();
     }
 
     /**

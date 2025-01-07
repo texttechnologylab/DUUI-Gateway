@@ -45,7 +45,7 @@
 		class="flex items-center !justify-between gap-2 px-3 py-2 leading-6  {border} {rounded} {style}"
 		use:popup={dropdown}
 	>
-		<span>{toTitleCase('' + value)}</span>
+		<span>{value === "" ? "" : toTitleCase('' + value)}</span>
 		<Fa {icon} />
 	</button>
 </div>
