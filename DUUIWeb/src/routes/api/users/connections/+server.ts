@@ -10,7 +10,7 @@ export const PUT = async ({ request, url, locals, fetch }) => {
 	if (!user) {
 		return error(401, { message: 'Unauthorized' })
 	}
-	console.log("sadfasdfawef")
+
 	const response = await fetch(`${API_URL}/users/connections/${user.oid}/${provider}`, {
 		method: 'PUT',
 		body: JSON.stringify(await request.json())

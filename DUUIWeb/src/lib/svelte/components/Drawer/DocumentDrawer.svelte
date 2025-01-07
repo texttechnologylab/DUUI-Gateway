@@ -148,7 +148,6 @@
 			selectedAnnotation = annotationNames[0]
 
 			processedAnnotations = getHighlightedText(json.text, unprocessedAnnotations, selectedAnnotation)
-			console.log(processedAnnotations)
 
 
 		} else {

@@ -1,6 +1,9 @@
 package org.texttechnologylab.duui.api.storage;
 
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
+import org.texttechnologylab.duui.analysis.document.Provider;
 import org.texttechnologylab.duui.api.Config;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
@@ -126,6 +129,53 @@ public class DUUIMongoDBStorage {
     public static void init(Config config) {
         DUUIMongoDBStorage.config = config;
         getClient();
+        refactorAllConnections();
+    }
+
+    public static void refactorAllConnections() {
+
+        MongoCollection<Document> collection = Users();
+        collection.find(Filters.exists("connections")).forEach(oldDocument -> {
+
+            Document oldConnections = oldDocument.get("connections", Document.class);
+            Document newConnections = oldConnections;
+
+            int modifiedCount = 0;
+
+            for (Map.Entry<String, Object> entry : oldConnections.entrySet()) {
+                String service = entry.getKey();
+                boolean isService = Arrays.stream(new String[]{"dropbox", "minio", "nextcloud", "google"})
+                        .anyMatch(s -> s.equalsIgnoreCase(service));
+
+                if (!isService) continue;
+
+                Document connectionDetails = (Document) entry.getValue();
+
+                boolean isOldStructure =
+                        connectionDetails.containsKey("uri") ||
+                        connectionDetails.containsKey("endpoint") ||
+                        connectionDetails.containsKey("access_token");
+
+                if (!isOldStructure) continue;
+
+                modifiedCount++;
+
+                String uuid = UUID.randomUUID().toString();
+                Document wrappedConnection = new Document(uuid, connectionDetails);
+                oldConnections.put(service, wrappedConnection);
+            }
+
+            if (modifiedCount <= 0) return;
+
+           Document update = new Document("$set", new Document("connections", oldConnections));
+
+           UpdateResult result = collection.updateOne(
+                   Filters.eq("_id", oldDocument.getObjectId("_id")),
+                   update,
+                   new UpdateOptions().upsert(true)
+           );
+
+        });
     }
 
     /**
