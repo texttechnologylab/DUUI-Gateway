@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.texttechnologylab.utilities.helper.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -588,5 +589,64 @@ public class DUUIProcessController {
     public static InputStream downloadFile(IDUUIDocumentHandler handler, String path) throws IOException {
         DUUIDocument document = handler.readDocument(path);
         return document.toInputStream();
+    }
+
+    public static Optional<String> getProcessSummaryForEmail(String processId) throws IOException {
+        Document process = findOneById(processId);
+
+        if (process == null) {
+            return Optional.empty();
+        }
+
+        String template = FileUtils.getContentFromFile(new File("HTML Templates/Summary.html"));
+        List<Document> documents = new ArrayList<>();
+
+        DUUIMongoDBStorage
+                .Documents()
+                .find(Filters.eq("process_id", processId))
+                .into(documents);
+
+        if (documents.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String pipelineId = process.getString("pipeline_id");
+        Document pipeline = DUUIPipelineController
+                .findOneById(pipelineId, false);
+
+        if (pipeline == null) {
+            return Optional.empty();
+        }
+
+        Document connector = (Document) process.get("output");
+        String connectorName = connector.getString("provider");
+
+        long completedCount = filterDocumentByStatus(documents, DUUIStatus.COMPLETED).size();
+        long failedCount = filterDocumentByStatus(documents, DUUIStatus.FAILED).size();
+        long skippedCount = filterDocumentByStatus(documents, DUUIStatus.SKIPPED).size();
+
+        // TODO: {@OUTPUT_PATH} for Connector
+
+        template = template
+                .replace("{@PIPELINE NAME}", pipeline.getString("name"))
+                .replace("{@PIPELINE ID}", pipelineId)
+                .replace("{@PIPELINE_STATUS}", pipeline.getString("status"))
+                .replace("{@DURATION}", process.getDouble("duration").toString())
+                .replace("{@CONNECTOR}", connectorName)
+                .replace("{@DOCUMENT_COUNT}", String.valueOf(documents.size()))
+                .replace("{@SUCCESS_COUNT}", String.valueOf(completedCount))
+                .replace("{@FAILED_COUNT}", String.valueOf(failedCount))
+                .replace("{@SKIPPED_COUNT}", String.valueOf(skippedCount))
+                .replace("{@PROCESS_ID", processId);
+
+
+        return Optional.of(template);
+    }
+
+    private static List<Document> filterDocumentByStatus(List<Document> documents, String status) {
+        return documents
+                .stream()
+                .filter((document) -> document.getString("status").equalsIgnoreCase(status))
+                .toList();
     }
 }
