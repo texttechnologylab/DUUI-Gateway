@@ -144,6 +144,11 @@
 
 		$processSettingsStore.input.provider =
 			(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
+		let converted_input_provider_id = (params.get('input_provider_id') as IOProvider) || ""
+		if (converted_input_provider_id && $processSettingsStore.input.provider) converted_input_provider_id =
+				user.connections[$processSettingsStore.input.provider.toLowerCase()][converted_input_provider_id].alias
+		$processSettingsStore.input.provider_id =
+				converted_input_provider_id || $processSettingsStore.input.provider_id
 		$processSettingsStore.input.path = params.get('input_path') || $processSettingsStore.input.path
 		$processSettingsStore.input.content =
 			params.get('input_content') || $processSettingsStore.input.content
@@ -154,12 +159,18 @@
 
 		if (isValidCloudProvider($processSettingsStore.input)) {
 			setAliases(true)
-			$processSettingsStore.input.provider_id = Object.keys(inputAliases)[0] || ""
+			$processSettingsStore.input.provider_id = $processSettingsStore.input.provider_id ?
+					$processSettingsStore.input.provider_id : Object.keys(inputAliases)[0] || ""
 			getFolderStructure($processSettingsStore.input.provider, true, false, $processSettingsStore.input.provider_id)
 		}
 
 		$processSettingsStore.output.provider =
 			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
+		let converted_output_provider_id = (params.get('output_provider_id') as IOProvider) || ""
+		if (converted_output_provider_id && $processSettingsStore.output.provider) converted_output_provider_id =
+				user.connections[$processSettingsStore.output.provider.toLowerCase()][converted_output_provider_id].alias
+		$processSettingsStore.output.provider_id =
+				converted_output_provider_id || $processSettingsStore.output.provider_id
 		$processSettingsStore.output.path =
 			params.get('output_path') || $processSettingsStore.output.path
 		$processSettingsStore.output.content =
@@ -170,7 +181,8 @@
 
 		if (isValidCloudProvider($processSettingsStore.output)) {
 			setAliases(false)
-			$processSettingsStore.output.provider_id = Object.keys(outputAliases)[0] || ""
+			$processSettingsStore.output.provider_id = $processSettingsStore.output.provider_id ?
+					$processSettingsStore.output.provider_id : Object.keys(outputAliases)[0] || ""
 			getFolderStructure($processSettingsStore.output.provider, false, false, $processSettingsStore.output.provider_id)
 		}
 

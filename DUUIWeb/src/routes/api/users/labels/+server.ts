@@ -31,7 +31,8 @@ export const PUT = async ({ request, locals }) => {
 	let labelId = data.labelId ? "/" + data.labelId : ''
 	let operation = data.labelId ? "update/" : "insert/"
 
-	return await fetch(routeString, {
+	// return error(400, { message: `${API_URL}/users/labels/${operation}${data.driver}/${data.label}${labelId}` })
+
 	return await fetch(`${API_URL}/users/labels/${operation}${data.driver}/${data.label}${labelId}`, {
 		method: 'PUT',
 		body: JSON.stringify({})

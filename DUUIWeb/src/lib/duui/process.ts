@@ -95,10 +95,12 @@ export const blankSettings = () => {
 export const processToSeachParams = (process: DUUIProcess) => {
 	return `
 		&input_provider=${process.input.provider}
+		&input_provider_id=${process.input.provider_id}
 		&input_path=${process.input.path}
 		&input_content=${equals(process.input.provider, IO.Text) ? process.input.content : ''}
 		&input_file_extension=${process.input.file_extension}
 		&output_provider=${process.output.provider}
+		&output_provider_id=${process.output.provider_id}
 		&output_path=${process.output.path}
 		&output_file_extension=${process.output.file_extension}
 		&notify=${process.settings.notify || 'false'}
