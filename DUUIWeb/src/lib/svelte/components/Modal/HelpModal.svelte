@@ -186,7 +186,7 @@
 				<Tip>Once created a pipeline can be used as a template in the builder.</Tip>
 			{:else if step === 2}
 				<div class="space-y-8">
-					<h2 class="h4">Components</h2>
+					<p class="font-bold h2">Components</p>
 					<p>
 						A Component is instantiated and controlled by a Driver indicated by an icon. The Driver
 						also defines settings that influence a Component's behavior. These settings can be
@@ -221,7 +221,7 @@
 				</div>
 			{:else if step === 3}
 				<div class="space-y-8">
-					<h2 class="h4">Processes</h2>
+					<p class="font-bold h2">Processes</p>
 					<p>
 						Once you have a created a Pipeline, you can start using it to analyze files or plain
 						text by starting it in a process. A process manages the flow of data and pipeline
@@ -245,7 +245,7 @@
 				</div>
 			{:else if step === 4}
 				<div class="space-y-8">
-					<h2 class="h4">Documents</h2>
+					<p class="font-bold h2">Documents</p>
 					<p>
 						Documents are the smallest unit in DUUI holding the data to be processed. Additionally
 						documents track metrics about performance, integrity and performed annotations.
