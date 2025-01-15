@@ -55,8 +55,8 @@
 	const clearParameters = async () => {
 		const confirm = await showConfirmationModal(
 			{
-				title: 'Clear all Parameters',
-				message: 'Please confirm the deletion of ALL Parameters.',
+				title: 'Clear all Labels',
+				message: 'Please confirm the deletion of ALL Labels.',
 				textYes: 'Yes, clear'
 			},
 			modalStore
@@ -116,7 +116,7 @@
 			{/if}
 		</div>
 		{#if data.size === 0}
-			<p>Click new, select a value then on click confirm.</p>
+			<p>Select a value then on click confirm.</p>
 		{/if}
 
 		<div class="flex flex-wrap justify-start items-start gap-2">
