@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -150,7 +151,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         }
 
         try {
-            outputHandler = input.equals(output)
+            outputHandler = Objects.equals(input, output) && Objects.equals(output.getProviderId(), input.getProviderId())
                 ? inputHandler
                 : DUUIProcessController.getHandler(output.getProvider(), output.getProviderId(), getUserID());
             if (outputHandler != null && output.getProvider().equals(Provider.DROPBOX)) {
@@ -353,7 +354,8 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
     @Override
     public void shutdown() {
-
+        inputHandler.shutdown();
+        if (outputHandler != inputHandler) outputHandler.shutdown();
     }
 
     @Override
