@@ -110,6 +110,16 @@
 	// let labels: {[id: string]: {label:string, driver: string}} = {}
 
 	const updateLabel = async (labelId: string) => {
+
+		for (const [otherLabelId, label] of Object.entries(labels)) {
+			if (label.label === labels[labelId].label
+				&& label.driver === labels[labelId].driver
+				&& otherLabelId !== labelId) {
+				toastStore.trigger(errorToast(`This label already exists for the ${label.driver}.`))
+				return;
+			}
+		}
+
 		let req = {
 			method: 'PUT', body: JSON.stringify({
 				labelId: labelId,
@@ -129,6 +139,14 @@
 	}
 
 	const insertLabel = async () => {
+
+		for (const [_, label] of Object.entries(labels)) {
+			if (label.label === newLabel && label.driver === newLabelDriver) {
+				toastStore.trigger(errorToast(`This label already exists for the ${label.driver}.`))
+				return;
+			}
+		}
+
 		let req = {
 			method: 'PUT', body: JSON.stringify({
 				label: newLabel,
