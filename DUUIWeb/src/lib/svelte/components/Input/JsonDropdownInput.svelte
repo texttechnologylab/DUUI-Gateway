@@ -116,7 +116,7 @@
 			{/if}
 		</div>
 		{#if data.size === 0}
-			<p>Select a value then on click confirm.</p>
+			<p>Select a value and confirm.</p>
 		{/if}
 
 		<div class="flex flex-wrap justify-start items-start gap-2">
