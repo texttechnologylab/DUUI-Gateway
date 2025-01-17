@@ -3,6 +3,7 @@ import { writable, type Writable } from 'svelte/store'
 import { blankComponent, type DUUIComponent } from './duui/component'
 import { blankPipeline, type DUUIPipeline } from './duui/pipeline'
 import { blankSettings, type ProcessSettings } from './duui/process'
+import {defaultGlobals, type Globals, type User} from "../app";
 
 // Stores the current state of the pipelines that is edited and used the brower's local storage.
 export const currentPipelineStore: Writable<DUUIPipeline> = localStorageStore(
@@ -11,25 +12,6 @@ export const currentPipelineStore: Writable<DUUIPipeline> = localStorageStore(
 )
 
 export const examplePipelineStore: Writable<DUUIPipeline> = writable(blankPipeline())
-
-// Store the state of the feedback form
-export const feedbackStore: Writable<Feedback> = localStorageStore('feedback', {
-	name: '',
-	message: '',
-	step: 0,
-	language: 'english',
-	programming: -1,
-	java: -1,
-	python: -1,
-	duui: false,
-	duuiRating: -1,
-	nlp: -1,
-	nlpNeeded: false,
-	requirements: -1,
-	frustration: -1,
-	correction: -1,
-	ease: -1
-})
 
 // Stores the current state of the process settings.
 export const processSettingsStore: Writable<ProcessSettings> = writable(blankSettings())
@@ -42,3 +24,5 @@ export const isDarkModeStore: Writable<boolean> = writable(false)
 
 // Store for the logged in User.
 export const userSession: Writable<User> = writable(undefined)
+
+export const globalsSession: Writable<Globals> = writable(defaultGlobals())

@@ -40,7 +40,7 @@
 							<p>
 								Automatic analysis of large text corpora is a complex task. This complexity
 								particularly concerns the question of time efficiency. Furthermore, efficient,
-								flexible, and extensible textanalysis requires the continuous integration of every
+								flexible, and extensible text-analysis requires the continuous integration of every
 								new text analysis tools. Since there are currently, in the area of NLP and
 								especially in the application context of UIMA, only very few to no adequate
 								frameworks for these purposes, which are not simultaneously outdated or can no

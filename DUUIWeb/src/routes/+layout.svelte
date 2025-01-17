@@ -30,7 +30,7 @@
 	import { afterNavigate, beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import { initializeStores, storePopup } from '@skeletonlabs/skeleton'
 
-	import { isDarkModeStore, userSession } from '$lib/store'
+	import { isDarkModeStore, userSession, globalsSession } from '$lib/store'
 	import Documentation from '$lib/svelte/components/Documentation.svelte'
 	import DocumentModal from '$lib/svelte/components/Drawer/DocumentDrawer.svelte'
 	import Sidebar from '$lib/svelte/components/Drawer/Sidebar.svelte'
@@ -61,8 +61,9 @@
 	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
 
 	export let data
-	let { user, theme } = data
+	let { user, theme, globals } = data
 	$userSession = user
+	$globalsSession = globals
 
 	const themes = Object.keys(COLORS)
 	$: {

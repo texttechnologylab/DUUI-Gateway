@@ -196,9 +196,10 @@
             <version>${uima.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.texttechnologylab</groupId>
+            <groupId>com.github.dterefe</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
-            <version>${duui.version}</version>
+<!--            <version>aaf531ace0b22020b56b396a0ef6b5f2aa4666a1</version>-->
+            <version>4fd88a5f77dcd31523e2bf7a2158dc3334d2b4ad</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.mongodb</groupId>

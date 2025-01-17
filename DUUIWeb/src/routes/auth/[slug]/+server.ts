@@ -8,7 +8,7 @@ import type { RequestHandler, RouteParams } from './$types'
  * Attempt to login the user by veryfing the entered credentaisl at /auth/login.
  * @returns
  */
-const login = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+const login = async (event: RequestEvent<RouteParams, "/auth/[slug]">) => {
 	const data = await event.request.json()
 
 	const email = data.email
