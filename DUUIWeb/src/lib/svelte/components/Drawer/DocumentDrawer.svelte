@@ -159,7 +159,7 @@
 
 	switch (input.provider) {
 		case IO.Dropbox:
-			URLIn = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
+			URLIn = 'https://www.dropbox.com/home/Apps/DUUI'
 			break
 		case IO.Minio:
 			URLIn = $userSession?.connections.minio[input.provider_id].endpoint || ''
@@ -170,7 +170,7 @@
 
 	switch (output.provider) {
 		case IO.Dropbox:
-			URLOut = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
+			URLOut = 'https://www.dropbox.com/home/Apps/DUUI'
 			break
 		case IO.Minio:
 			URLOut = $userSession?.connections.minio[output.provider_id].endpoint || ''
