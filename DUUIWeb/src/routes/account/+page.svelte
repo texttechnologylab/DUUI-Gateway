@@ -418,6 +418,21 @@
 		}
 	}
 
+	function removeQueryParam(param) {
+		// Get the current URL
+		const url = new URL(window.location.href);
+
+		// Get the query parameters
+		const searchParams = new URLSearchParams(url.search);
+
+		// Remove the specified parameter
+		searchParams.delete(param);
+
+		// Update the URL without reloading the page
+		const newUrl = `${url.origin}${url.pathname}?${searchParams.toString()}`;
+		window.history.replaceState({}, '', newUrl);
+	}
+
 	{
 		if ($userSession.connections.dropbox[$page.url.searchParams.get("newDropboxConnectionId")]) {
 			updateUser({
@@ -427,8 +442,9 @@
 			$userSession.connections.dropbox[$page.url.searchParams.get("newDropboxConnectionId")].alias =
 					localStorage.getItem("currentDropboxConnectionAlias")
 
+			removeQueryParam("newDropboxConnectionId")
 			$page.url.searchParams.delete("newDropboxConnectionId")
-			window.location.href = $page.url.href
+			// window.location.href = $page.url.href
 		}
 
 		if ($userSession.connections.google[$page.url.searchParams.get("newGoogleConnectionId")]) {
@@ -439,8 +455,9 @@
 			$userSession.connections.google[$page.url.searchParams.get("newGoogleConnectionId")].alias =
 					localStorage.getItem("currentGoogleConnectionAlias")
 
-			$page.url.searchParams.delete("newGoogleConnectionId")
-			window.location.href = $page.url.href
+			removeQueryParam("newGoogleConnectionId")
+			// $page.url.searchParams.delete("newGoogleConnectionId")
+			// window.location.href = $page.url.href
 		}
 	}
 
