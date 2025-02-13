@@ -18,6 +18,7 @@ import org.bson.conversions.Bson;
 import spark.Request;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
@@ -135,47 +136,95 @@ public class DUUIMongoDBStorage {
     public static void refactorAllConnections() {
 
         MongoCollection<Document> collection = Users();
-        collection.find(Filters.exists("connections")).forEach(oldDocument -> {
-
+        for (Document oldDocument : collection.find(Filters.exists("connections"))) {
             Document oldConnections = oldDocument.get("connections", Document.class);
-            Document newConnections = oldConnections;
 
-            int modifiedCount = 0;
+            AtomicInteger modifiedCount = new AtomicInteger();
+
+            String[] services = new String[]{"dropbox", "minio", "nextcloud", "google"};
+
+            // Add empty service document, if not already contained in User document.
+            long addedServices = Arrays.stream(services)
+                    .map(serviceName -> oldConnections.putIfAbsent(serviceName, new Document()))
+                    .filter(Objects::isNull)
+                    .count();
+
+            if (addedServices > 0) modifiedCount.getAndIncrement();
 
             for (Map.Entry<String, Object> entry : oldConnections.entrySet()) {
                 String service = entry.getKey();
-                boolean isService = Arrays.stream(new String[]{"dropbox", "minio", "nextcloud", "google"})
+                boolean isService = Arrays.stream(services)
                         .anyMatch(s -> s.equalsIgnoreCase(service));
 
                 if (!isService) continue;
 
                 Document connectionDetails = (Document) entry.getValue();
 
-                boolean isOldStructure =
-                        connectionDetails.containsKey("uri") ||
-                        connectionDetails.containsKey("endpoint") ||
-                        connectionDetails.containsKey("access_token");
+                if (connectionDetails.isEmpty()) continue;
 
-                if (!isOldStructure) continue;
+                String[] oldDetails = new String[]{"uri", "endpoint", "access_token"};
 
-                modifiedCount++;
+                boolean isOldStructure = Arrays.stream(oldDetails)
+                        .anyMatch(connectionDetails::containsKey);
 
-                String uuid = UUID.randomUUID().toString();
-                Document wrappedConnection = new Document(uuid, connectionDetails);
-                oldConnections.put(service, wrappedConnection);
+                if (!isOldStructure) {
+                    // Check for null-value connection details and remove them.
+                    ArrayList<String> removelist = new ArrayList<>();
+                    for (Map.Entry<String, Object> e : connectionDetails.entrySet()) {
+                        String key = e.getKey();
+                        Object value = e.getValue();
+
+                        if (!(value instanceof Document newConnDetails) || newConnDetails.isEmpty()) {
+                            removelist.add(key);
+                            modifiedCount.getAndIncrement();
+                            continue;
+                        }
+                        boolean areDetailsEmpty = Arrays.stream(oldDetails)
+                                .map(val -> newConnDetails.getOrDefault(val, null))
+                                .allMatch(Objects::isNull);
+
+                        if (areDetailsEmpty && !newConnDetails.isEmpty()) {
+                            connectionDetails.replace(key, new Document());
+                            modifiedCount.getAndIncrement();
+                        }
+                    }
+
+                    removelist.forEach(connectionDetails::remove);
+
+                } else {
+                    // Wrap old connection details structure with a uuid and
+                    boolean areDetailsEmpty = Arrays.stream(new Object[]{
+                                    connectionDetails.getOrDefault("uri", null),
+                                    connectionDetails.getOrDefault("endpoint", null),
+                                    connectionDetails.getOrDefault("access_token", null)})
+                            .allMatch(Objects::nonNull);
+
+                    // Add alias to connection.
+                    if (!areDetailsEmpty) {
+                        connectionDetails.putIfAbsent("alias", service + "-detail");
+                    }
+
+                    String uuid = UUID.randomUUID().toString();
+                    Document wrappedConnection = new Document(uuid, areDetailsEmpty ? new Document() : connectionDetails);
+                    oldConnections.replace(service, wrappedConnection);
+                    modifiedCount.getAndIncrement();
+
+                }
             }
 
-            if (modifiedCount <= 0) return;
+            if (modifiedCount.get() <= 0) continue;
 
-           Document update = new Document("$set", new Document("connections", oldConnections));
+            Document update = new Document("$set", new Document("connections", oldConnections));
 
-           UpdateResult result = collection.updateOne(
-                   Filters.eq("_id", oldDocument.getObjectId("_id")),
-                   update,
-                   new UpdateOptions().upsert(true)
-           );
+            UpdateResult result = collection.updateOne(
+                    Filters.eq("_id", oldDocument.getObjectId("_id")),
+                    update,
+                    new UpdateOptions().upsert(true)
+            );
 
-        });
+            System.out.println(result);
+
+        }
     }
 
     /**
