@@ -43,6 +43,7 @@
 <!--        <duui.version>1.4.1</duui.version>-->
         <duui.version>74c930d8acbd47457f5ebd4bb2ea0109c9eacb7b</duui.version>
         <uima.version>3.5.0</uima.version>
+        <maven.javadoc.skip>false</maven.javadoc.skip>
     </properties>
 
     <repositories>

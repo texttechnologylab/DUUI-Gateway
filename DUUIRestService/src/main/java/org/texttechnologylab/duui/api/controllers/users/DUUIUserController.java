@@ -39,6 +39,9 @@ import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
  */
 public class DUUIUserController {
 
+    /**
+     * The allowed updates for a user.
+     */
     private static final Set<String> ALLOWED_UPDATES = Set.of(
         "role",
         "session",
@@ -99,6 +102,12 @@ public class DUUIUserController {
                 .get(providerId, Document.class);
     }
 
+    /**
+     * Retrieve the stored user credentials for nextcloud (uri, username and password).
+     *
+     * @param user The user to retrieve the credentials for.
+     * @return a {@link Document} containing the credentials.
+     */
     public static Document getNextCloudCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
                 .Users()
@@ -113,6 +122,8 @@ public class DUUIUserController {
         return projection.get("connections", Document.class).get("nextcloud", Document.class)
                 .get(providerId, Document.class);
     }
+
+
 
     public static Document getGoogleCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
@@ -300,7 +311,9 @@ public class DUUIUserController {
     }
 
 
-
+    /**
+     *  Create and insert a user into the database.
+     */
     public static String insertLabel(Request request, Response response) {
         String driver = request.params(":driver");
         String label = request.params(":label");
@@ -353,6 +366,11 @@ public class DUUIUserController {
         return new Document("message", "Successfully deleted").toJson();
     }
 
+    /**
+     * Get all labels from the database.
+     *
+     * @return a list of labels.
+     */
     public static String getLabels(Request request, Response response) {
 
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
@@ -360,6 +378,11 @@ public class DUUIUserController {
         return labels.toJson();
     }
 
+    /**
+     * Get all labels from the database.
+     *
+     * @return a list of labels.
+     */
     public static String getDriverLabels(Request request, Response response) {
 
         String driver = request.params(":driver");
@@ -875,6 +898,12 @@ public class DUUIUserController {
         }
     }
 
+    /**
+        * Finish the Google OAuth 2.0 process given a code returned after accepting the connection with DUUI.
+        * @param request the request object.
+        * @param response the response object.
+        * @return the user with updated google credentials. See {@link DUUIUserController#getGoogleCredentials(Document, String)}.
+     */
     public static String finishGoogleOAuthFromCode(Request request, Response response) {
         String code = request.queryParamOrDefault("code", null);
         String providerId = request.queryParamOrDefault("name", null);
@@ -920,6 +949,14 @@ public class DUUIUserController {
         }
     }
 
+    /**
+     * Refresh the access token for a user given a refresh token.
+     *
+     * @param refreshToken the refresh token.
+     * @param clientId     the client id.
+     * @param clientSecret the client secret.
+     * @return the new access token.
+     */
     public static String refreshAccessToken(String refreshToken, String clientId, String clientSecret) throws IOException {
         TokenResponse tokenResponse = new GoogleRefreshTokenRequest(new NetHttpTransport(), new JacksonFactory(),
                 refreshToken, clientId, clientSecret).setGrantType("refresh_token").execute();
@@ -927,6 +964,11 @@ public class DUUIUserController {
         return tokenResponse.getAccessToken();
     }
 
+    /**
+     * Get the Google OAuth 2.0 settings.
+     *
+     * @return the client id, client secret and redirect uri.
+     */
     public static String getGoogleSettings(Request request, Response response) {
         return new Document()
                 .append("key", Main.config.getGoogleClientId())
@@ -935,6 +977,11 @@ public class DUUIUserController {
                 .toJson();
     }
 
+    /**
+     * Get the Dropbox OAuth 2.0 settings.
+     *
+     * @return the client id, client secret and redirect uri.
+     */
     public static String getDropboxAppSettings(Request request, Response response) {
         return new Document()
             .append("key", Main.config.getDropboxKey())

@@ -21,7 +21,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-
+/**
+ * A simple HTTP server that uses the fastText model to detect the language of a text.
+ * The server listens on port 8000 and provides three endpoints:
+ * - /v1/communication_layer: returns a Lua script that can be used to serialize and deserialize CAS objects
+ * - /v1/typesystem: returns the type system of the CAS objects
+ * - /v1/process: processes a CAS object and adds the detected language as a Language annotation
+ */
 public class LanguageDetectionFastText {
 
 //    public static class Language extends Annotation {
@@ -45,6 +51,9 @@ public class LanguageDetectionFastText {
 //        }
 //    }
 
+    /**
+     * The path to the fastText model.
+     */
     private static String modelPath;
 
     public static void main(String[] args) throws Exception {
@@ -66,6 +75,9 @@ public class LanguageDetectionFastText {
         System.out.println("Remote Server started at " + server.getAddress());
     }
 
+    /**
+     * A handler that processes a CAS object and adds the detected language as a Language annotation.
+     */
     static class ProcessHandler implements HttpHandler {
 
         static JCas jc;
@@ -109,6 +121,9 @@ public class LanguageDetectionFastText {
         }
     }
 
+    /**
+     * A handler that returns the type system of the CAS objects.
+     */
     static class TypesystemHandler implements HttpHandler {
 
         @Override
@@ -131,6 +146,9 @@ public class LanguageDetectionFastText {
         }
     }
 
+    /**
+     * A handler that returns a Lua script that can be used to serialize and deserialize CAS objects.
+     */
     static class CommunicationLayer implements HttpHandler {
 
         @Override

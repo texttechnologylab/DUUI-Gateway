@@ -31,7 +31,14 @@ import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEm
  */
 public class DUUIMongoDBStorage {
 
+    /**
+     * The {@link MongoClient} instance.
+     */
     private static MongoClient mongoClient;
+
+    /**
+     * The {@link Config} instance.
+     */
     private static Config config;
 
     /**
@@ -133,6 +140,9 @@ public class DUUIMongoDBStorage {
         refactorAllConnections();
     }
 
+    /**
+     * Refactor all connections in the database to the new structure.
+     */
     public static void refactorAllConnections() {
 
         MongoCollection<Document> collection = Users();
@@ -237,31 +247,61 @@ public class DUUIMongoDBStorage {
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("pipelines");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Components() {
         DUUIStorageMetrics.incrementComponentsCounter();
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("components");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Users() {
         DUUIStorageMetrics.incrementUsersCounter();
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("users");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Documents() {
         DUUIStorageMetrics.incrementDocumentsCounter();
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("documents");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Processses() {
         DUUIStorageMetrics.incrementProcesssesCounter();
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("processes");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Events() {
         DUUIStorageMetrics.incrementEventsCounter();
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("events");
     }
 
+    /**
+     * Utility functions for fast access to collections in the database.
+     *
+     * @return A MongoCollection object.
+     */
     public static MongoCollection<Document> Globals() {
 
         MongoCollection<Document> collection = getClient().getDatabase(config.getMongoDatabase())

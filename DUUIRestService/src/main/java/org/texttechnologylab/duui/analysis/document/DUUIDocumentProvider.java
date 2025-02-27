@@ -39,6 +39,11 @@ public class DUUIDocumentProvider {
      */
     private final String fileExtension;
 
+    /**
+     * Constructs a DUUIDocumentProvider from a BSON Document.
+     *
+     * @param document the BSON Document containing the provider information
+     */
     public DUUIDocumentProvider(Document document) {
         provider = document.getString("provider");
         providerId = document.getString("provider_id");
@@ -47,6 +52,15 @@ public class DUUIDocumentProvider {
         fileExtension = document.getString("file_extension");
     }
 
+    /**
+     * Constructs a DUUIDocumentProvider with the specified parameters.
+     *
+     * @param provider the name of the data provider
+     * @param providerId the ID of the data provider connection
+     * @param path the path from where to read data
+     * @param content the content to be analyzed if the provider is plain text
+     * @param fileExtension the file extension filter
+     */
     public DUUIDocumentProvider(String provider, String providerId, String path, String content, String fileExtension) {
         this.provider = provider;
         this.providerId = providerId;
@@ -55,22 +69,47 @@ public class DUUIDocumentProvider {
         this.fileExtension = fileExtension;
     }
 
+    /**
+     * Returns the name of the data provider.
+     *
+     * @return the name of the data provider
+     */
     public String getProvider() {
         return provider;
     }
 
+    /**
+     * Returns the path from where to read data if the provider is not {@link Provider}.
+     *
+     * @return the path from where to read data
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * Returns the content to be analyzed if the provider is plain text.
+     *
+     * @return the content to be analyzed
+     */
     public String getContent() {
         return content;
     }
 
+    /**
+     * Returns the file extension filter to only select matching file extensions.
+     *
+     * @return the file extension filter
+     */
     public String getFileExtension() {
         return fileExtension;
     }
 
+    /**
+     * Converts this DUUIDocumentProvider to a BSON Document.
+     *
+     * @return a BSON Document representing this DUUIDocumentProvider
+     */
     public Document toDocument() {
         return new Document()
             .append("provider", provider)
@@ -80,6 +119,12 @@ public class DUUIDocumentProvider {
             .append("file_extension", fileExtension);
     }
 
+    /**
+     * Checks if this DUUIDocumentProvider is equal to another object.
+     *
+     * @param o the object to compare with
+     * @return true if this DUUIDocumentProvider is equal to the specified object, false otherwise
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -88,19 +133,39 @@ public class DUUIDocumentProvider {
         return Objects.equals(provider, that.provider);
     }
 
+    /**
+     * Returns the hash code value for this DUUIDocumentProvider.
+     *
+     * @return the hash code value for this DUUIDocumentProvider
+     */
     @Override
     public int hashCode() {
         return Objects.hash(provider);
     }
 
+    /**
+     * Checks if this DUUIDocumentProvider has no output.
+     *
+     * @return true if this DUUIDocumentProvider has no output, false otherwise
+     */
     public boolean hasNoOutput() {
         return provider.equals(Provider.TEXT) || provider.equals(Provider.NONE);
     }
 
+    /**
+     * Checks if this DUUIDocumentProvider is a text provider.
+     *
+     * @return true if this DUUIDocumentProvider is a text provider, false otherwise
+     */
     public boolean isText() {
         return provider.equals(Provider.TEXT);
     }
 
+    /**
+     * Checks if this DUUIDocumentProvider is a cloud provider.
+     *
+     * @return true if this DUUIDocumentProvider is a cloud provider, false otherwise
+     */
     public boolean isCloudProvider() {
         return provider.equalsIgnoreCase(Provider.DROPBOX)
             || provider.equalsIgnoreCase(Provider.MINIO)
@@ -109,10 +174,20 @@ public class DUUIDocumentProvider {
             || provider.equalsIgnoreCase(Provider.GOOGLE);
     }
 
+    **
+     * Checks if this DUUIDocumentProvider is a database provider.
+     *
+     * @return true if this DUUIDocumentProvider is a database provider, false otherwise
+     */
     public boolean isDatabaseProvider() {
         return provider.equalsIgnoreCase(Provider.MONGODB);
     }
 
+    /**
+     * Returns the ID of the data provider connection.
+     *
+     * @return the ID of the data provider connection
+     */
     public String getProviderId() {
         return providerId;
     }

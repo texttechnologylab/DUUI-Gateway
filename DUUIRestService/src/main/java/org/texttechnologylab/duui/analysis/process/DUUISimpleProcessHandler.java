@@ -46,19 +46,74 @@ import java.util.concurrent.TimeUnit;
  */
 public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHandler {
 
+    /**
+     * The scheduled future for the updater task.
+     */
     private final ScheduledFuture<?> updater;
+
+    /**
+     * The composer for handling the process.
+     */
     private final DUUIComposer composer;
+
+    /**
+     * The document containing process relevant information.
+     */
     private final Document process;
+
+    /**
+     * The document containing information about the pipeline to be executed by the process.
+     */
     private final Document pipeline;
+
+    /**
+     * The document containing process specific settings that alter its behavior.
+     */
     private final Document settings;
+
+    /**
+     * The current status of the process.
+     */
     private String status = DUUIStatus.SETUP;
+
+    /**
+     * The input document provider.
+     */
     private DUUIDocumentProvider input;
+
+    /**
+     * The output document provider.
+     */
     private DUUIDocumentProvider output;
+
+    /**
+     * The handler for the input document.
+     */
     private IDUUIDocumentHandler inputHandler;
+
+    /**
+     * The handler for the output document.
+     */
     private IDUUIDocumentHandler outputHandler;
+
+    /**
+     * The document reader for the collection.
+     */
     private DUUIDocumentReader collectionReader;
+
+    /**
+     * The number of threads currently in use.
+     */
     private int threadCount = 0;
+
+    /**
+     * The maximum number of worker threads allowed.
+     */
     private int maximumWorkerCount = 1;
+
+    /**
+     * Indicates whether to shut down on exit.
+     */
     private final boolean shutdownOnExit;
 
     /**
@@ -136,6 +191,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
     }
 
 
+    /**
+     * Dispatches the process configuration to the composer which starts it.
+     */
     @Override
     public void startInput() {
         DUUIProcessController.setStatus(getProcessID(), DUUIStatus.INPUT);
@@ -223,6 +281,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         }
     }
 
+    /**
+     * Processes the text input.
+     */
     @Override
     public void processText() {
         try {
@@ -257,6 +318,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         }
     }
 
+    /**
+     * Processes the collection.
+     */
     @Override
     public void process() {
         String processIdentifier = String.format(
@@ -274,6 +338,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
     }
 
 
+    /**
+     * Updates the process status.
+     */
     @Override
     public void update() {
         if (composer == null) return;
@@ -285,6 +352,11 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         DUUIProcessController.insertAnnotations(getProcessID(), composer.getDocuments());
     }
 
+    /**
+     * Handles exceptions that occur during the process.
+     *
+     * @param exception The exception that occurred.
+     */
     @Override
     public void onException(Exception exception) {
         DUUIProcessController.setStatus(getProcessID(), DUUIStatus.FAILED);
@@ -309,6 +381,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         exit();
     }
 
+    /**
+     * Handles the completion of the process.
+     */
     @Override
     public void onCompletion() {
         if (status.equals(DUUIStatus.CANCELLED)) return;
@@ -328,6 +403,9 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
     }
 
+    /**
+     * Cancels the process.
+     */
     @Override
     public void cancel() {
         status = DUUIStatus.CANCELLED;
@@ -352,12 +430,20 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         exit();
     }
 
+    /**
+     * Shuts down the process.
+     *
+     * Active connections to cloud services are closed.
+     */
     @Override
     public void shutdown() {
         inputHandler.shutdown();
         if (outputHandler != inputHandler) outputHandler.shutdown();
     }
 
+    /**
+     * Exits the process.
+     */
     @Override
     public void exit() {
         DUUIProcessMetrics.decrementActiveProcesses();
@@ -409,31 +495,59 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         interrupt();
     }
 
+    /**
+     * Handles the server stopping.
+     */
     @Override
     public void onServerStopped() {
         cancel();
     }
 
+    /**
+     * Returns the process ID.
+     *
+     * @return The process ID.
+     */
     @Override
     public String getProcessID() {
         return process.getString("oid");
     }
 
+    /**
+     * Returns the pipeline ID.
+     *
+     * @return The pipeline ID.
+     */
     @Override
     public String getPipelineID() {
         return pipeline.getString("oid");
     }
 
+    /**
+     * Returns the user ID.
+     *
+     * @return The user ID.
+     */
     @Override
     public String getUserID() {
         return pipeline.getString("user_id");
     }
 
+    /**
+     * Returns the status of the process.
+     *
+     * @return The status of the process.
+     */
     @Override
     public String getStatus() {
         return status;
     }
 
+    /**
+     * Returns the composer.
+     *
+     * @return The composer.
+     */
     @Override
     public void run() {
         DUUIProcessMetrics.incrementActiveProcesses();

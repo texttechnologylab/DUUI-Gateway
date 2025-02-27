@@ -21,6 +21,9 @@ import java.util.Set;
  */
 public class DUUIComponentRequestHandler {
 
+    /**
+     * A set of all available drivers.
+     */
     public static final Set<String> DRIVERS = Set.of(
         "DUUIDockerDriver",
         "DUUISwarmDriver",

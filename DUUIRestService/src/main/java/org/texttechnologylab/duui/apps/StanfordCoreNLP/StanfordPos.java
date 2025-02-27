@@ -21,8 +21,14 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasIOUtils;
 import org.xml.sax.SAXException;
 
+/**
+ * StanfordPos is a simple HTTP server that uses StanfordCoreNLP to perform POS tagging on text.
+ */
 public class StanfordPos {
 
+  /**
+   * The StanfordCoreNLP pipeline.
+   */
   private static StanfordCoreNLP pipeline;
 
   public static void main(String[] args) throws Exception {
@@ -49,6 +55,9 @@ public class StanfordPos {
 
   }
 
+  /**
+   * The ProcessHandler class is responsible for processing incoming requests.
+   */
   static class ProcessHandler implements HttpHandler {
 
     static JCas jc;
@@ -89,6 +98,9 @@ public class StanfordPos {
     }
   }
 
+  /**
+   * The TypesystemHandler class is responsible for returning the UIMA type system.
+   */
   static class TypesystemHandler implements HttpHandler {
 
     @Override
@@ -111,6 +123,9 @@ public class StanfordPos {
     }
   }
 
+    /**
+     * The CommunicationLayer class is responsible for returning the communication layer.
+     */
   static class CommunicationLayer implements HttpHandler {
 
     @Override

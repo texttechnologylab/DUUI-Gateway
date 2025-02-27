@@ -43,6 +43,12 @@ import static org.texttechnologylab.duui.api.controllers.processes.DUUIProcessCo
  */
 public class DUUIProcessRequestHandler {
 
+    /**
+     * Retrieve the folder structure of a provider.
+     * See {@link IDUUIFolderPickerApi#getFolderStructure()}.
+     *
+     * @return A JSON Document containing the folder structure.
+     */
     public static String getFolderStructure(Request request, Response response) throws DbxException, ExecutionException, InterruptedException, GeneralSecurityException, IOException {
         String id = request.params(":id");
         String provider = request.params(":provider") != null ? request.params(":provider") : "";

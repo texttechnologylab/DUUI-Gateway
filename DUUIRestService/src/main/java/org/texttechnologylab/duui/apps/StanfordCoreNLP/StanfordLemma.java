@@ -21,8 +21,14 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasIOUtils;
 import org.xml.sax.SAXException;
 
+/**
+ * StanfordLemma
+ */
 public class StanfordLemma {
 
+  /**
+   * Properties for the StanfordCoreNLP pipeline
+   */
   static Properties props;
 
   public static void main(String[] args) throws Exception {
@@ -50,6 +56,9 @@ public class StanfordLemma {
     server.start();
   }
 
+  /**
+   * ProcessHandler for the StanfordCoreNLP pipeline.
+   */
   static class ProcessHandler implements HttpHandler {
 
     static JCas jc;
@@ -96,6 +105,9 @@ public class StanfordLemma {
     }
   }
 
+    /**
+     * TypesystemHandler for the StanfordCoreNLP pipeline.
+     */
   static class TypesystemHandler implements HttpHandler {
 
     @Override
@@ -118,6 +130,9 @@ public class StanfordLemma {
     }
   }
 
+    /**
+     * CommunicationLayer for the StanfordCoreNLP pipeline.
+     */
   static class CommunicationLayer implements HttpHandler {
 
     @Override

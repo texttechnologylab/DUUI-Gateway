@@ -15,27 +15,46 @@ import java.util.concurrent.TimeUnit;
  */
 public class DUUISystemMetrics {
 
+    /**
+     * The current cpu load.
+     */
     private static final Gauge cpuLoad = Gauge.build()
         .name("duui_cpu_load")
         .help("The current cpu load")
         .register();
 
+    /**
+     * The current free memory.
+     */
     private static final Gauge memoryFree = Gauge.build()
         .name("duui_memory_free")
         .help("The current cpu load")
         .register();
 
+    /**
+     * The total memory.
+     */
     private static final Gauge memoryTotal = Gauge.build()
         .name("duui_memory_total")
         .help("The current cpu load")
         .register();
 
+    /**
+    * The current virtual memory comitted.
+     */
     private static final Gauge memoryVirtualComitted = Gauge.build()
         .name("duui_memory_virtual_comitted")
         .help("The current cpu load")
         .register();
+
+    /**
+     * The system monitor.
+     */
     private static OperatingSystemMXBean monitor;
 
+    /**
+     * Register the metrics and start the update service.
+     */
     public static void register() {
         monitor = ManagementFactory.getPlatformMXBean(com.sun.management.OperatingSystemMXBean.class);
         ScheduledFuture<?> service = Executors
@@ -50,6 +69,9 @@ public class DUUISystemMetrics {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> service.cancel(true)));
     }
 
+    /**
+     * Update the system metrics.
+     */
     private static void updateSystemMetrics() {
         cpuLoad.set(monitor.getCpuLoad());
         memoryFree.set(monitor.getFreeMemorySize());

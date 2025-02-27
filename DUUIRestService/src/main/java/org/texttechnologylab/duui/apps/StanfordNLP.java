@@ -24,6 +24,9 @@ import org.xml.sax.SAXException;
 
 public class StanfordNLP {
 
+  /**
+   * The StanfordCoreNLP instance is created for each request to the server.
+   */
   private static StanfordCoreNLP stanfordCoreNLP;
 
   public static void main(String[] args) throws Exception {
@@ -43,6 +46,10 @@ public class StanfordNLP {
     System.out.println("Remote Server started at " + server.getAddress());
   }
 
+  /**
+   * The ProcessHandler class is responsible for processing the incoming
+   * requests. It processes the incoming CAS and returns the processed CAS.
+   */
   static class ProcessHandler implements HttpHandler {
 
     static JCas jc;
@@ -100,6 +107,10 @@ public class StanfordNLP {
     }
   }
 
+  /**
+   * The TypesystemHandler class is responsible for returning the type system
+   * description of the CAS.
+   */
   static class TypesystemHandler implements HttpHandler {
 
     @Override

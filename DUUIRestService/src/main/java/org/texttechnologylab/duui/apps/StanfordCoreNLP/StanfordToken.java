@@ -22,7 +22,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-
+/**
+ * StanfordToken is a simple HTTP server that provides a communication layer for UIMA and Stanford CoreNLP.
+ */
 public class StanfordToken {
 
 
@@ -41,6 +43,9 @@ public class StanfordToken {
 
     }
 
+    /**
+     * ProcessHandler is a HTTP handler that processes the input CAS and adds token annotations to it.
+     */
     static class ProcessHandler implements HttpHandler {
 
         static JCas jc;
@@ -85,6 +90,9 @@ public class StanfordToken {
         }
     }
 
+    /**
+     * TypesystemHandler is a HTTP handler that provides the UIMA type system description.
+     */
     static class TypesystemHandler implements HttpHandler {
 
         @Override
@@ -107,6 +115,9 @@ public class StanfordToken {
         }
     }
 
+    /**
+     * CommunicationLayer is a HTTP handler that provides the communication layer for UIMA and Stanford CoreNLP.
+     */
     static class CommunicationLayer implements HttpHandler {
 
         @Override

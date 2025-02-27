@@ -63,6 +63,12 @@ public class DUUIProcessController {
             .append("language", "");
     }
 
+    /**
+     * Get the language code for a given language.
+     *
+     * @param language The language to get the code for.
+     * @return the language code.
+     */
     public static String getLanguageCode(String language) {
         return switch (language.toLowerCase()) {
             case "german" -> "de";
@@ -591,6 +597,13 @@ public class DUUIProcessController {
         return document.toInputStream();
     }
 
+    /**
+     * Get the summary of a process for an email.
+     *
+     * @param processId The id of the process.
+     * @return an {@link Optional} of the summary.
+     * @throws IOException when the template file is not found.
+     */
     public static Optional<String> getProcessSummaryForEmail(String processId) throws IOException {
         Document process = findOneById(processId);
 
@@ -643,6 +656,13 @@ public class DUUIProcessController {
         return Optional.of(template);
     }
 
+    /**
+     * Filter a list of documents by their status.
+     *
+     * @param documents The list of documents to filter.
+     * @param status    The status to filter by.
+     * @return a list of documents with the given status.
+     */
     private static List<Document> filterDocumentByStatus(List<Document> documents, String status) {
         return documents
                 .stream()

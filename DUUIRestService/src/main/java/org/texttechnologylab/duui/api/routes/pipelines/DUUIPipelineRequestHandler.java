@@ -130,7 +130,7 @@ public class DUUIPipelineRequestHandler {
             return DUUIRequestHelper.badRequest(response, "Missing field name");
 
         List<Document> components = body.getList("components", Document.class);
-        if (DUUIRequestHelper.isNullOrEmpty(components))
+        if (DUUIRequestHelper.isNullOrEmpty(componennts))
             return DUUIRequestHelper.badRequest(response, "Missing field components");
 
         boolean isTemplate = request

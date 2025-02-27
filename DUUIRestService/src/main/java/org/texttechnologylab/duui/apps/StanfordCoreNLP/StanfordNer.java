@@ -23,6 +23,9 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * StanfordNer is a simple HTTP server that uses StanfordCoreNLP to perform Named Entity Recognition on a text.
+ */
 public class StanfordNer {
     public static void main(String[] args) throws Exception {
 
@@ -39,6 +42,10 @@ public class StanfordNer {
 
     }
 
+    /**
+     * ProcessHandler is the handler for the /v1/process endpoint.
+     * It reads a CAS from the request body, processes it with StanfordCoreNLP, and writes the result back to the response body.
+     */
     static class ProcessHandler implements HttpHandler {
 
         static JCas jc;
@@ -84,6 +91,10 @@ public class StanfordNer {
         }
     }
 
+    /**
+     * TypesystemHandler is the handler for the /v1/typesystem endpoint.
+     * It writes the UIMA type system description to the response body.
+     */
     static class TypesystemHandler implements HttpHandler {
 
         @Override
@@ -106,6 +117,10 @@ public class StanfordNer {
         }
     }
 
+    /**
+     * CommunicationLayer is the handler for the /v1/communication_layer endpoint.
+     * It writes the Lua code for the communication layer to the response body.
+     */
     static class CommunicationLayer implements HttpHandler {
 
         @Override
