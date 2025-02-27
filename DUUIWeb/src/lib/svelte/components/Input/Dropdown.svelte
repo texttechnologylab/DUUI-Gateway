@@ -13,6 +13,8 @@
 	export let label: string = ''
 	export let name: string = label
 
+	export let capitalize = true
+
 	export let options: string[] | number[]
 	export let value: string | number
 
@@ -45,7 +47,7 @@
 		class="flex items-center !justify-between gap-2 px-3 py-2 leading-6  {border} {rounded} {style}"
 		use:popup={dropdown}
 	>
-		<span>{value === "" ? "" : toTitleCase('' + value)}</span>
+		<span>{value === "" ? "" : capitalize ? toTitleCase('' + value) : '' + value}</span>
 		<Fa {icon} />
 	</button>
 </div>

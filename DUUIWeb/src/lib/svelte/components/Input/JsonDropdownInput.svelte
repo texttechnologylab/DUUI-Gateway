@@ -96,6 +96,7 @@
 					<div class="flex-center-4">
 						<Dropdown
 								label="Add a Lable"
+								capitalize={false}
 								offset={0}
 								bind:value={key}
 								on:change={(_) => {
