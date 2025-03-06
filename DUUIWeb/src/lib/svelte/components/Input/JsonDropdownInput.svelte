@@ -116,20 +116,16 @@
 				</div>
 			{/if}
 		</div>
-		{#if data.size === 0}
-			<p>Select a value and confirm.</p>
-		{/if}
 
 		<div class="flex flex-wrap justify-start items-start gap-2">
 			{#each data.entries() as [_key, _value]}
-				<div class="input-wrapper p-4 min-w-[200px]">
-					<div class="flex-center-4 justify-between">
-						<p class="text-m font-bold">{_value}</p>
+				<div class="flex justify-between gap-3 px-4 py-1 min-w-[30px] bg-sky-800 bg-opacity-50 outline-primary-600 outline outline-1 rounded-full">
+						<span class="text-opacity-100 font-semibold text-neutral-50">{_value}</span>
 						<button
-							class="rounded-full hover:text-error-500 transition-colors"
-							on:click={() => remove(_key)}><Fa icon={faClose} size="lg" /></button
-						>
-					</div>
+							class="flex-center rounded-full hover:text-error-500 transition-colors"
+							on:click={() => remove(_key)}>
+							<Fa icon={faClose}  />
+						</button>
 				</div>
 			{/each}
 		</div>

@@ -6,12 +6,14 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
+import com.mongodb.client.result.DeleteResult;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
 import org.texttechnologylab.duui.analysis.document.Provider;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
+import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.routes.users.DUUIUsersRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import com.dropbox.core.*;
@@ -122,8 +124,6 @@ public class DUUIUserController {
         return projection.get("connections", Document.class).get("nextcloud", Document.class)
                 .get(providerId, Document.class);
     }
-
-
 
     public static Document getGoogleCredentials(Document user, String providerId) {
         Document projection = DUUIMongoDBStorage
@@ -312,8 +312,124 @@ public class DUUIUserController {
 
 
     /**
-     *  Create and insert a user into the database.
+     * Insert a new group to the database.
+     *
+     * @return Newly added group.
      */
+    public static String insertGroup(Request request, Response response) {
+        String newGroupId = UUID.randomUUID().toString();
+
+        Document data = Document.parse(request.body());
+
+        String name = data.getString("name");
+        if (DUUIRequestHelper.isNullOrEmpty(name)) {
+            return DUUIRequestHelper.missingField(response, "name");
+        }
+
+        List<String> members = data.getList("members", String.class);
+        List<String> groupLabels = data.getList("labels", String.class);
+
+        Document newGroup = new Document("name", name)
+                .append("members", members)
+                .append("labels", groupLabels);
+
+        Document update = new Document("$set", new Document("groups." + newGroupId, newGroup));
+
+        FindOneAndUpdateOptions options = new FindOneAndUpdateOptions()
+                .upsert(true)
+                .returnDocument(ReturnDocument.AFTER);
+
+        Document updatedDoc = DUUIMongoDBStorage.Globals().findOneAndUpdate(new Document(), update, options);
+
+        if (updatedDoc == null) {
+            return DUUIRequestHelper.badRequest(response, "Database write failed.");
+        }
+
+        response.status(201);
+
+        return updatedDoc.toJson();
+    }
+
+    /**
+     * Update a group in the database.
+     *
+     * @param request Request object.
+     * @param response Response object.
+     * @return Updated group.
+     */
+    public static String updateGroup(Request request, Response response) {
+
+        String groupId = request.params("groupId");
+        if (DUUIRequestHelper.isNullOrEmpty(groupId)) {
+            return DUUIRequestHelper.missingField(response, "groupId");
+        }
+
+        Document newGroupData = Document.parse(request.body());
+
+        Document update = new Document("$set", new Document("groups." + groupId, newGroupData));
+
+        Document result = DUUIMongoDBStorage.Globals()
+                .findOneAndUpdate(Filters.exists("groups." + groupId), update);
+
+        if (result == null) {
+            response.status(404);
+            return DUUIRequestHelper.badRequest(response, "Group does not exist and cannot be updated: " + groupId);
+        }
+
+        response.status(200);
+        return new Document(groupId, newGroupData).toJson();
+    }
+
+    /**
+     * Delete a group from the database.
+     *
+     * @param request Request object.
+     * @param response Response object.
+     * @return Confirmation message.
+     */
+    public static String deleteGroup(Request request, Response response) {
+
+        String groupId = request.params("groupId");
+
+        if (DUUIRequestHelper.isNullOrEmpty(groupId)) {
+            return DUUIRequestHelper.missingField(response, "groupId");
+        }
+
+        DeleteResult result = DUUIMongoDBStorage.Globals()
+                .deleteOne(Filters.exists("groups." + groupId));
+
+        if (result.wasAcknowledged() && result.getDeletedCount() < 1)
+            return DUUIRequestHelper.badRequest(response, "Group " + groupId + " could not be deleted.");
+
+        response.status(204);
+
+        return "Successfully deleted group: " + groupId;
+    }
+
+    /**
+     * Only accessible through admins.
+     *
+     * Retrieves groups from database. Every group has members which correspond to user emails and
+     * labels which this group has access to. When creating a component, a user is restricted to adding
+     * public labels or labels contained in one of the users valid groups.
+     *
+     * @param request Request object.
+     * @param response Response object.
+     * @return Document containing all groups.
+     */
+    public static String getGroups(Request request, Response response) {
+
+        Document groupsDoc = DUUIMongoDBStorage.Globals()
+            .findOneAndUpdate(
+                    new Document(),
+                    new Document("$setOnInsert", new Document("groups", new Document())),
+                    new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+            );
+
+        response.status(200);
+        return groupsDoc.toJson();
+    }
+
     public static String insertLabel(Request request, Response response) {
         String driver = request.params(":driver");
         String label = request.params(":label");
@@ -323,6 +439,7 @@ public class DUUIUserController {
         Document update = new Document("$set", new Document("labels." + newLabelId, new Document()
                 .append("label", label)
                 .append("driver", driver)
+                .append("scope", "public")
         ));
         Document result = DUUIMongoDBStorage.Globals()
                 .findOneAndUpdate(Filters.exists("labels"), update);
@@ -336,12 +453,14 @@ public class DUUIUserController {
         String driver = request.params(":driver");
         String label = request.params(":label");
         String labelId = request.params(":labelId");
+        String scope = request.params(":scope");
 
         DUUIMongoDBStorage.Globals().updateOne(
             Filters.exists("labels." + labelId),
             Updates.combine(
                 Updates.set("labels." + labelId + ".label", label),
-                Updates.set("labels." + labelId + ".driver", driver)
+                Updates.set("labels." + labelId + ".driver", driver),
+                Updates.set("labels." + labelId + ".scope", scope.isEmpty() ? "public" : scope)
             )
         );
 
@@ -372,6 +491,11 @@ public class DUUIUserController {
      * @return a list of labels.
      */
     public static String getLabels(Request request, Response response) {
+
+        if (invalidRequestOrigin(request.ip())) {
+            response.status(401);
+            return "Unauthorized";
+        }
 
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
 

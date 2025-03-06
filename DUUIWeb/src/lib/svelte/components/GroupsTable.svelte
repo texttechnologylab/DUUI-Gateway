@@ -13,9 +13,21 @@
 		row2: { groups: 'g2', members: [], labels: ["a", "b"]}
 	};
 
-	export let saveCallback
-	export let insertCallback
-	export let deleteCallback
+	export let saveCallback = (key, row) => {
+		return () => {
+			console.log(key, row)
+		}
+	}
+	export let insertCallback = (newGroupName, rows) => {
+		return () => {
+			console.log(newGroupName, rows)
+		}
+	}
+	export let deleteCallback = (key, row) => {
+		return () => {
+			console.log(key, row)
+		}
+	}
 
 	let newGroupName
 
@@ -66,17 +78,23 @@
 	];
 </script>
 
-<FunctionalTable data={ rows } columns={ columns } { functionalColumns } />
-<div style="display: flex; align-items: center; justify-content: flex-end;">
-	<Text
-		label=""
-		style="self-center"
-		name="newLabel"
-		bind:value={newGroupName}
-	/>
-	<button
-		class="button-neutral !justify-center !border-none !rounded-none"
-		on:click={() => insertCallback(newGroupName, rows)}>
-		<Fa icon={faPlus} />
-	</button>
+<div class="section-wrapper p-8 space-y-4 w-full">
+	<div class="flex items gap-2 justify-start">
+		<Text
+			label="Add new group"
+			style="self-center"
+			name="newLabel"
+			bind:value={newGroupName}
+		/>
+		<div class="mt-8 flex items-center gap-2">
+			<button
+				class=" button-neutral hover:!variant-soft-primary transition-300   "
+				on:click={() => insertCallback(newGroupName, rows)}>
+				<Fa icon={faPlus} />
+				<span >Add</span>
+			</button>
+		</div>
+	</div>
+	<FunctionalTable data={ rows } columns={ columns } { functionalColumns } />
 </div>
+

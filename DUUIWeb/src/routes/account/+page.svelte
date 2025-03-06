@@ -39,6 +39,8 @@
 	} from "../../app";
 	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import GroupsTable from "$lib/svelte/components/GroupsTable.svelte";
+	import LabelsTable from "$lib/svelte/components/LabelsTable.svelte";
 
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
@@ -1303,6 +1305,9 @@
 						</div>
 					</div>
 				</div>
+
+<!--				<GroupsTable />-->
+				<LabelsTable />
 			{/if}
 		{/if}
 	</div>

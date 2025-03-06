@@ -75,6 +75,21 @@ public class Methods {
                 get("/driver-filter/:driver", DUUIUserController::getDriverLabels);
                 get("", DUUIUserController::getLabels);
             });
+
+            path("/groups", () -> {
+                before("/*", (request, response) -> {
+                    boolean isAuthorized = DUUIRequestHelper.isAdmin(request);
+                    if (!isAuthorized) {
+                        halt(401, "Only admins can access this endpoint.");
+                    }
+                });
+
+                post("/insert/", DUUIUserController::insertGroup);
+                post("/update/groupId", DUUIUserController::updateGroup);
+                delete("", DUUIUserController::deleteGroup);
+                get("", DUUIUserController::getGroups);
+            });
+
             get("/:id", DUUIUserController::fetchUser);
             get("", DUUIUserController::fetchUsers);
             post("", DUUIUserController::insertOne);

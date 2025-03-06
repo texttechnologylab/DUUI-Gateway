@@ -1,6 +1,7 @@
 package org.texttechnologylab.duui.api.routes;
 
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
+import org.texttechnologylab.duui.api.controllers.users.Role;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.bson.Document;
 import spark.Request;
@@ -53,6 +54,20 @@ public class DUUIRequestHelper {
             }
         }
         return props;
+    }
+
+    /**
+     * Checks if the user is an admin.
+     *
+     * @param request The Spark Request object.
+     * @return true if the user is an admin.
+     */
+    public static boolean isAdmin(Request request) {
+
+        String role = (String) getUserProps(request, Set.of("role"))
+            .getOrDefault("role", null);
+
+        return role.equals(Role.ADMIN);
     }
 
     /**
