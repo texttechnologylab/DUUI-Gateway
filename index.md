@@ -11,4 +11,4 @@ The step-by-step guide for the project can be found on the web page
 or on the project [README](./README.md)
 
 ## JavaDoc
-[View JavaDoc](./javadocs/index.html)
+[View JavaDoc](./javadoc/apidocs/index.html)

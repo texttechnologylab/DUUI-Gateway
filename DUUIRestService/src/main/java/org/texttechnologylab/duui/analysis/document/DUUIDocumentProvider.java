@@ -174,7 +174,7 @@ public class DUUIDocumentProvider {
             || provider.equalsIgnoreCase(Provider.GOOGLE);
     }
 
-    **
+    /**
      * Checks if this DUUIDocumentProvider is a database provider.
      *
      * @return true if this DUUIDocumentProvider is a database provider, false otherwise
