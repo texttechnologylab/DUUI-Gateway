@@ -28,4 +28,4 @@ jobs:
           pip install mkdocs-glightbox
       - name: Deploy 
         run: | 
-          mkdocs gh-deploy --config-file Documentation/mkdocs.yml --remote-branch gh-pages --force
+          mkdocs gh-deploy --config-file page/mkdocs.yml --remote-branch gh-pages --force
