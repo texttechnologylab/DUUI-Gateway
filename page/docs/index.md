@@ -2,6 +2,8 @@
 
 ![GitHub License](https://img.shields.io/github/license/Texttechnologylab/DUUI-Gateway)
 
+![DUUIGatewayImage](images/DUUI.svg)
+
 ### About
 The Docker Unified UIMA Interface – Gateway (DUUI-Gateway for short) is a web and REST-based software solution for encapsulating and utilising the Docker Unified UIMA Interface, a Big Data NLP framework for the automatic processing of heterogeneous NLP tools, based on UIMA and using microservices such as Docker or Kubernetes.
 

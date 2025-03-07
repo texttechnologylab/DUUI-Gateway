@@ -21,8 +21,8 @@ nav:
 # Configuration
 theme:
   name: material
-  logo: images/logo/cropped-favicon-2.png
-  favicon: images/logo/cropped-favicon-2.png
+  logo: images/DUUI.svg
+  favicon: images/DUUI.svg
 
   icon:
     repo: fontawesome/brands/github
