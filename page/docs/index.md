@@ -5,7 +5,7 @@
 ![DUUIGatewayImage](images/DUUI.svg)
 
 ### About
-The Docker Unified UIMA Interface – Gateway (DUUI-Gateway for short) is a web and REST-based software solution for encapsulating and utilising the Docker Unified UIMA Interface, a Big Data NLP framework for the automatic processing of heterogeneous NLP tools, based on UIMA and using microservices such as Docker or Kubernetes.
+The **Docker Unified UIMA Interface – Gateway** (**DUUI-Gateway** for short) is a web and REST-based software solution for encapsulating and utilising the [Docker Unified UIMA Interface](https://github.com/texttechnologylab/DockerUnifiedUIMAInterface), a Big Data NLP framework for the automatic processing of heterogeneous NLP tools, based on UIMA and using microservices such as Docker or Kubernetes.
 
 **DUUI** as well as **DUUI-Gateway** are developed and maintained at the **Texttechnologylab** ([TTLab](https://www.texttechnologylab.org/)) at the Goethe University Frankfurt.
 
@@ -19,7 +19,8 @@ Automatic analysis of large text corpora is a complex task. This complexity part
 - Cederic Borkowski [:fontawesome-brands-github:](https://github.com/CedricBorko)
 - Prof. Dr. Alexander Mehler (Leader TTLab) [:fontawesome-brands-github:](https://github.com/amehler) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Alexander-Mehler-2)
 - Giuseppe Abrami [:fontawesome-brands-github:](https://github.com/abrami) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Giuseppe-Abrami)
-- Davit Terefe
+- Davit Terefe [:fontawesome-brands-github:](https://github.com/dterefe)
+  
 
 
 ## Pipeline
