@@ -24,7 +24,7 @@ jobs:
       - name: Generate Javadoc
         run: |
           mkdir -p javadoc
-          javadoc -d javadoc -sourcepath DUUIRestService/src -subpackages org.texttechnologylab
+          javadoc -d javadoc -sourcepath DUUIRestService/src/main -subpackages org.texttechnologylab
 
       - name: Checkout gh-pages Branch
         uses: actions/checkout@v4
