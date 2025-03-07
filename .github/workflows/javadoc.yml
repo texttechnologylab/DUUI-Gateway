@@ -1,9 +1,10 @@
 name: Generate and Deploy Javadoc
 
 on:
-  push:
-    branches:
-      - main  # Passe dies an den Branch an, den du verwendest
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - main
 
 jobs:
   generate-javadoc:
@@ -19,7 +20,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'  # Passe die Java-Version an dein Projekt an
+          java-version: '17'
 
       - name: Generate Javadoc
         run: |
