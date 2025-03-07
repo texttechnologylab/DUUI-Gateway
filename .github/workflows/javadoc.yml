@@ -24,6 +24,7 @@ jobs:
       - name: Generate Javadoc
         run: |
           mkdir -p javadoc
+          cd DUUIRestService
           mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
           javadoc -d javadoc -sourcepath DUUIRestService/src/main/java -subpackages org.texttechnologylab.duui -classpath $(cat classpath.txt)
 
