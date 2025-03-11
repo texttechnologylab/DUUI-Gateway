@@ -19,7 +19,7 @@ Automatic analysis of large text corpora is a complex task. This complexity part
 - Cederic Borkowski [:fontawesome-brands-github:](https://github.com/CedricBorko)
 - Prof. Dr. Alexander Mehler (Leader TTLab) [:fontawesome-brands-github:](https://github.com/amehler) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Alexander-Mehler-2)
 - Giuseppe Abrami [:fontawesome-brands-github:](https://github.com/abrami) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Giuseppe-Abrami)
-- Davit Terefe [:fontawesome-brands-github:](https://github.com/dterefe)
+- Dawit Terefe [:fontawesome-brands-github:](https://github.com/dterefe)
   
 
 
