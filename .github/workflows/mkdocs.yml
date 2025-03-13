@@ -25,21 +25,27 @@ jobs:
           java-version: '17'
 
       # 3) Generate Javadoc
-      - name: Generate Javadoc
-        run: |
-          mkdir -p javadoc/apidocs
-          cd DUUIRestService
-
-          mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
-
-          javadoc \
-            -d ../javadoc/apidocs \
-            -sourcepath src/main/java \
-            -subpackages org.texttechnologylab.duui \
-            -classpath $(cat classpath.txt)
+#      - name: Generate Javadoc
+#        run: |
+#          mkdir -p javadoc/apidocs
+#          cd DUUIRestService
+#
+#          mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
+#
+#          javadoc \
+#            -d ../javadoc/apidocs \
+#            -sourcepath src/main/java \
+#            -subpackages org.texttechnologylab.duui \
+#            -classpath $(cat classpath.txt)
 
       # 4) Copy Javadoc into the folder where MkDocs expects to find it
-      - name: Move Javadoc into docs folder
+#      - name: Move Javadoc into docs folder
+#        run: |
+#          mkdir -p page/docs/javadoc
+#          cp -r javadoc/apidocs/* page/docs/javadoc
+
+      # 4) Copy the static javadoc folder into the docs folder for MkDocs
+      - name: Static JavaDoc Copy
         run: |
           mkdir -p page/docs/javadoc
           cp -r javadoc/apidocs/* page/docs/javadoc
