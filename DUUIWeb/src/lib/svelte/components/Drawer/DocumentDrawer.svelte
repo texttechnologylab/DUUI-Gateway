@@ -90,7 +90,7 @@
 		annotationType?: string
 	}
 
-	let selectedAnnotation: string
+	let selectedAnnotation: string = ""
 	let documentText: string
 	let annotationNames: string[]
 	let unprocessedAnnotations: Annotation[]
@@ -227,6 +227,9 @@
 			)
 		}
 	}
+
+	if (!selectedAnnotation)
+		preprocessDocument()
 </script>
 
 <div class="h-full bg-surface-50-900-token">

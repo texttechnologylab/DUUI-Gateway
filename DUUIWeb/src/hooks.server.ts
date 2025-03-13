@@ -29,17 +29,28 @@ const fetchUser = async (
  * The request is verified through this function before being passed to the appropriate page / endpoint.
  */
 export const handle: Handle = async ({ event, resolve }) => {
-	const { cookies } = event
-	let session = cookies.get('session') || event.url.searchParams.get('state') || ''
+	const { cookies } = event;
+	let session = cookies.get('session') || event.url.searchParams.get('state') || '';
 
 	if (session) {
 		try {
-			await fetchUser(session, event)
+			await fetchUser(session, event);
 		} catch (err) {}
 	}
 
 	// The user is not authorized.
-	if (!event.locals.user) cookies.delete('session', { path: '/' })
+	if (!event.locals.user) cookies.delete('session', { path: '/' });
 
-	return await resolve(event)
-}
+	// Resolve the response
+	const response = await resolve(event);
+
+	// Set headers to allow cross-origin requests
+	response.headers.set('Access-Control-Allow-Origin', '*'); // Change * to your frontend URL in production
+	response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+	response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	response.headers.set('Access-Control-Allow-Credentials', 'true'); // Allow cookies
+
+	return response;
+};
+
+
