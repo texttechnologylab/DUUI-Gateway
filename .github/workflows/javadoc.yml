@@ -27,8 +27,9 @@ jobs:
           mkdir -p javadoc
           cd DUUIRestService
           mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
-          javadoc -d javadoc -sourcepath DUUIRestService/src/main/java -subpackages org.texttechnologylab.duui -classpath $(cat classpath.txt)
-
+          # javadoc -d javadoc -sourcepath DUUIRestService/src/main/java -subpackages org.texttechnologylab.duui -classpath $(cat classpath.txt)
+          mvn javadoc:javadoc
+          
       - name: Checkout gh-pages Branch
         uses: actions/checkout@v4
         with:
