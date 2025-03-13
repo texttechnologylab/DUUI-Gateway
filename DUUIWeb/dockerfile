@@ -1,5 +1,7 @@
 FROM node:18-alpine AS builder
 
+ENV API_URL=http://duui-backend:2605
+
 RUN mkdir /app
 
 COPY . /app
@@ -7,7 +9,6 @@ COPY . /app
 RUN cd /app && npm install && npm run build
 
 FROM node:18-alpine
-
 
 RUN mkdir /app
 COPY --from=builder /app/build /app/build
@@ -18,15 +19,7 @@ RUN cd /app && \
 
 WORKDIR /app
 
-EXPOSE 5173
+EXPOSE 5174
 
-# URL auf der das Frontend läuft
-ENV ORIGIN=http://localhost:5173 
+CMD ["node", "./build/index.js" ]
 
-# URL auf der das Backend läuft
-ENV API_URL=http://192.168.2.122:2605
-
-# URL der Dropbox App
-ENV DBX_URL='https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
-
-CMD [ "node", "build/index.js" ]

@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:
+  duui-backend:
+    build:
+      context: ./DUUIRestService
+      dockerfile: Dockerfile      # or Dockerfile-rest-service, if that's the file name
+    container_name: duui-backend
+    ports:
+      - "2605:2605"
+    
+  duui-frontend:
+    build:
+      context: ./DUUIWeb
+      dockerfile: dockerfile      # or Dockerfile-frontend, etc.
+    container_name: web-frontend
+    ports:
+      - "5174:5174"
+    depends_on:
+      - duui-backend
+
+    environment:
+#       - ORIGIN=http://localhost:5174
+       - API_URL=http://duui-backend:2605
+#       - API_URL=http://192.168.2.122:2605
+       - PORT=5174
+       - DBX_URL='https://www.dropbox.com/home/Apps/DUUI'
