@@ -2,9 +2,9 @@ name: Generate and Deploy Javadoc
 
 on:
   workflow_dispatch:
-#  push:
-#    branches:
-#      - main
+  push:
+   branches:
+       - main
 
 jobs:
   generate-javadoc:
