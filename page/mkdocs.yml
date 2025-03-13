@@ -14,7 +14,8 @@ repo_name: texttechnologylab/DUUI-Gateway
 nav:
   - Home: index.md
   - Publications: publications.md
-  - JavaDoc: docs/index.html
+  - JavaDoc: ~/javadoc/apidocs/index.html
+  # - JavaDoc: docs/index.html
   - Features: features.md
 
 
