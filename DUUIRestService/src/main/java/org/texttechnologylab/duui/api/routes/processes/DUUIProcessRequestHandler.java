@@ -22,7 +22,6 @@ import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import spark.Request;
 import spark.Response;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -68,7 +67,7 @@ public class DUUIProcessRequestHandler {
                 );
         }
 
-        if (handler instanceof IDUUIFolderPickerApi) {
+        if (handler instanceof IDUUIFolderPickerApi iDUUIFolderPickerApi) {
             Document document = null;
             Document result = DUUIMongoDBStorage.Users().find(Filters.eq(new ObjectId(id))).first();
             if (result != null) {
@@ -78,7 +77,7 @@ public class DUUIProcessRequestHandler {
 
             if (document == null) {
                 CompletableFuture<IDUUIFolderPickerApi.DUUIFolder> folderStructure =
-                        CompletableFuture.supplyAsync(() -> ((IDUUIFolderPickerApi) handler).getFolderStructure());
+                        CompletableFuture.supplyAsync(() -> iDUUIFolderPickerApi.getFolderStructure());
                 Map<String, Object> tree = folderStructure.get().toJson();
                 document = new Document(tree);
 

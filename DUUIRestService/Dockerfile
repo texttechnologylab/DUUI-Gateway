@@ -13,14 +13,12 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/
 
-# Compile Java project and create the JAR-file
-RUN mvn package
-
 # Expose port 2605 where the server is addressed to
 EXPOSE 2605
 
-# Setzen des Einstiegspunkts, um die JAR-Datei auszuführen
-ENTRYPOINT ["java", "-jar", "./target/DUUIRestService.jar"]
-# CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main" -Dexec.args="./config.ini"
-# Übergeben der Konfigurationsdatei als Argument (passen Sie den Pfad an)
-CMD ["./config.ini"]
+# # Compile Java project and create the JAR-file
+RUN mvn package
+
+
+# Setzen des Einstiegspunkts, um die Main-Datei auszuführen
+ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar", "config.ini"]

@@ -1,27 +1,33 @@
 package org.texttechnologylab.duui.api.storage;
 
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.UpdateResult;
-import org.texttechnologylab.duui.analysis.document.Provider;
-import org.texttechnologylab.duui.api.Config;
-import org.texttechnologylab.duui.api.Main;
-import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
-import org.texttechnologylab.duui.api.metrics.providers.DUUIStorageMetrics;
-import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Updates;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import spark.Request;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.texttechnologylab.duui.api.Config;
+import org.texttechnologylab.duui.api.Main;
+import org.texttechnologylab.duui.api.metrics.providers.DUUIStorageMetrics;
+import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+
+import spark.Request;
 
 /**
  * A utility class for setting up and retrieving information about the database including its collections. Also

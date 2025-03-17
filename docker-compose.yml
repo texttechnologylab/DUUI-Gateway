@@ -11,23 +11,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "2605:2605"
-    extra_hosts:
-        - "host.docker.internal:host-gateway"
 
 
   duui-frontend:
     build:
       context: ./DUUIWeb
-      dockerfile: dockerfile      # or Dockerfile-frontend, etc.
+      dockerfile: Dockerfile      # or Dockerfile-frontend, etc.
     container_name: web-frontend
     ports:
-      - "5174:5174"
+      - "5173:5173"
     depends_on:
       - duui-backend
 
     environment:
-#       - ORIGIN=http://localhost:5174
+      #  - ORIGIN=http://localhost:5173
        - API_URL=http://duui-backend:2605
 #       - API_URL=http://192.168.2.122:2605
-       - PORT=5174
+       - PORT=5173
        - DBX_URL='https://www.dropbox.com/home/Apps/DUUI'

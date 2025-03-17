@@ -372,9 +372,12 @@ public class DUUIUserController {
      * @return a list of labels.
      */
     public static String getLabels(Request request, Response response) {
-
+    
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
-
+    
+        if (labels == null) {
+            return "{}";
+        }
         return labels.toJson();
     }
 

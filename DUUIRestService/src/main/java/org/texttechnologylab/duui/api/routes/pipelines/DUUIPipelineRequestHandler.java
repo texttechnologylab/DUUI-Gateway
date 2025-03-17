@@ -1,21 +1,22 @@
 package org.texttechnologylab.duui.api.routes.pipelines;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+
+import org.bson.Document;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
-import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
 import org.texttechnologylab.duui.api.controllers.users.Role;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.storage.MongoDBFilters;
+
 import com.mongodb.client.model.Filters;
-import org.bson.Document;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+
 import spark.Request;
 import spark.Response;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Set;
 
 
 /**

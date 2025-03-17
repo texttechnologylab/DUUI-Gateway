@@ -16,6 +16,7 @@ nav:
   - Publications: publications.md
   - JavaDoc: javadoc/index.html
   - Features: features.md
+  - Setup: setup.md
 
 
 # Configuration

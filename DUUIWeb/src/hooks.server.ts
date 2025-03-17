@@ -44,12 +44,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Resolve the response
 	const response = await resolve(event);
 
-	// Set headers to allow cross-origin requests
-	response.headers.set('Access-Control-Allow-Origin', '*'); // Change * to your frontend URL in production
-	response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-	response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-	response.headers.set('Access-Control-Allow-Credentials', 'true'); // Allow cookies
-
 	return response;
 };
 
