@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://texttechnologylab.github.io/DUUI-Gateway/setup/">
+        <link rel="canonical" href="https://texttechnologylab.github.io/DUUI-Gateway/javadocs/">
       
       
-        <link rel="prev" href="../features/">
+        <link rel="prev" href="../publications/">
       
+      
+        <link rel="next" href="../features/">
       
       
       <link rel="icon" href="../images/DUUI.svg">
@@ -22,7 +24,7 @@
     
     
       
-        <title>Setup - DUUI-Gateway - Documentation</title>
+        <title>JavaDoc - DUUI-Gateway - Documentation</title>
       
     
     
@@ -83,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#duui-gateway-setup-guide" class="md-skip">
+        <a href="#javadoc" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Setup
+              JavaDoc
             
           </span>
         </div>
@@ -267,9 +269,11 @@
         
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../javadocs/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
     
@@ -301,11 +305,9 @@
         
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../setup/" class="md-tabs__link">
         
   
     
@@ -407,10 +409,19 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../javadocs/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -420,6 +431,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -449,31 +461,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Setup
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -483,152 +474,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Setup
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Docker Setup">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#docker-compose-explanation-docker-composeyml" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Compose Explanation (docker-compose.yml)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-configini" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration (config.ini)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration (config.ini)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-configini" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example config.ini:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#obtaining-api-keys" class="md-nav__link">
-    <span class="md-ellipsis">
-      Obtaining API Keys
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-the-application" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running the Application
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running the Application">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#frontend-development-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      Frontend Development Setup
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security-and-access-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      Security and Access Control
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Further Documentation
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -653,140 +498,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docker-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Setup
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Docker Setup">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#docker-compose-explanation-docker-composeyml" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Compose Explanation (docker-compose.yml)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-configini" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration (config.ini)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration (config.ini)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-configini" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example config.ini:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#obtaining-api-keys" class="md-nav__link">
-    <span class="md-ellipsis">
-      Obtaining API Keys
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-the-application" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running the Application
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running the Application">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#frontend-development-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      Frontend Development Setup
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security-and-access-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      Security and Access Control
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Further Documentation
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -804,141 +515,12 @@
   
 
 
-<h1 id="duui-gateway-setup-guide">DUUI-Gateway Setup Guide</h1>
-<p>This document describes how to set up and configure DUUI-Gateway, including Docker-based deployment and necessary configuration.</p>
-<hr />
-<h2 id="overview">Overview</h2>
-<p>DUUI-Gateway consists of two main components:</p>
-<ul>
-<li><strong>Backend</strong>: REST API for NLP processing</li>
-<li><strong>Frontend</strong>: Web interface built with SvelteKit</li>
-</ul>
-<p>Both components are containerized using Docker, simplifying setup and deployment.</p>
-<hr />
-<h2 id="prerequisites">Prerequisites</h2>
-<p>Make sure you have installed:</p>
-<ul>
-<li>Docker and Docker Compose</li>
-<li>Node.js and npm (for frontend development)</li>
-<li>Java 17</li>
-</ul>
-<hr />
-<h2 id="docker-setup">Docker Setup</h2>
-<p>The application uses Docker Compose for simple setup and deployment. Below is an explanation of the provided Docker Compose configuration:</p>
-<h3 id="docker-compose-explanation-docker-composeyml">Docker Compose Explanation (<code>docker-compose.yml</code>)</h3>
-<p>The docker-compose file defines two services:</p>
-<ul>
-<li>
-<p><strong>duui-backend</strong>:</p>
-<ul>
-<li>Builds from <code>./DUUIRestService</code></li>
-<li>Exposed on port <code>2605</code></li>
-<li>Mounts Docker socket (<code>/var/run/docker.sock</code>) allowing the backend to manage Docker containers itself.</li>
-</ul>
-</li>
-<li>
-<p><strong>duui-frontend</strong>:</p>
-<ul>
-<li>Builds from <code>./DUUIWeb</code></li>
-<li>Depends on the backend</li>
-<li>Exposed on port <code>5173</code></li>
-<li>Environment variables configure frontend-backend connectivity (<code>API_URL=http://duui-backend:2605</code>)</li>
-</ul>
-</li>
-</ul>
-<h3 id="example">Example:</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3.3&#39;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">services</span><span class="p">:</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">duui-backend</span><span class="p">:</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">build</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./DUUIRestService</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duui-backend</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/run/docker.sock:/var/run/docker.sock</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;2605:2605&quot;</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nt">duui-frontend</span><span class="p">:</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">build</span><span class="p">:</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./DUUIWeb</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">web-frontend</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5173:5173&quot;</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duui-backend</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">API_URL=http://duui-backend:2605</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PORT=5173</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DBX_URL=&#39;https://www.dropbox.com/home/Apps/DUUI&#39;</span>
-</span></code></pre></div>
-<hr />
-<h2 id="configuration-configini">Configuration (<code>config.ini</code>)</h2>
-<p>Configuration variables are managed through <code>config.ini</code>, which contains API credentials, server port, file locations, and database connections.</p>
-<h3 id="example-configini">Example <code>config.ini</code>:</h3>
-<div class="language-ini highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Dropbox configuration</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="na">DBX_APP_KEY</span><span class="o">=</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="na">DBX_APP_SECRET</span><span class="o">=</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="na">DBX_REDIRECT_URL</span><span class="o">=</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Google Drive configuration</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="na">GOOGLE_CLIENT_ID</span><span class="o">=</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="na">GOOGLE_CLIENT_SECRET</span><span class="o">=</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="na">GOOGLE_REDIRECT_URI</span><span class="o">=</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Application configuration</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="na">PORT</span><span class="o">=</span><span class="s">2605</span><span class="w">  </span><span class="c1"># Match with Docker Compose backend port</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="na">HOST</span><span class="o">=</span><span class="s">0.0.0.0</span><span class="w">  </span><span class="c1"># 0.0.0.0 makes backend accessible from all IP addresses</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># File Upload Configuration</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="na">FILE_UPLOAD_DIRECTORY</span><span class="o">=</span><span class="s">/temp</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="c1"># MongoDB Connection</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="na">MONGO_HOST</span><span class="o">=</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="na">MONGO_PORT</span><span class="o">=</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="na">MONGO_DB</span><span class="o">=</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="na">MONGO_USER</span><span class="o">=</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="na">MONGO_PASSWORD</span><span class="o">=</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># Alternatively, provide a MongoDB connection string</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="na">MONGO_DB_CONNECTION_STRING</span><span class="o">=</span>
-</span></code></pre></div>
-<hr />
-<h2 id="obtaining-api-keys">Obtaining API Keys</h2>
-<p>You must obtain keys for Dropbox and Google Drive:</p>
-<ul>
-<li><strong>Dropbox</strong>: <a href="https://www.dropbox.com/developers">Dropbox Developers Console</a></li>
-<li><strong>Google Drive</strong>: <a href="https://console.cloud.google.com/apis/dashboard">Google Cloud Console</a></li>
-</ul>
-<p>Follow their respective documentation to set up OAuth credentials.</p>
-<hr />
-<h2 id="running-the-application">Running the Application</h2>
-<p>To deploy locally:</p>
-<ol>
-<li>Clone repository and navigate into the root directory.</li>
-<li>Start the application using Docker Compose:</li>
-</ol>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker-compose<span class="w"> </span>up<span class="w"> </span>--build
-</span></code></pre></div>
-<p>The frontend will be available at <a href="http://localhost:5173">http://localhost:5173</a>.</p>
-<p>To ensure the frontend correctly communicates with the backend, ensure ports in <code>config.ini</code> and <code>docker-compose.yml</code> match appropriately (<code>PORT=2605</code>).</p>
-<h3 id="frontend-development-setup">Frontend Development Setup</h3>
-<p>For local frontend development:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>DUUIWeb
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>npm<span class="w"> </span>install
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>npm<span class="w"> </span>run<span class="w"> </span>dev<span class="w"> </span>--<span class="w"> </span>--open<span class="w"> </span>--host
-</span></code></pre></div>
-<p>This setup provides auto-reload functionality, ideal for iterative frontend development.</p>
-<hr />
-<h2 id="security-and-access-control">Security and Access Control</h2>
-<p>DUUI-Gateway adheres to industry-standard security practices for handling API keys, secrets, and authentication. However, the application is actively developed, and additional security measures are continuously being implemented. Developers and deployers should remain cautious, keep security best practices in mind, and regularly update the system to mitigate any emerging security concerns.</p>
-<hr />
-<h2 id="further-documentation">Further Documentation</h2>
-<p>Refer to the <a href="https://texttechnologylab.github.io/DUUI-Gateway/">DUUI-Gateway Documentation</a> for more detailed instructions, API references, and developer guidelines.</p>
-<hr />
-<p>This comprehensive setup guide helps developers get started quickly and contributes effectively to ongoing development.</p>
+<h1 id="javadoc">Javadoc</h1>
+<p>Below you'll find the embedded Javadoc for our project. This page is designed to offer an broad overview of our backend
+APIs. </p>
+<iframe src="javadoc/index.html" width="100%" height="800px" style="border:none;">
+
+</iframe>
 
 
 
@@ -961,7 +543,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 17, 2025 21:27:58">March 17, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 17:21:27">March 28, 2025</span>
   </span>
 
     
@@ -971,7 +553,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 17, 2025 21:27:58">March 17, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 17:21:27">March 28, 2025</span>
   </span>
 
     
