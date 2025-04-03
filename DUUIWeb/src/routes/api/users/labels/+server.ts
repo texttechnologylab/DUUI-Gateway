@@ -6,14 +6,18 @@ import {error} from '@sveltejs/kit'
  * The requesting user must be an admin.
  */
 export const GET = async ({ request, locals, url }) => {
-	const user = locals.user
-	const driver = url.searchParams.get('driver')
+	const user = locals.user;
+	const driver = url.searchParams.get('driver');
 
 	return await fetch(`${API_URL}/users/labels/driver-filter/${driver}`, {
-		method: 'GET'
-	})
-
-}
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			'x-user-role': user.role,
+			'x-user-oid': user.oid
+		}
+	});
+};
 
 
 export const PUT = async ({ request, locals }) => {

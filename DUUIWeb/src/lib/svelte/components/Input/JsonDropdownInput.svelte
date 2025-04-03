@@ -9,10 +9,11 @@
 	import Fa from 'svelte-fa'
 	import TextInput from './TextInput.svelte'
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
+	import Chip from "$lib/svelte/components/Chip.svelte";
 
-	export let dropdownList: string[]
+	export let dropdownList: string[] | Map<string, any>
 	export let data: Map<string, any> = new Map()
-	export let target: string[]
+	export let target: string[] = []
 
 	let edit: boolean = false
 	let key: string = ''
@@ -95,7 +96,7 @@
 				<div class="grid gap-1">
 					<div class="flex-center-4">
 						<Dropdown
-								label="Add a Lable"
+								label="Add a Label"
 								capitalize={false}
 								offset={0}
 								bind:value={key}
@@ -119,14 +120,16 @@
 
 		<div class="flex flex-wrap justify-start items-start gap-2">
 			{#each data.entries() as [_key, _value]}
-				<div class="flex justify-between gap-3 px-4 py-1 min-w-[30px] bg-sky-800 bg-opacity-50 outline-primary-600 outline outline-1 rounded-full">
-						<span class="text-opacity-100 font-semibold text-neutral-50">{_value}</span>
-						<button
-							class="flex-center rounded-full hover:text-error-500 transition-colors"
-							on:click={() => remove(_key)}>
+				<Chip text={_value}>
+					<span slot="icon-right">
+						<button class="hover:text-error-500 duration-300 transition-colors"
+						on:click={() => remove(_key)}>
+
 							<Fa icon={faClose}  />
+
 						</button>
-				</div>
+					</span>
+				</Chip>
 			{/each}
 		</div>
 	</div>

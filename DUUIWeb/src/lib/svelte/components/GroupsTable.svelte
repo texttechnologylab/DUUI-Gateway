@@ -1,11 +1,22 @@
-<script>
+<script  lang="ts">
 	import FunctionalTable from '$lib/svelte/components/FunctionalTable.svelte'
 	import JsonDropdownInput from '$lib/svelte/components/Input/JsonDropdownInput.svelte'
 	import { faPlus, faSave } from '@fortawesome/free-solid-svg-icons'
 	import Text from '$lib/svelte/components/Input/TextInput.svelte'
 	import Fa from 'svelte-fa'
 
-	export let labels = ["a", "b", "c", "d", "e", "f", "g"]
+	type Labels = {
+		[labelId: string]: {
+			label: string;
+			driver: string;
+			scope: string;
+		}
+	};
+
+	export let labels: Labels = {
+		"a": { label: "a", driver: "a", scope: "a" },
+		"b": { label: "a", driver: "a", scope: "a" },
+	}
 	export let users = ["a", "b", "c", "d", "e", "f", "g"]
 
 	export let rows = {
@@ -95,6 +106,6 @@
 			</button>
 		</div>
 	</div>
-	<FunctionalTable data={ rows } columns={ columns } { functionalColumns } />
+	<FunctionalTable data={ rows } columns={ columns } { functionalColumns } title="Groups" />
 </div>
 

@@ -511,20 +511,63 @@ public class DUUIUserController {
 
         String driver = request.params(":driver");
 
-        return new Document("labels", filterLabelsByDriver(driver)).toJson();
+        // Retrieve role and user from custom headers instead of the request body.
+        String role = request.headers("x-user-role");
+        String userId = request.headers("x-user-oid");
+
+        if (DUUIRequestHelper.isNullOrEmpty(role)) {
+            return DUUIRequestHelper.missingField(response, "role");
+        }
+
+        if (DUUIRequestHelper.isNullOrEmpty(userId)) {
+            return DUUIRequestHelper.missingField(response, "user");
+        }
+
+        return new Document("labels", filterLabelsByDriver(driver, userId, role)).toJson();
     }
 
-    public static List<String> filterLabelsByDriver(String driver) {
+
+    public static List<String> filterLabelsByDriver(String driver, String memberId, String role) {
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
         if (labels == null) return Collections.emptyList();
 
+        Set<String> permittedLabels = getLabelsByMember(memberId);
+
         labels = labels.get("labels", Document.class);
         return labels
-            .values().stream()
-            .filter(l -> Objects.equals(((Document) l).getString("driver"), driver))
-//                .filter(l -> ((Document) l).getString("permission") == role)
-            .map(l -> ((Document) l).getString("label"))
+            .entrySet().stream()
+            .filter(l -> role.equalsIgnoreCase(Role.ADMIN)
+                    || permittedLabels.contains(l.getKey()))
+            .filter(l -> Objects.equals(((Document) l.getValue()).getString("driver"), driver))
+            .map(l -> ((Document) l.getValue()).getString("label"))
             .toList();
+    }
+
+
+    public static Set<String> getLabelsByMember(String memberId) {
+        Set<String> uniqueLabels = new HashSet<>();
+
+        Document doc = DUUIMongoDBStorage.Globals().find(new Document()).first();
+
+        if (doc == null || !doc.containsKey("groups")) {
+            return uniqueLabels;
+        }
+
+        Document groups = doc.get("groups", Document.class);
+
+        for (Map.Entry<String, Object> entry : groups.entrySet()) {
+            Document group = (Document) entry.getValue();
+
+            List<String> members = group.getList("members", String.class);
+            if (members != null && members.contains(memberId)) {
+                List<String> labels = group.getList("labels", String.class);
+                if (labels != null) {
+                    uniqueLabels.addAll(labels);
+                }
+            }
+        }
+
+        return uniqueLabels;
     }
 
     /**
