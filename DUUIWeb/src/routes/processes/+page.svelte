@@ -144,13 +144,18 @@
 
 		$processSettingsStore.input.provider =
 			(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
-		let converted_input_provider_id: string = (params.get('input_provider_id') as IOProvider) || ""
+
+		let converted_input_provider_id: string = params.get('input_provider_id') || ""
 		let serviceDetails = user.connections[$processSettingsStore.input.provider.toLowerCase()]
+
 		if (converted_input_provider_id
-				&& $processSettingsStore.input.provider
-				&& serviceDetails[converted_input_provider_id])
+			&& $processSettingsStore.input.provider
+			&& serviceDetails[converted_input_provider_id]) 
 			converted_input_provider_id = serviceDetails[converted_input_provider_id].alias
-		else converted_input_provider_id = $processSettingsStore.input.provider_id
+		else {
+			converted_input_provider_id = $processSettingsStore.input.provider_id
+		}
+
 		$processSettingsStore.input.provider_id = converted_input_provider_id
 		$processSettingsStore.input.path = params.get('input_path') || $processSettingsStore.input.path
 		$processSettingsStore.input.content =
@@ -169,15 +174,18 @@
 
 		$processSettingsStore.output.provider =
 			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
-		let converted_output_provider_id:string = (params.get('output_provider_id') as IOProvider) || ""
+
+		let converted_output_provider_id:string = params.get('output_provider_id') || ""
 		let oserviceDetails = user.connections[$processSettingsStore.output.provider.toLowerCase()]
-		console.log(converted_output_provider_id)
-		console.log($processSettingsStore.output.provider)
+		
 		if (converted_output_provider_id
 				&& $processSettingsStore.output.provider
 				&& oserviceDetails[converted_output_provider_id])
 			converted_output_provider_id = oserviceDetails[converted_output_provider_id].alias
-		else converted_output_provider_id = $processSettingsStore.output.provider_id
+		else {
+			converted_output_provider_id = $processSettingsStore.output.provider_id
+		} 
+
 		$processSettingsStore.output.provider_id = converted_output_provider_id
 		$processSettingsStore.output.path =
 			params.get('output_path') || $processSettingsStore.output.path
@@ -187,7 +195,6 @@
 			(params.get('output_file_extension') as FileExtension) ||
 			$processSettingsStore.output.file_extension
 
-		console.log($processSettingsStore.output)
 		if (isValidCloudProvider($processSettingsStore.output)) {
 			setAliases(false)
 			$processSettingsStore.output.provider_id = $processSettingsStore.output.provider_id ?

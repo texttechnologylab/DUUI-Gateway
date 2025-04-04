@@ -43,6 +43,7 @@
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
+	import type { Sort, PaginationSettings } from '../../../app.js'
 
 	export let data
 	const toastStore = getToastStore()

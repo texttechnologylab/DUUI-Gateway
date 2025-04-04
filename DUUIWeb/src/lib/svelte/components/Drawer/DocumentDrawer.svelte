@@ -364,7 +364,7 @@
 						<div class="h-64 overflow-y-auto">
 							{#each processedAnnotations as part}
 								{#if part.annotationType}
-									<span class="bg-amber-500 px-1 rounded"> {part.text}</span>
+									<span class=" variant-soft-primary px-1 rounded"> {part.text}</span>
 								{:else}
 									<span>{part.text}</span>
 								{/if}
