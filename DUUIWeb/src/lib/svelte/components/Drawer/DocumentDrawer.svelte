@@ -8,7 +8,7 @@
 	import type { DUUIPipeline } from '$lib/duui/pipeline'
 	import type { DUUIProcess } from '$lib/duui/process'
 	import { formatFileSize, includes } from '$lib/duui/utils/text'
-	import { errorToast, getStatusIcon } from '$lib/duui/utils/ui'
+	import {errorToast, getStatusIcon, infoToast, successToast} from '$lib/duui/utils/ui'
 	import { isDarkModeStore, userSession } from '$lib/store'
 	import {
 		faCheck,
@@ -90,13 +90,42 @@
 		annotationType?: string
 	}
 
-	let selectedAnnotation: string
+	let selectedAnnotation: string = ""
 	let documentText: string
 	let annotationNames: string[]
 	let unprocessedAnnotations: Annotation[]
 	let processedAnnotations: ProcessedAnnotation[]
 	let processingText = false
 
+	let keyList: string[]
+
+	function addKey(key: string, object: string) {
+		while (true) {
+			try {
+				localStorage.setItem(key, object);
+				// toastStore.trigger(successToast('Document is cached locally.'))
+				break;
+			} catch (e) {
+				if (keyList.length > 0) {
+					const removedKey = keyList.shift();
+					localStorage.removeItem(removedKey);
+				} else {
+					toastStore.trigger(infoToast('Document cannot be cached locally.'))
+					// localStorage.setItem("keyList", JSON.stringify([]));
+					return;
+				}
+			}
+		}
+
+		keyList.push(key);
+		localStorage.setItem("keyList", JSON.stringify(keyList));
+	}
+
+	function clearLocalStorage() {
+		// keyList = JSON.parse(localStorage.getItem("keyList")) || [];
+		keyList.forEach(key => localStorage.removeItem(key));
+		localStorage.setItem("keyList", JSON.stringify(keyList));
+	}
 
 	function getHighlightedText(text: string, annotations: Annotation[], selectedType:string) {
 		processingText = true
@@ -128,30 +157,49 @@
 
 	const preprocessDocument = async () => {
 		processingText = true
-		const extraSlash = output.path.endsWith("/") ? "" : "/"
-		const response = await fetch(
-				`/api/files/preprocess?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
-						input.file_extension,
-						output.file_extension
-				)}&pipeline_id=${pipeline.oid}`,
-				{
-					method: 'GET'
-				}
-		)
 
-		if (response.ok) {
-			const json = await response.json()
+		const extraSlash = output.path.endsWith("/") ? "" : "/"
+		const filePath = `/api/files/preprocess?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
+				input.file_extension,
+				output.file_extension
+			)}&pipeline_id=${pipeline.oid}`
+
+		let json: {
+			text: string
+			annotationNames: string[]
+			preprocessed: Annotation[]
+		} = null
+
+		if (localStorage.getItem(filePath)) {
+			const jsonString: string = localStorage.getItem(filePath)
+
+			json = JSON.parse(jsonString)
+		} else {
+			const response = await fetch(filePath,
+					{
+						method: 'GET'
+					}
+			)
+			if (response.ok) {
+				json = await response.json()
+				addKey(filePath, JSON.stringify(json))
+			} else {
+				toastStore.trigger(errorToast(await response.text()))
+			}
+		}
+
+		if (json) {
 
 			documentText = json.text
 			annotationNames = json.annotationNames
 			unprocessedAnnotations = json.preprocessed
+
+
 			selectedAnnotation = annotationNames[0]
 
 			processedAnnotations = getHighlightedText(json.text, unprocessedAnnotations, selectedAnnotation)
-
-
 		} else {
-			toastStore.trigger(errorToast(await response.text()))
+			toastStore.trigger(errorToast('Document not found'))
 		}
 
 		processingText = false
@@ -159,7 +207,7 @@
 
 	switch (input.provider) {
 		case IO.Dropbox:
-			URLIn = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
+			URLIn = 'https://www.dropbox.com/home/Apps/DUUI'
 			break
 		case IO.Minio:
 			URLIn = $userSession?.connections.minio[input.provider_id].endpoint || ''
@@ -170,7 +218,7 @@
 
 	switch (output.provider) {
 		case IO.Dropbox:
-			URLOut = 'https://www.dropbox.com/home/Apps/Docker Unified UIMA Interface'
+			URLOut = 'https://www.dropbox.com/home/Apps/DUUI'
 			break
 		case IO.Minio:
 			URLOut = $userSession?.connections.minio[output.provider_id].endpoint || ''
@@ -206,6 +254,13 @@
 		eventOptions = getTimelinePlotOptions(process, pipeline, _document, $isDarkModeStore)
 	}
 
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		alert("UNLOADING")
+		if (keyList.length > 0) {
+			clearLocalStorage()
+		}
+	}
+
 	onMount(() => {
 		async function loadApexCharts() {
 			const module = await import('apexcharts')
@@ -213,8 +268,13 @@
 			window.ApexCharts = ApexCharts
 			loaded = true
 		}
+		window.addEventListener('beforeunload', handleBeforeUnload);
+
+		keyList = JSON.parse(localStorage.getItem("keyList")) || []
 
 		loadApexCharts()
+
+		preprocessDocument()
 	})
 
 	$: {
@@ -361,7 +421,7 @@
 						<div class="h-64 overflow-y-auto">
 							{#each processedAnnotations as part}
 								{#if part.annotationType}
-									<span class="bg-amber-500 px-1 rounded"> {part.text}</span>
+									<span class=" variant-soft-primary px-1 rounded"> {part.text}</span>
 								{:else}
 									<span>{part.text}</span>
 								{/if}

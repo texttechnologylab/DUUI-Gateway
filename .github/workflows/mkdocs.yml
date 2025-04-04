@@ -1,0 +1,72 @@
+name: Build and Deploy Documentation
+
+on:
+  # Run when pushing to main or master
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) Check out the code
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2) Set up Java (for Javadoc)
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3) Generate Javadoc
+#      - name: Generate Javadoc
+#        run: |
+#          mkdir -p javadoc/apidocs
+#          cd DUUIRestService
+#
+#          mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
+#
+#          javadoc \
+#            -d ../javadoc/apidocs \
+#            -sourcepath src/main/java \
+#            -subpackages org.texttechnologylab.duui \
+#            -classpath $(cat classpath.txt)
+
+      # 4) Copy Javadoc into the folder where MkDocs expects to find it
+#      - name: Move Javadoc into docs folder
+#        run: |
+#          mkdir -p page/docs/javadoc
+#          cp -r javadoc/apidocs/* page/docs/javadoc
+
+      # 4) Copy the static javadoc folder into the docs folder for MkDocs
+      - name: Static JavaDoc Copy
+        run: |
+          mkdir -p page/docs/javadoc
+          cp -r javadoc/apidocs/* page/docs/javadoc
+
+      # 5) Set up Python (for MkDocs)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # 6) Install MkDocs and plugins
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs-material
+          pip install mkdocs-git-revision-date-localized-plugin
+          pip install mkdocs-glightbox
+          # ...add anything else you need here...
+
+      # 7) Deploy with MkDocs
+      - name: Deploy site
+        run: |
+          # Tweak --config-file if your mkdocs.yml is named or located differently
+          mkdocs gh-deploy --config-file page/mkdocs.yml --remote-branch gh-pages --force

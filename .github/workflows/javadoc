@@ -1,0 +1,49 @@
+name: Generate and Deploy Javadoc
+
+on:
+  workflow_dispatch:
+  push:
+   branches:
+       - main
+
+jobs:
+  generate-javadoc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate Javadoc
+        run: |
+          mkdir -p javadoc
+          cd DUUIRestService
+          mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt
+          # javadoc -d javadoc -sourcepath DUUIRestService/src/main/java -subpackages org.texttechnologylab.duui -classpath $(cat classpath.txt)
+          mvn javadoc:javadoc
+          
+      - name: Checkout gh-pages Branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Deploy Javadoc
+        run: |
+          mkdir -p gh-pages/docs  
+          rm -rf gh-pages/docs/*
+          cp -r javadoc/* gh-pages/docs/
+          cd gh-pages
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Update Javadoc"
+          git push origin gh-pages

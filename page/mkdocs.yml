@@ -1,0 +1,107 @@
+# Project information
+site_name: DUUI-Gateway - Documentation
+site_url: https://texttechnologylab.github.io/DUUI-Gateway/
+site_description: >-
+  Documentation for DUUI-Gateway
+
+
+# Repository
+repo_url: https://github.com/texttechnologylab/DUUI-Gateway
+repo_name: texttechnologylab/DUUI-Gateway
+
+
+# Page tree
+nav:
+  - Home: index.md
+  - Publications: publications.md
+  - JavaDoc: javadocs.md   #javadoc/index.html
+  - Features: features.md
+  - Setup: setup.md
+
+
+# Configuration
+theme:
+  name: material
+  logo: images/DUUI.svg
+  favicon: images/DUUI.svg
+
+  icon:
+    repo: fontawesome/brands/github
+  # Light/Darkmode
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.expand
+    - navigation.tracking
+    - navigation.path
+    - search.highlight
+    - search.suggest
+
+
+# Additional configuration
+extra:
+  homepage: https://texttechnologylab.github.io/DUUI-Gateway/
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  social:
+    - icon: fontawesome/solid/house
+      link: https://www.texttechnologylab.org/
+    - icon: fontawesome/brands/github
+      link: https://github.com/texttechnologylab
+    - icon: fontawesome/brands/x-twitter
+      link: https://twitter.com/ttlab_ffm
+    - icon: fontawesome/brands/researchgate
+      link: https://www.researchgate.net/lab/Text-Technology-Lab-TTLab-Alexander-Mehler
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/channel/UCST6Bz8tydqR-VOnihevKtg
+
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - search
+  - glightbox
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+  - attr_list
+  - md_in_html
+
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

@@ -1,36 +1,56 @@
 package org.texttechnologylab.duui.api.controllers.users;
 
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.*;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.*;
-import com.mongodb.client.result.DeleteResult;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
 import org.texttechnologylab.duui.analysis.document.Provider;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
-import org.texttechnologylab.duui.api.routes.users.DUUIUsersRequestHandler;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.authenticate;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.badRequest;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.getUserId;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.missingField;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.notFound;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.unauthorized;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
-import com.dropbox.core.*;
+
+import com.dropbox.core.DbxAppInfo;
+import com.dropbox.core.DbxAuthFinish;
+import com.dropbox.core.DbxException;
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.DbxWebAuth;
+import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
+
 import spark.Request;
 import spark.Response;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
 
 
 
@@ -498,7 +518,10 @@ public class DUUIUserController {
         }
 
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
-
+    
+        if (labels == null) {
+            return "{}";
+        }
         return labels.toJson();
     }
 

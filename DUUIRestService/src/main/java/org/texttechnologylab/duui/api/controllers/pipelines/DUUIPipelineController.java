@@ -1,15 +1,19 @@
 package org.texttechnologylab.duui.api.controllers.pipelines;
 
-import org.apache.uima.cas.CASException;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
-import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
-import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
-import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
-import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
-import org.texttechnologylab.duui.api.storage.MongoDBFilters;
-import com.mongodb.client.model.*;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
@@ -18,21 +22,32 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.*;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIDockerDriver;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIKubernetesDriver;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIPipelineComponent;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIRemoteDriver;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUISwarmDriver;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIUIMADriver;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.IDUUIDriverInterface;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.lua.DUUILuaContext;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
+import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
+import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
+import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+import org.texttechnologylab.duui.api.storage.MongoDBFilters;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.security.InvalidParameterException;
-import java.time.Instant;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Facet;
+import com.mongodb.client.model.Field;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.Updates;
 
 /**
  * A Controller for database operations related to the pipelines collection.
