@@ -34,7 +34,8 @@ services:
       - duui-backend
     environment:
       - ORIGIN=http://duui-gateway-frontend:5173
-      - API_URL=http://duui-gateway-backend:2605
+      - API_URL=http://localhost:2605
+      #http://duui-gateway-backend:2605
       - PORT=5173
       - DBX_URL='https://www.dropbox.com/home/Apps/DUUI'
 
