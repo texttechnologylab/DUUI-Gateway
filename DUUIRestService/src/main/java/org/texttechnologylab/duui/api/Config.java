@@ -23,62 +23,80 @@ public class Config {
         }
     }
 
+    public Config() {
+        properties = null;
+    }
+
+    private String getValue(String sKey, String defaultValue) {
+        if(properties!=null){
+            return properties.getProperty(sKey, defaultValue);
+        }
+        else{
+            if(System.getenv().containsKey(sKey)){
+                return System.getenv(sKey);
+            }
+            else{
+                return defaultValue;
+            }
+        }
+    }
+
     public String getMongoDBConnectionString() {
-        return properties.getProperty("MONGO_DB_CONNECTION_STRING", null);
+        return getValue("MONGO_DB_CONNECTION_STRING", null);
     }
 
     public String getMongoHost() {
-        return properties.getProperty("MONGO_HOST", null);
+        return getValue("MONGO_HOST", null);
     }
 
     public int getMongoPort() {
-        return Integer.parseInt(properties.getProperty("MONGO_PORT", "27017"));
+        return Integer.parseInt(getValue("MONGO_PORT", "27017"));
     }
 
     public String getMongoUser() {
-        return properties.getProperty("MONGO_USER", null);
+        return getValue("MONGO_USER", null);
     }
 
     public String getMongoDatabase() {
-        return properties.getProperty("MONGO_DB", null);
+        return getValue("MONGO_DB", null);
     }
 
     public String getMongoPassword() {
-        return properties.getProperty("MONGO_PASSWORD", null);
+        return getValue("MONGO_PASSWORD", null);
     }
 
     public String getDropboxKey() {
-        return properties.getProperty("DBX_APP_KEY", null);
+        return getValue("DBX_APP_KEY", null);
     }
 
     public String getDropboxSecret() {
-        return properties.getProperty("DBX_APP_SECRET", null);
+        return getValue("DBX_APP_SECRET", null);
     }
 
     public String getDropboxRedirectUrl() {
-        return properties.getProperty("DBX_REDIRECT_URL", null);
+        return getValue("DBX_REDIRECT_URL", null);
     }
 
-    public String getGoogleClientId() { return properties.getProperty("GOOGLE_CLIENT_ID", null); }
+    public String getGoogleClientId() { return getValue("GOOGLE_CLIENT_ID", null); }
 
-    public String getGoogleClientSecret() { return properties.getProperty("GOOGLE_CLIENT_SECRET", null); }
+    public String getGoogleClientSecret() { return getValue("GOOGLE_CLIENT_SECRET", null); }
 
-    public String getGoogleRedirectUri() { return properties.getProperty("GOOGLE_REDIRECT_URI", null); }
+    public String getGoogleRedirectUri() { return getValue("GOOGLE_REDIRECT_URI", null); }
 
     public List<String> getAllowedOrigins() {
-        return List.of(properties.getProperty("ALLOWED_ORIGINS", "").split(";"));
+        return List.of(getValue("ALLOWED_ORIGINS", "").split(";"));
     }
 
     public int getPort() {
-        return Integer.parseInt(properties.getProperty("PORT", null));
+        return Integer.parseInt(getValue("PORT", null));
     }
 
     public String getHost() {
-        return properties.getProperty("HOST", "localhost");
+        return getValue("HOST", "localhost");
     }
 
     public String getFileUploadPath() {
-        return properties.getProperty("FILE_UPLOAD_DIRECTORY", "files/upload");
+        return getValue("FILE_UPLOAD_DIRECTORY", "files/upload");
     }
 
 }
