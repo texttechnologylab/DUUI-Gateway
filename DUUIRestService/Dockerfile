@@ -18,7 +18,10 @@ EXPOSE 2605
 
 # # Compile Java project and create the JAR-file
 RUN mvn package
+#RUN mvn compile
 
 
 # Setzen des Einstiegspunkts, um die Main-Datei auszuführen
-ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar", "config.ini"]
+#ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar", "config.ini"]
+ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar"]
+#CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"

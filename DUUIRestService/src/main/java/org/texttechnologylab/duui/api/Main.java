@@ -1,54 +1,41 @@
 package org.texttechnologylab.duui.api;
 
-import org.apache.commons.compress.compressors.CompressorException;
+import com.dropbox.core.DbxException;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
-import org.apache.uima.UIMAFramework;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
-import org.apache.uima.util.CasIOUtils;
-import org.apache.uima.util.InvalidXMLException;
-import org.apache.uima.util.XMLInputSource;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
+import org.bson.Document;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
 import org.texttechnologylab.duui.api.metrics.DUUIMetricsManager;
 import org.texttechnologylab.duui.api.metrics.providers.DUUIHTTPMetrics;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
-import com.dropbox.core.DbxException;
-import org.apache.uima.fit.util.JCasUtil;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
-import org.bson.Document;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
-import org.xml.sax.SAXException;
 import spark.Request;
 import spark.Response;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.Part;
-import java.io.*;
-import java.net.URISyntaxException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -69,30 +56,35 @@ public class Main {
     public static Config config;
 
     public static void main(String[] args) {
-        try {
-            String configFilePath = args[0];
-            config = new Config(configFilePath);
-            System.out.println("Starting DUUI REST Service");
-        } catch (ArrayIndexOutOfBoundsException | IOException exception) {
-            System.err.println("Create a config (ini, properties, ...) file and pass the path to this file as the first application argument.");
-            System.err.println("The config file should contain the following variables: ");
-            System.err.println("\t> DBX_APP_KEY");
-            System.err.println("\t> DBX_APP_SECRET");
-            System.err.println("\t> DBX_REDIRECT_URL");
-            System.err.println("\t> GOOGLE_CLIENT_ID");
-            System.err.println("\t> GOOGLE_CLIENT_SECRET");
-            System.err.println("\t> GOOGLE_REDIRECT_URI");
-            System.err.println("\t> PORT");
-            System.err.println("\t> HOST");
-            System.err.println("\t> FILE_UPLOAD_DIRECTORY");
-            System.err.println("\t> MONGO_HOST");
-            System.err.println("\t> MONGO_PORT");
-            System.err.println("\t> MONGO_DB");
-            System.err.println("\t> MONGO_USER");
-            System.err.println("\t> MONGO_PASSWORD");
-            System.err.println("\t> MONGO_DB_CONNECTION_STRING");
-            System.err.println("Dropbox related variables are found in the App Console at https://www.dropbox.com/developers/apps");
-            System.exit(0);
+        if(args.length>0) {
+            try {
+                String configFilePath = args[0];
+                config = new Config(configFilePath);
+                System.out.println("Starting DUUI REST Service");
+            } catch (ArrayIndexOutOfBoundsException | IOException exception) {
+                System.err.println("Create a config (ini, properties, ...) file and pass the path to this file as the first application argument.");
+                System.err.println("The config file should contain the following variables: ");
+                System.err.println("\t> DBX_APP_KEY");
+                System.err.println("\t> DBX_APP_SECRET");
+                System.err.println("\t> DBX_REDIRECT_URL");
+                System.err.println("\t> GOOGLE_CLIENT_ID");
+                System.err.println("\t> GOOGLE_CLIENT_SECRET");
+                System.err.println("\t> GOOGLE_REDIRECT_URI");
+                System.err.println("\t> PORT");
+                System.err.println("\t> HOST");
+                System.err.println("\t> FILE_UPLOAD_DIRECTORY");
+                System.err.println("\t> MONGO_HOST");
+                System.err.println("\t> MONGO_PORT");
+                System.err.println("\t> MONGO_DB");
+                System.err.println("\t> MONGO_USER");
+                System.err.println("\t> MONGO_PASSWORD");
+                System.err.println("\t> MONGO_DB_CONNECTION_STRING");
+                System.err.println("Dropbox related variables are found in the App Console at https://www.dropbox.com/developers/apps");
+                System.exit(0);
+            }
+        }
+        else{
+            config = new Config();
         }
 
         DUUIMongoDBStorage.init(config);

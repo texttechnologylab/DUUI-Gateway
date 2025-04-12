@@ -112,28 +112,32 @@ public class DUUIMongoDBStorage {
      */
     public static MongoClient getClient() {
         if (mongoClient == null) {
-            System.out.println("Init MongoConnection");
-            //mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
-            if (getConnectionURI() == null) {
-                System.out.println("Using Connection-Config");
-                StringBuilder sb = new StringBuilder();
-                sb.append("mongodb://");
-                sb.append(config.getMongoUser());
-                sb.append(":");
-                sb.append(config.getMongoPassword());
-                sb.append("@");
-                sb.append(config.getMongoHost());
-                sb.append(":").append(config.getMongoPort());
-                sb.append("/?authSource=").append(config.getMongoDatabase());
 
-                mongoClient = MongoClients.create(sb.toString());
-            } else {
-                System.out.println("Using Connection-URI");
-                mongoClient = MongoClients.create(getConnectionURI());
-            }
+                System.out.println("Init MongoConnection");
+                //mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
+                if (getConnectionURI() == null) {
+                    System.out.println("Using Connection-Config");
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("mongodb://");
+                    sb.append(config.getMongoUser());
+                    sb.append(":");
+                    sb.append(config.getMongoPassword());
+                    sb.append("@");
+                    sb.append(config.getMongoHost());
+                    sb.append(":").append(config.getMongoPort());
+                    sb.append("/?authSource=").append(config.getMongoDatabase());
+
+                    mongoClient = MongoClients.create(sb.toString());
+                } else {
+                    System.out.println("Using Connection-URI");
+                    mongoClient = MongoClients.create(getConnectionURI());
+                }
+
         }
         return mongoClient;
     }
+
+
 
     /**
      * Inject the {@link Config} for the application and initialize a {@link com.mongodb.MongoClient}.

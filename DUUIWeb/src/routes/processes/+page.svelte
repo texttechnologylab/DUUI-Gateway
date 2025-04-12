@@ -66,10 +66,10 @@
 		}
 		let aliases = isInput ? inputAliases : outputAliases
 
-		const response = await fetch('/api/processes/folderstructure',
+        const response = await fetch('/api/processes/folderstructure',
 				{
 					method: 'POST',
-					body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset, providerId: aliases[providerId.toLowerCase()]})
+					body: JSON.stringify({provider: provider, user: $userSession?.oid, reset: isReset, providerId: aliases[providerId]})
 				})
 
 		if (response.ok) {
