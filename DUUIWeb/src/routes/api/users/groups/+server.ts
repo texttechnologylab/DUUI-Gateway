@@ -2,7 +2,7 @@ import {API_URL} from '$env/static/private'
 import {error} from '@sveltejs/kit'
 
 /**
- * Sends a put request to the backend to update or insert a label.
+ * Sends a put request to the backend to update or insert a Group.
  * The requesting user must be an admin.
  */
 export const GET = async ({ request, locals, url }) => {
@@ -13,13 +13,8 @@ export const GET = async ({ request, locals, url }) => {
 		return error(401, { message: 'Unauthorized' })
 	}
 
-	return await fetch(`${API_URL}/users/labels/driver-filter/${driver}`, {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			'x-user-role': user.role,
-			'x-user-oid': user.oid
-		}
+	return await fetch(`${API_URL}/users/groups`, {
+		method: 'GET'
 	});
 };
 
@@ -28,26 +23,29 @@ export const PUT = async ({ request, locals }) => {
 	const data = await request.json()
 	const user = locals.user
 
-	console .log("PUT label data", data)
-
-	if (data.label.driver === "" || data.label.label === "" || !data.label.groups) {
-		return error(400, { message: 'The label, driver and groups are required.' })
+	if (!data.group.name || data.group.name === "") {
+		return error(400, { message: 'The group name is required.' })
 	}
 
 	if (!user || user.role !== 'Admin') {
 		return error(401, { message: 'Unauthorized' })
 	}
 
+	if (!data.group.members || !data.group.name) {
+		return error(400, { message: 'The group members, name and labels are required.' })
+	}
+
+	console.log("PUT group data", data)
 	// return error(400, { message: `${API_URL}/users/labels/${operation}${data.driver}/${data.label}${labelId}` })
 
-	return await fetch(`${API_URL}/users/labels/${data.labelId}`, {
+	return await fetch(`${API_URL}/users/groups/${data.groupId}`, {
 		method: 'PUT',
-		body: JSON.stringify(data.label)
+		body: JSON.stringify(data.group)
 	})
 }
 
 /**
- * Sends a delete request to the backend to delete a label.
+ * Sends a delete request to the backend to delete a Group.
  * The requesting user must be an admin.
  */
 export const DELETE = async ({ cookies, locals, request }) => {
@@ -58,7 +56,7 @@ export const DELETE = async ({ cookies, locals, request }) => {
 		return error(401, { message: 'Unauthorized' })
 	}
 
-	return await fetch(`${API_URL}/users/labels/${data.labelId}`, {
+	return await fetch(`${API_URL}/users/groups/${data.groupId}`, {
 		method: 'DELETE',
 		body: JSON.stringify({})
 	})

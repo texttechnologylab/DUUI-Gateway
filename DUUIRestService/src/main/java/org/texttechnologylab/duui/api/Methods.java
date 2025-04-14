@@ -8,8 +8,15 @@ import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHand
 import org.texttechnologylab.duui.api.routes.pipelines.DUUIPipelineRequestHandler;
 import org.texttechnologylab.duui.api.routes.processes.DUUIProcessRequestHandler;
 
-
-import static spark.Spark.*;
+import static spark.Spark.after;
+import static spark.Spark.before;
+import static spark.Spark.delete;
+import static spark.Spark.get;
+import static spark.Spark.halt;
+import static spark.Spark.options;
+import static spark.Spark.path;
+import static spark.Spark.post;
+import static spark.Spark.put;
 
 /**
  * A class to set up the Java Spark path groups. This class is only used to increase readability and reduce
@@ -64,17 +71,43 @@ public class Methods {
         });
 
 
+        path("/settings", () -> {
+            before("/*", (request, response) -> {
+                boolean isAuthorized = DUUIRequestHelper.isAuthorized(request);
+                if (!isAuthorized || !DUUIRequestHelper.isAdmin(request)) {
+                    halt(401, "Unauthorized");
+                }
+            });
+
+            get("", (request, response) ->  Main.getSettings(request, response));
+            put("", (request, response) -> Main.updateSettings(request, response));
+        });
+
         /* Users */
         path("/users", () -> {
             before("/*", (request, response) -> DUUIHTTPMetrics.incrementUsersRequests());
 
             path("/labels", () -> {
-                put("/insert/:driver/:label", DUUIUserController::insertLabel);
-                put("/update/:driver/:label/:labelId", DUUIUserController::updateLabel);
-                delete("", DUUIUserController::deleteLabel);
+                put("/:labelId", DUUIUserController::upsertLabel);
+                delete("/:labelId", DUUIUserController::deleteLabel);
                 get("/driver-filter/:driver", DUUIUserController::getDriverLabels);
                 get("", DUUIUserController::getLabels);
             });
+
+            path("/groups", () -> {
+                // before("/*", (request, response) -> {
+                //     boolean isAuthorized = DUUIRequestHelper.isAdmin(request);
+                //     if (!isAuthorized) {
+                //         halt(401, "Only admins can access this endpoint.");
+                        
+                //     }
+                // });
+
+                put("/:groupId", DUUIUserController::upsertGroup);
+                delete("/:groupId", DUUIUserController::deleteGroup);
+                get("", DUUIUserController::getGroups);
+            });
+
             get("/:id", DUUIUserController::fetchUser);
             get("", DUUIUserController::fetchUsers);
             post("", DUUIUserController::insertOne);

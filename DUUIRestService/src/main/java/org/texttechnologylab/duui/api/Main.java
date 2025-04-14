@@ -1,8 +1,24 @@
 package org.texttechnologylab.duui.api;
 
-import com.dropbox.core.DbxException;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.GeneralSecurityException;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletException;
+import javax.servlet.http.Part;
+
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -20,24 +36,18 @@ import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessControlle
 import org.texttechnologylab.duui.api.metrics.DUUIMetricsManager;
 import org.texttechnologylab.duui.api.metrics.providers.DUUIHTTPMetrics;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
+import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+
+import com.dropbox.core.DbxException;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.Updates;
+
 import spark.Request;
 import spark.Response;
-
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletException;
-import javax.servlet.http.Part;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
-import java.util.*;
-
-import static spark.Spark.*;
+import static spark.Spark.port;
 
 /*
  * To build follow these steps for now:
@@ -86,9 +96,10 @@ public class Main {
         else{
             config = new Config();
         }
-
+        
         DUUIMongoDBStorage.init(config);
         DUUIMetricsManager.init();
+
 
         try {
             port(config.getPort());
@@ -97,6 +108,9 @@ public class Main {
         }
 
         Methods.init();
+
+
+        DUUIComponentRequestHandler.insertSpacyTemplate();
 
         File fileUploadDirectory = Paths.get(config.getFileUploadPath()).toFile();
 
@@ -276,5 +290,36 @@ public class Main {
             response.status(500);
             return "The file could not be downloaded.";
         }
+    }
+
+    public static String updateSettings(Request request, Response response) {
+        
+        Document settings = Document.parse(request.body());
+
+        if (settings.containsKey("allowed_origins")) {
+            List<String> allowedOrigins = settings.getList("allowed_origins", String.class);
+            settings.put("allowed_origins", String.join(";", allowedOrigins));
+        }
+
+        settings = DUUIMongoDBStorage.Globals()
+            .findOneAndUpdate(
+                Filters.exists("settings"),
+                Updates.set("settings", settings),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+            );
+        
+        if (settings == null) {
+            throw new RuntimeException("Failed to create settings document");
+        }
+        
+        if (settings.get("settings", Document.class) != null) {
+            settings = settings.get("settings", Document.class);
+        }
+
+        return settings.toJson();
+    }
+
+    public static String getSettings(Request request, Response response) {
+        return DUUIMongoDBStorage.Settings().toJson();
     }
 }

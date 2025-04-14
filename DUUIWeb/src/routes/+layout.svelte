@@ -59,6 +59,9 @@
 	import { onMount } from 'svelte'
 	import ProcessDrawer from './processes/[oid]/ProcessDrawer.svelte'
 	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
+	import GroupEditor from "$lib/svelte/components/Drawer/GroupEditor.svelte";
+	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
+	import SettingsEditor from '$lib/svelte/components/Drawer/SettingsEditor.svelte'
 
 	export let data
 	let { user, theme } = data
@@ -149,6 +152,12 @@
 		<ComponentDrawer />
 	{:else if $drawerStore.id === 'process'}
 		<ProcessDrawer />
+	{:else if $drawerStore.id === 'group'}
+		<GroupEditor />
+	{:else if $drawerStore.id === 'label'}
+		<LabelsEditor />
+	{:else if $drawerStore.id === 'settings'}
+		<SettingsEditor />
 	{/if}
 </Drawer>
 

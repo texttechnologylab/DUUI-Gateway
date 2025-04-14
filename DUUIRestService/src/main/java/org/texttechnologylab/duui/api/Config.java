@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
+import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+
 /**
  * A class holding configuration data for the application and allowing for easy access to the configuration.
  *
@@ -28,16 +30,20 @@ public class Config {
     }
 
     private String getValue(String sKey, String defaultValue) {
+
         if(properties!=null){
             return properties.getProperty(sKey, defaultValue);
         }
         else{
+            String value; 
             if(System.getenv().containsKey(sKey)){
-                return System.getenv(sKey);
+                value = System.getenv(sKey);
             }
             else{
-                return defaultValue;
+                value = defaultValue;
             }
+
+            return value;
         }
     }
 
@@ -66,25 +72,94 @@ public class Config {
     }
 
     public String getDropboxKey() {
-        return getValue("DBX_APP_KEY", null);
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("dbx_app_key")) {
+            value = DUUIMongoDBStorage.Settings().getString("dbx_app_key");
+        } else {
+            value = getValue("DBX_APP_KEY", null);
+            DUUIMongoDBStorage.updateSettings("dbx_app_key", value);
+        }
+        return value;
     }
 
     public String getDropboxSecret() {
-        return getValue("DBX_APP_SECRET", null);
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("dbx_app_secret")) {
+            value = DUUIMongoDBStorage.Settings().getString("dbx_app_secret");
+        } else {
+            value = getValue("DBX_APP_SECRET", null);
+            DUUIMongoDBStorage.updateSettings("dbx_app_secret", value);
+        }
+        return value;
     }
 
     public String getDropboxRedirectUrl() {
-        return getValue("DBX_REDIRECT_URL", null);
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("dbx_redirect_url")) {
+            value = DUUIMongoDBStorage.Settings().getString("dbx_redirect_url");
+        } else {
+            value = getValue("DBX_REDIRECT_URL", null);
+            DUUIMongoDBStorage.updateSettings("dbx_redirect_url", value);
+        }
+        return value;
     }
 
-    public String getGoogleClientId() { return getValue("GOOGLE_CLIENT_ID", null); }
+    public String getGoogleClientId() {  
+        
+        String value; 
 
-    public String getGoogleClientSecret() { return getValue("GOOGLE_CLIENT_SECRET", null); }
+        if (DUUIMongoDBStorage.Settings().containsKey("google_client_id")) {
+            value = DUUIMongoDBStorage.Settings().getString("google_client_id");
+        } else {
+            value = getValue("GOOGLE_CLIENT_ID", null);
+            DUUIMongoDBStorage.updateSettings("google_client_id", value);
+        }
+        return value;
+    }
 
-    public String getGoogleRedirectUri() { return getValue("GOOGLE_REDIRECT_URI", null); }
+    public String getGoogleClientSecret() { 
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("google_client_secret")) {
+            value = DUUIMongoDBStorage.Settings().getString("google_client_secret");
+        } else {
+            value = getValue("GOOGLE_CLIENT_SECRET", null);
+            DUUIMongoDBStorage.updateSettings("google_client_secret", value);
+        }
+        return value;
+    }
+
+    public String getGoogleRedirectUri() { 
+
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("google_redirect_uri")) {
+            value = DUUIMongoDBStorage.Settings().getString("google_redirect_uri");
+        } else {
+            value = getValue("GOOGLE_REDIRECT_URI", null);
+            DUUIMongoDBStorage.updateSettings("google_redirect_uri", value);
+        }
+        return value;
+    }
 
     public List<String> getAllowedOrigins() {
-        return List.of(getValue("ALLOWED_ORIGINS", "").split(";"));
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("allowed_origins")) {
+            value = DUUIMongoDBStorage.Settings().getString("allowed_origins");
+        } else {
+            value = getValue("ALLOWED_ORIGINS", "");
+            DUUIMongoDBStorage.updateSettings("allowed_origins", value);
+        }
+        return List.of(value.split(";"));
     }
 
     public int getPort() {
@@ -96,7 +171,16 @@ public class Config {
     }
 
     public String getFileUploadPath() {
-        return getValue("FILE_UPLOAD_DIRECTORY", "files/upload");
+        
+        String value; 
+
+        if (DUUIMongoDBStorage.Settings().containsKey("file_upload_directory")) {
+            value = DUUIMongoDBStorage.Settings().get("file_upload_directory", "files/upload");
+        } else {
+            value = getValue("FILE_UPLOAD_DIRECTORY", "files/upload");
+            DUUIMongoDBStorage.updateSettings("file_upload_directory", value);
+        }
+        return value;
     }
 
 }

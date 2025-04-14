@@ -1,5 +1,6 @@
 # Verwenden Sie das offizielle OpenJDK 17 Image als Basis
-FROM maven:3.8.5-openjdk-17
+# FROM maven:3.8.5-openjdk-17
+FROM maven:3.9.4-eclipse-temurin-17
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app
@@ -18,10 +19,8 @@ EXPOSE 2605
 
 # # Compile Java project and create the JAR-file
 RUN mvn package
-#RUN mvn compile
 
 
 # Setzen des Einstiegspunkts, um die Main-Datei auszuführen
-#ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar", "config.ini"]
 ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar"]
-#CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"
+# CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"

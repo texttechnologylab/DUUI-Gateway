@@ -4,7 +4,6 @@
 
 import { equals } from '$lib/duui/utils/text'
 import type { DUUIEvent } from './monitor'
-import type {ServiceConnections, User} from "../../app";
 
 export interface DUUIDocument {
 	oid: string
@@ -38,6 +37,7 @@ export type DUUIDocumentProvider = {
 
 export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'NextCloud' | 'Google'| 'None'
 export type FileExtension = '.txt' | '.xmi' | '.gz'
+export type OutputFileExtension = '.xmi' | '.gz'
 
 export enum IO {
 	Dropbox = 'Dropbox',
@@ -53,7 +53,7 @@ export const IO_INPUT: string[] = ['Dropbox', 'File', 'Minio', 'Text', 'NextClou
 export const INPUT_EXTENSIONS: string[] = ['.txt', '.xmi', '.gz']
 
 export const IO_OUTPUT: string[] = ['Dropbox', 'Minio', 'NextCloud', 'Google', 'None']
-export const OUTPUT_EXTENSIONS: string[] = ['.txt', '.xmi']
+export const OUTPUT_EXTENSIONS: string[] = ['.xmi', '.gz']
 
 /**
  * Check if the input and output for the process are valid. This also includes checking
@@ -95,7 +95,7 @@ export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user:
 	}
 
 	if (equals(input.provider, IO.Minio)) {
-		if (!user?.connections.minio[input.provider_id].endpoint) return false
+		if (!user?.connections.minio[input.provider_id]?.endpoint) return false
 		return isValidS3BucketName(input.path || '').length === 0
 	}
 
@@ -136,7 +136,7 @@ export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean
 	if (!isValidCloudProvider(output)) return false
 
 	if (equals(output.provider, IO.Minio)) {
-		if (!user?.connections.minio[output.provider_id].endpoint) return false
+		if (!user?.connections.minio[output.provider_id]?.endpoint) return false
 		return isValidS3BucketName(output.path || '').length === 0
 	}
 

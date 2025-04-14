@@ -4,18 +4,49 @@ import { fail, redirect } from '@sveltejs/kit'
 import { DropboxAuth } from 'dropbox'
 import type { PageServerLoad } from './$types'
 import { OAuth2Client } from 'google-auth-library'
+import { groupStore, labelStore } from '$lib/store'
+import { get } from 'svelte/store'
 
 export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 	if (!locals.user) {
 		redirect(302, handleLoginRedirect(url))
 	}
 
-	let labels: {[id: string]: {label:string, driver: string}} = await(await fetch(`${API_URL}/users/labels`, {
-		method: 'GET'
+	const labels = await(await fetch(`${API_URL}/users/labels`, {
+		method: 'GET',
+		headers: {
+			Authorization: cookies.get('session') || ''
+		}
 	})).json()
 
-	labels = labels !== null || labels ?  labels["labels"] : {}
+	const groups: DUUIGroups = await(await fetch(`${API_URL}/users/groups`, {
+		method: 'GET',
+		headers: {
+			Authorization: cookies.get('session') || ''
+		}
+	})).json()
 
+	let settings: DUUISettings = {
+			dbx_app_key: '',
+			dbx_app_secret: '',
+			dbx_redirect_url: '',
+			google_client_id: '',
+			google_client_secret: '',
+			google_redirect_uri: '',
+			allowed_origins: [],
+			file_upload_directory: ''
+		}
+
+	try {
+		settings = await(await fetch(`${API_URL}/settings`, {
+			method: 'GET',
+			headers: {
+				Authorization: cookies.get('session') || ''
+			}
+		})).json()
+	} catch (error) {
+		console.error('Error fetching settings')
+	}
 
 	// Retrieve the Dropbox OAuth 2.0 credentials from the backend.
 	// These correspond to the properties set in the config file.
@@ -101,6 +132,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 			}
 		})
 
+		
 		if (!response.ok) {
 			return fail(response.status, { message: response.statusText })
 		}
@@ -108,12 +140,17 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		return await response.json()
 	}
 
+	let usr = (await fetchProfile()).user
+	let usrs = (await fetchUsers()).users
+
 	return {
 		dropbBoxURL: dropbBoxURL,
 		googleDriveURL: googleDriveURL,
-		user: (await fetchProfile()).user,
+		user: usr,
 		theme: +(cookies.get('theme') || '0'),
-		users: (await fetchUsers()).users,
-		labels: labels
+		users: usrs,
+		labels: labels,
+		groups: groups,
+		settings: settings,
 	}
 }

@@ -1,10 +1,20 @@
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
-// and what to do when importing types
+
+// import type { DUUIDriver, DUUIDriverFilter } from "$lib/duui/component"
+
+
+/// <reference types="@sveltejs/kit" />
+
 declare namespace App {
 	interface Locals {
 		user: User
 	}
+	interface Platform {
+		env: {
+		  API_URL: string
+		}
+	  }
 }
 
 // Types related to a User
@@ -33,39 +43,70 @@ interface UserProperties {
 			username: string | null
 			password: string | null
 		}
-		nextcloud?: NextCloudConnections
-		google?: OAuthConnections
+		nextcloud: NextCloudConnections
+		google: OAuthConnections
 	}
 }
 
-export type ServiceConnections = {
+type DUUILabels = {
+	[labelId: string]: DUUILabel
+}
+
+type DUUILabel = {
+	label: string
+	driver: DUUIDriverFilter
+	scope: string
+	groups: string[]
+}
+
+type DUUIGroup = {
+	name: string
+	members: string[]
+}
+
+type DUUIGroups = {
+	[groupId: string]: DUUIGroup
+}
+
+type DUUISettings = {
+	dbx_app_secret: string
+	dbx_app_key: string
+	dbx_redirect_url: string
+	google_client_id: string
+	google_client_secret: string
+	google_redirect_uri: string
+	allowed_origins: string[]
+	file_upload_directory: string
+}
+
+type ServiceConnections = {
 	[name: string]: OAuthConnectionDetails | MinioConnectionDetails | NextcloudConnectionDetails;
 };
 
-export type OAuthConnections = {
+type OAuthConnections = {
 	[name: string]: OAuthConnectionDetails;
 };
-export type MinioConnections = {
+type MinioConnections = {
 	[name: string]: MinioConnectionDetails;
 };
-export type NextCloudConnections = {
+type NextCloudConnections = {
 	[name: string]: NextcloudConnectionDetails;
 };
 
-export type OAuthConnectionDetails = {
+type OAuthConnectionDetails = {
 	alias: string
 	access_token: string | null
 	refresh_token: string | null
 };
 
-export type MinioConnectionDetails = {
+type MinioConnectionDetails = {
 	alias: string
 	endpoint: string | null
 	access_key: string | null
 	secret_key: string | null
 };
 
-export type NextcloudConnectionDetails = {
+type NextcloudConnectionDetails = {
 	alias: string
 	uri: string | null
 	username: string | null
@@ -106,41 +147,4 @@ type APIEndpoint = {
 	parameters: APIParameter[]
 	description: string
 	exampleRequest: string = ''
-}
-
-// Types related to Feedback
-
-type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7
-
-type Feedback = {
-	name: string
-	message: string
-	step: number
-	language: 'german' | 'english'
-	programming: number
-	nlp: number
-	nlpNeeded: boolean
-	duui: boolean
-	duuiRating: number
-	java: number
-	python: number
-	requirements: number
-	frustration: number
-	ease: number
-	correction: number
-}
-
-type FeedbackResult = {
-	programming: number
-	nlp: number
-	nlpNeeded: boolean
-	duui: boolean
-	duuiRating: number
-	java: number
-	python: number
-	requirements: number
-	frustration: number
-	ease: number
-	correction: number
-	timestamp: number
 }

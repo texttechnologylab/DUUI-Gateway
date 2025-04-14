@@ -1,0 +1,39 @@
+{
+    "name" : "spaCy Single DE",
+    "tags" : [
+        "Dependency",
+        "NamedEntities",
+        "Ner",
+        "Pos",
+        "Sentence",
+        "Spacy",
+        "Token"
+    ],
+    "description" : "",
+    "driver" : "DUUIDockerDriver",
+    "target" : "docker.texttechnologylab.org/textimager-duui-spacy-single-de_core_news_sm:latest",
+    "options" : {
+        "use_GPU" : false,
+        "docker_image_fetching" : true,
+        "scale" : 1,
+        "keep_alive" : false,
+        "registry_auth" : {
+            "username" : "",
+            "password" : ""
+        },
+        "constraints" : [
+
+        ],
+        "labels" : [
+
+        ],
+        "host" : "",
+        "ignore_200_error" : true
+    },
+    "parameters" : {
+
+    },
+    "pipeline_id" : null,
+    "user_id" : null,
+    "index" : 0
+}

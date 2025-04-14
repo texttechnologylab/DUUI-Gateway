@@ -12,25 +12,6 @@ export const currentPipelineStore: Writable<DUUIPipeline> = localStorageStore(
 
 export const examplePipelineStore: Writable<DUUIPipeline> = writable(blankPipeline())
 
-// Store the state of the feedback form
-export const feedbackStore: Writable<Feedback> = localStorageStore('feedback', {
-	name: '',
-	message: '',
-	step: 0,
-	language: 'english',
-	programming: -1,
-	java: -1,
-	python: -1,
-	duui: false,
-	duuiRating: -1,
-	nlp: -1,
-	nlpNeeded: false,
-	requirements: -1,
-	frustration: -1,
-	correction: -1,
-	ease: -1
-})
-
 // Stores the current state of the process settings.
 export const processSettingsStore: Writable<ProcessSettings> = writable(blankSettings())
 
@@ -42,3 +23,7 @@ export const isDarkModeStore: Writable<boolean> = writable(false)
 
 // Store for the logged in User.
 export const userSession: Writable<User> = writable(undefined)
+
+export const labelStore: Writable<DUUILabels | undefined> = writable(undefined)
+
+export const groupStore: Writable<DUUIGroups | undefined> = writable(undefined)

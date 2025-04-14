@@ -1,17 +1,24 @@
 package org.texttechnologylab.duui.api.routes.components;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.bson.Document;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.storage.MongoDBFilters;
+
 import com.mongodb.client.model.Filters;
-import org.bson.Document;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+
 import spark.Request;
 import spark.Response;
-
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -85,6 +92,46 @@ public class DUUIComponentRequestHandler {
         return component.toJson();
     }
 
+    /**
+     * Inserts a spacy template into the database. The template is read from a file and inserted as a new component.
+     * See {@link DUUIComponentController#insertOne(Document)}
+     *
+     */
+    public static void insertSpacyTemplate() {
+        System.out.println("Inserting spacy template...");
+        try (InputStream is = DUUIComponentRequestHandler.class.getResourceAsStream("/spacy_template.json");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+            if (is == null) {
+                System.err.println("Spacy template file not found.");
+                return;
+            }
+            
+            String json = reader.lines().collect(Collectors.joining("\n"));
+            Document spacyTemplate = Document.parse(json);
+            
+            // Directly insert the spacy template into MongoDB.
+            
+            String templateName = spacyTemplate.getString("name");
+            Document existingTemplate = DUUIMongoDBStorage.Components()
+                .find(new Document("name", templateName)
+                    .append("pipeline_id", null)
+                    .append("user_id", null) // Ensure it's a template
+            ).first();
+            
+            if (existingTemplate != null) {
+                System.out.println("Template with name '" + templateName + "' already exists. Skipping insertion.");
+            } else {
+                Document inserted = DUUIComponentController.insertOne(spacyTemplate);
+                System.out.println("Spacy template inserted: " + templateName);
+            } 
+
+        } catch (IOException e) {
+            System.err.println("Error reading spacy template file: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error inserting spacy template: " + e.getMessage());
+        }
+    }
 
     /**
      * Finds one component by its id extracted from the request url.

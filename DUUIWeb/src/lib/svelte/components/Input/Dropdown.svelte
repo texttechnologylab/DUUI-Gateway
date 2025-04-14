@@ -15,7 +15,7 @@
 
 	export let capitalize = true
 
-	export let options: string[] | number[]
+	export let options: string[] | number[] | Map<string | number, string | number>
 	export let value: string | number
 
 	export let icon: IconDefinition = faChevronDown
@@ -27,6 +27,7 @@
 	export let rounded: string = 'rounded-md'
 	export let border: string = 'border border-color'
 	export let textAlign: string = 'text-start'
+	export let minWidth: string = 'md:min-w-[220px]'
 
 	const dropdown: PopupSettings = {
 		event: 'click',
@@ -37,9 +38,20 @@
 			offset: offset
 		}
 	}
-</script>
 
-<div class="label flex flex-col md:min-w-[220px]">
+	// Convert options into a Map if necessary.
+	let optionsMap: Map<string | number, string | number>
+	if (options instanceof Map) {
+		optionsMap = options
+	} else if (Array.isArray(options)) {
+		optionsMap = new Map(
+			options.map(item => [item, item] as [string | number, string | number])
+		)
+	} else {
+		throw new Error("options must be an array or a Map")
+	}
+</script>
+<div class="label flex flex-col {minWidth}">
 	{#if label}
 		<span class="form-label {textAlign}">{label} </span>
 	{/if}
@@ -47,28 +59,35 @@
 		class="flex items-center !justify-between gap-2 px-3 py-2 leading-6  {border} {rounded} {style}"
 		use:popup={dropdown}
 	>
-		<span>{value === "" ? "" : capitalize ? toTitleCase('' + value) : '' + value}</span>
+		<span>
+			{value === ""
+					? ""
+					: capitalize
+							? toTitleCase('' + (optionsMap.get(value) ?? value))
+							: '' + (optionsMap.get(value) ?? value)
+			}
+		</span>
 		<Fa {icon} />
 	</button>
 </div>
 
-<div data-popup={name} class="fixed overflow-y-auto h64">
-	<div class="popup-solid p-2 md:min-w-[220px] overflow-scroll max-h-96">
+<div data-popup={name} class="fixed overflow-y-auto h64 mt-1">
+	<div class="popup-solid p-2 {minWidth} overflow-scroll max-h-96">
 		<ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
-			{#each options as option}
+			{#each Array.from(optionsMap.entries()) as [key, displayValue]}
 				<ListBoxItem
 					on:change
 					bind:group={value}
 					{name}
-					value={option}
+					value={key}
 					rounded="rounded-md"
 					hover="hover:bg-surface-100-800-token"
 					active="variant-filled-primary"
 				>
 					<svelte:fragment slot="lead">
-						<Fa class={equals('' + value, '' + option) ? '' : 'invisible'} icon={faCheck} />
+						<Fa class={equals('' + value, '' + key) ? '' : 'invisible'} icon={faCheck} />
 					</svelte:fragment>
-					{option}
+					{displayValue}
 				</ListBoxItem>
 			{/each}
 		</ListBox>
