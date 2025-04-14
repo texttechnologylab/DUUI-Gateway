@@ -60,6 +60,7 @@
 	import ProcessDrawer from './processes/[oid]/ProcessDrawer.svelte'
 	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
 	import GroupEditor from "$lib/svelte/components/Drawer/GroupEditor.svelte";
+	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
 
 	export let data
 	let { user, theme } = data
@@ -152,6 +153,8 @@
 		<ProcessDrawer />
 	{:else if $drawerStore.id === 'group'}
 		<GroupEditor />
+	{:else if $drawerStore.id === 'label'}
+		<LabelsEditor />
 	{/if}
 </Drawer>
 

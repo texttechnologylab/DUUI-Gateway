@@ -69,8 +69,22 @@
 
 			if (!labels || !labels.length) {
 				component.options.labels = []
+			} else {
+				labels = [...labels]
+				component.options.labels = component.options.labels.filter((label) => labels.includes(label))
 			}
-		}
+			
+			for (let l=0; l<component.options.labels.length; l++) {
+				chosenLabels.set(component.options.labels[l], component.options.labels[l])
+			}
+
+			chosenLabels.clear() // Clear the map
+			component.options.labels.forEach(label => {
+				chosenLabels.set(label, label); // Repopulate the map
+			});
+			chosenLabels = new Map(chosenLabels); // Create a new Map instance
+			// component.options.labels = [...component.options.labels] // Trigger reactivity
+			}
 	}
 
 	fetchDriverLabels()
@@ -243,6 +257,7 @@
 		document.body.removeChild(anchor)
 		URL.revokeObjectURL(url)
 	}
+
 </script>
 
 <div class="menu-mobile lg:!max-w-[50%]">
@@ -389,7 +404,7 @@
 				</div>
 			</div>
 
-			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} />
+			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} on:change={fetchDriverLabels} />
 
 			<Chips style="md:col-span-2" label="Tags" bind:values={component.tags} />
 			<TextArea

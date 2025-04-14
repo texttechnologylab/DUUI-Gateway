@@ -168,12 +168,12 @@
 			text: string
 			annotationNames: string[]
 			preprocessed: Annotation[]
-		} = null
+		} | null = null
 
 		if (localStorage.getItem(filePath)) {
-			const jsonString: string = localStorage.getItem(filePath)
+			const jsonString = localStorage.getItem(filePath)
 
-			json = JSON.parse(jsonString)
+			json = JSON.parse(jsonString) || null
 		} else {
 			const response = await fetch(filePath,
 					{
@@ -270,7 +270,7 @@
 		}
 		window.addEventListener('beforeunload', handleBeforeUnload);
 
-		keyList = JSON.parse(localStorage.getItem("keyList")) || []
+		keyList = JSON.parse(localStorage.getItem("keyList") || "[]")
 
 		loadApexCharts()
 

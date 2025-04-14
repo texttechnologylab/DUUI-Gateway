@@ -9,28 +9,35 @@
 		faAnglesLeft,
 		faAnglesRight
 	} from '@fortawesome/free-solid-svg-icons'
-	import { createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, onMount } from 'svelte'
 	import Fa from 'svelte-fa'
 	import Dropdown from './Input/Dropdown.svelte'
+	import pkg from 'lodash';
+	const {cloneDeep} = pkg;
 
 	const dispatcher = createEventDispatcher()
 
 	export let settings: PaginationSettings
 
+	// Initialize localSettings on component mount.
+	// onMount(() => {
+	// 	localSettings = cloneDeep(settings);
+	// });
+
 	const decrement = () => {
 		settings.page = Math.max(settings.page - 1, 0)
-		dispatcher('change')
+		dispatcher('change', { settings: settings });
 	}
 
 	const increment = () => {
 		if (settings.total <= (settings.page + 1) * settings.limit) return
 		settings.page += 1
-		dispatcher('change')
+		dispatcher('change', { settings: settings });
 	}
 
 	const toFirst = () => {
 		settings.page = 0
-		dispatcher('change')
+		dispatcher('change', { settings: settings });
 	}
 
 	const toLast = () => {
@@ -42,13 +49,13 @@
 		}
 
 		settings.page = page
-		dispatcher('change')
+		dispatcher('change', { settings: settings });
 	}
 </script>
 
 <div class="justify-between flex gap-4 text-sm md:text-base">
 	<Dropdown
-		on:change={() => dispatcher('change')}
+		on:change={() => dispatcher('change', { settings: settings })}
 		bind:value={settings.limit}
 		options={settings.sizes}
 		border="bordered-soft"

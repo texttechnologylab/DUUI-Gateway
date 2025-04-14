@@ -4,27 +4,28 @@
 -->
 <script lang="ts">
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
-	import { faCheck, faClose, faPen, faPlus } from '@fortawesome/free-solid-svg-icons'
+	import { faCheck, faClose, faPen, faPlus, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 	import { getModalStore } from '@skeletonlabs/skeleton'
 	import Fa from 'svelte-fa'
 	import TextInput from './TextInput.svelte'
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
 	import Chip from "$lib/svelte/components/Chip.svelte";
 
-	export let dropdownList: string[] | Map<string, any>
+	export let dropdownList: Map<string, any>
 	export let data: Map<string, any> = new Map()
 	export let target: string[] = []
+	export let leadingIcon: IconDefinition | undefined = undefined
 
 	let edit: boolean = false
 	let key: string = ''
 	let value: string = ''
 	export let label: string = ''
 
-	const remove = async (key: string) => {
+	const remove = async (key: string, value: string) => {
 		const confirm = await showConfirmationModal(
 			{
 				title: 'Delete Parameter',
-				message: `Please confirm the deletion of ${key}.`,
+				message: `Please confirm the deletion of ${value}.`,
 				textYes: 'Delete'
 			},
 			modalStore
@@ -45,8 +46,10 @@
 		} else if (!isNaN(+value)) {
 			data.set(key, +value)
 		} else {
-			data.set(key, value)
-			target.push(key)
+			if (!data.has(key)) {
+				data.set(key, value)
+				target.push(key)
+			}
 		}
 		data = data
 		edit = false
@@ -69,6 +72,8 @@
 			target = []
 		}
 	}
+
+	$: data = data
 </script>
 
 <div class="label flex flex-col">
@@ -101,18 +106,28 @@
 								offset={0}
 								bind:value={key}
 								on:change={(_) => {
-									value = key
+									if (dropdownList instanceof Map) {
+										value = dropdownList.get(key) ?? key
+									} else {
+										value = key
+									}
 								}}
 								style="button-menu px-4 py-2 !self-stretch"
 								options={dropdownList}
 						/>
-						<button
-							disabled={!key || !value || data[key]}
-							class="pt-7 aspect-square rounded-full {key && value && !data[key]
-								? 'hover:text-success-500 transition-colors'
-								: 'opacity-50'}"
-							on:click={create}><Fa icon={faCheck} size="lg" /></button
-						>
+						<div class="flex flex-col pt-6 gap-y-1">
+							<button
+								disabled={!key || !value || data[key]}
+								class=" aspect-square rounded-full {key && value && !data[key]
+									? 'hover:text-success-500 transition-colors'
+									: 'opacity-50'}"
+								on:click={() => create()}><Fa icon={faCheck} size="lg" /></button
+							>
+							<button
+								class=" aspect-square rounded-full opacity-50 hover:text-error-500 transition-colors}"
+								on:click={() => edit = false}><Fa icon={faClose} size="lg" /></button
+							>
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -120,10 +135,10 @@
 
 		<div class="flex flex-wrap justify-start items-start gap-2">
 			{#each data.entries() as [_key, _value]}
-				<Chip text={_value}>
+				<Chip text={_value} leftIcon={leadingIcon}>
 					<span slot="icon-right">
 						<button class="hover:text-error-500 duration-300 transition-colors"
-						on:click={() => remove(_key)}>
+						on:click={() => remove(_key, _value)}>
 
 							<Fa icon={faClose}  />
 

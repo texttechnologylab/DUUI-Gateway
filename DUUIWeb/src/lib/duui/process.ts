@@ -1,5 +1,5 @@
 import { equals } from '$lib/duui/utils/text'
-import { IO, type DUUIDocumentProvider, type FileExtension } from './io'
+import { IO, type DUUIDocumentProvider, type FileExtension, type OutputFileExtension } from './io'
 
 export interface ProcessSettings {
 	pipeline_id: string
@@ -69,7 +69,7 @@ export const blankSettings = () => {
 			provider: IO.None,
 			path: '',
 			content: '',
-			file_extension: '.txt' as FileExtension,
+			file_extension: '.txt' as OutputFileExtension,
 			provider_id: ""
 		},
 		settings: {

@@ -9,15 +9,18 @@
 	export let arrow: boolean = true
 	export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
 	export let classes: string = ''
+	export let autoPopupWidth: boolean = false
+
+	const popupWidth = autoPopupWidth ? "w-auto min-w-max" : ""
 </script>
 
 <div class="group relative {classes}">
 	<slot name="trigger" />
 	{#if position === 'bottom'}
 		<div
-			class="invisible group-hover:visible translate-y-4 transition-all origin-top opacity-0
+			class={`invisible group-hover:visible translate-y-4 transition-all origin-top opacity-0
                 absolute left-1/2 -translate-x-1/2 top-full z-[9999]
-                group-hover:translate-y-0 duration-300 group-hover:opacity-100"
+                group-hover:translate-y-0 duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="py-4 relative">
 				<slot name="popup" />
@@ -32,9 +35,9 @@
 		</div>
 	{:else if position === 'top'}
 		<div
-			class="invisible group-hover:visible -translate-y-4 transition-all origin-bottom opacity-0
+			class={`invisible group-hover:visible -translate-y-4 transition-all origin-bottom opacity-0
                 absolute left-1/2 -translate-x-1/2 bottom-full z-[100]
-                group-hover:translate-y-0 duration-300 group-hover:opacity-100"
+                group-hover:translate-y-0 duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="py-4 relative">
 				<slot name="popup" />
@@ -50,9 +53,9 @@
 		</div>
 	{:else if position === 'right'}
 		<div
-			class="invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
+			class={`invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
                 absolute right-2 top-1/2 -translate-y-1/2 z-[100]
-                group-hover:translate-x-full duration-300 group-hover:opacity-100"
+                group-hover:translate-x-full duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="translate-x-4 relative">
 				<slot name="popup" />
@@ -68,9 +71,9 @@
 		</div>
 	{:else if position === 'left'}
 		<div
-			class="invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
+			class={`invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
                 absolute left-2 top-1/2 -translate-y-1/2 z-[100]
-                group-hover:-translate-x-full duration-300 group-hover:opacity-100"
+                group-hover:-translate-x-full duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="-translate-x-4 relative">
 				<slot name="popup" />
