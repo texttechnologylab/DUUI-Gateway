@@ -1,4 +1,5 @@
 <script lang="ts">
+// <script >
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import {
@@ -16,6 +17,7 @@
 		isValidCloudProvider,
 		getCloudProviderAliases,
 		type FileExtension,
+		type OutputFileExtension,
 		type IOProvider
 	} from '$lib/duui/io.js'
 	import { Languages, blankSettings } from '$lib/duui/process'
@@ -91,11 +93,11 @@
 
 		if (isInput) {
 			inputAliases =
-					!user.connections[$processSettingsStore.input.provider.toLowerCase()] ? {} :
+					!user?.connections[$processSettingsStore.input.provider.toLowerCase()] ? {} :
 							getCloudProviderAliases(user.connections[$processSettingsStore.input.provider.toLowerCase()])
 		} else {
 			outputAliases =
-					!user.connections[$processSettingsStore.output.provider.toLowerCase()] ? {} :
+					!user?.connections[$processSettingsStore.output.provider.toLowerCase()] ? {} :
 							getCloudProviderAliases(user.connections[$processSettingsStore.output.provider.toLowerCase()])
 		}
 	}
@@ -146,7 +148,7 @@
 			(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
 
 		let converted_input_provider_id: string = params.get('input_provider_id') || ""
-		let serviceDetails = user.connections[$processSettingsStore.input.provider.toLowerCase()]
+		let serviceDetails = user?.connections[$processSettingsStore.input.provider.toLowerCase()]
 
 		if (converted_input_provider_id
 			&& $processSettingsStore.input.provider
@@ -176,7 +178,7 @@
 			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
 
 		let converted_output_provider_id:string = params.get('output_provider_id') || ""
-		let oserviceDetails = user.connections[$processSettingsStore.output.provider.toLowerCase()]
+		let oserviceDetails = user?.connections[$processSettingsStore.output.provider.toLowerCase()]
 		
 		if (converted_output_provider_id
 				&& $processSettingsStore.output.provider
@@ -192,7 +194,7 @@
 		$processSettingsStore.output.content =
 			params.get('output_content') || $processSettingsStore.output.content
 		$processSettingsStore.output.file_extension =
-			(params.get('output_file_extension') as FileExtension) ||
+			(params.get('output_file_extension') as OutputFileExtension) ||
 			$processSettingsStore.output.file_extension
 
 		if (isValidCloudProvider($processSettingsStore.output)) {
@@ -438,7 +440,7 @@
 							{/if}
 						</div>
 						{#if $processSettingsStore.input.provider === IO.Minio &&
-							Object.keys($userSession?.connections.minio).length <= 0}
+							Object.keys($userSession?.connections.minio ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Minio you must first connect your <a
@@ -451,7 +453,7 @@
 						{/if}
 
 						{#if $processSettingsStore.input.provider === IO.Dropbox &&
-							Object.keys($userSession?.connections.dropbox).length <= 0}
+							Object.keys($userSession?.connections.dropbox ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Dropbox you must first connect your <a
@@ -464,7 +466,7 @@
 						{/if}
 
 						{#if $processSettingsStore.input.provider === IO.NextCloud &&
-							Object.keys($userSession?.connections.nextcloud).length <= 0}
+							Object.keys($userSession?.connections.nextcloud ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use NextCloud you must first connect your <a
@@ -477,7 +479,7 @@
 						{/if}
 
 						{#if $processSettingsStore.input.provider === IO.Google &&
-							Object.keys($userSession?.connections.google).length <= 0}
+							Object.keys($userSession?.connections.google ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Google you must first connect your <a
@@ -696,7 +698,7 @@
 							: '!border-error-500'}"
 					>
 						{#if $processSettingsStore.output.provider === IO.Minio &&
-						Object.keys($userSession?.connections.minio).length <= 0}
+						Object.keys($userSession?.connections.minio ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Minio you must first connect your <a
@@ -708,7 +710,7 @@
 						{/if}
 
 						{#if $processSettingsStore.output.provider === IO.Dropbox &&
-							Object.keys($userSession?.connections.dropbox).length <= 0}
+							Object.keys($userSession?.connections.dropbox ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Dropbox you must first connect your <a
@@ -720,7 +722,7 @@
 						{/if}
 
 						{#if $processSettingsStore.output.provider === IO.NextCloud &&
-							Object.keys($userSession?.connections.nextcloud).length <= 0}
+							Object.keys($userSession?.connections.nextcloud ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use NextCloud you must first connect your <a
@@ -732,7 +734,7 @@
 						{/if}
 
 						{#if $processSettingsStore.output.provider === IO.Google &&
-							Object.keys($userSession?.connections.google).length <= 0}
+							Object.keys($userSession?.connections.google ?? {}).length <= 0}
 							<div class="text-center w-full variant-soft-error p-4 rounded-md">
 								<p class="mx-auto">
 									To use Google you must first connect your <a

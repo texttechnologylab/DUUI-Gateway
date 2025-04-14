@@ -1,40 +1,59 @@
 package org.texttechnologylab.duui.api.controllers.processes;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import org.texttechnologylab.duui.api.Main;
-import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
-import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
-import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
-import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
-import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
-import org.texttechnologylab.duui.api.storage.MongoDBFilters;
-import com.dropbox.core.DbxException;
-import com.dropbox.core.DbxRequestConfig;
-import com.dropbox.core.oauth.DbxCredential;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.model.*;
-import com.mongodb.client.result.UpdateResult;
-import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
-import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
-import org.texttechnologylab.duui.analysis.document.Provider;
-import org.texttechnologylab.duui.analysis.process.DUUISimpleProcessHandler;
-import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
-import org.texttechnologylab.utilities.helper.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDropboxDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIGoogleDriveDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
+import org.texttechnologylab.duui.analysis.document.Provider;
+import org.texttechnologylab.duui.analysis.process.DUUISimpleProcessHandler;
+import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
+import org.texttechnologylab.duui.api.Main;
+import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
+import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
+import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
+import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
+import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
+import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+import org.texttechnologylab.duui.api.storage.MongoDBFilters;
+import org.texttechnologylab.utilities.helper.FileUtils;
+
+import com.dropbox.core.DbxException;
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.oauth.DbxCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Facet;
+import com.mongodb.client.model.Field;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * A Controller for database operations related to the processes collection.
@@ -521,6 +540,8 @@ public class DUUIProcessController {
     public static IDUUIDocumentHandler getHandler(String provider, String providerId, String userId) throws DbxException, GeneralSecurityException, IOException {
         Document user = DUUIUserController.getUserById(userId);
 
+        System.out.println("Getting Handler with Provider: " + provider + " and ProviderId: " + providerId);
+
         if (provider.equalsIgnoreCase(Provider.DROPBOX)) {
             Document credentials = DUUIUserController.getDropboxCredentials(user, providerId);
 
@@ -545,9 +566,8 @@ public class DUUIProcessController {
             return new DUUILocalDocumentHandler();
         } else if (provider.equalsIgnoreCase(Provider.NEXTCLOUD)) {
             Document credentials = DUUIUserController.getNextCloudCredentials(user, providerId);
-            System.out.println("URI: " + credentials.getString("uri"));
-            System.out.println("USERNAME: " + credentials.getString("username"));
-            System.out.println("PASSWORD: " + credentials.getString("password"));
+            System.out.println("Nextcloud Credentials: " + credentials.toJson());
+            
             return new DUUINextcloudDocumentHandler(
                         credentials.getString("uri"),
                         credentials.getString("username"),
