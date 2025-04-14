@@ -25,3 +25,4 @@ replay_pid*
 .idea/
 /DUUIRestService/.idea/*
 .vscode/
+mongodb_data/*
