@@ -41,6 +41,8 @@ import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 
 import com.dropbox.core.DbxException;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
 
 import spark.Request;
@@ -94,9 +96,10 @@ public class Main {
         else{
             config = new Config();
         }
-
+        
         DUUIMongoDBStorage.init(config);
         DUUIMetricsManager.init();
+
 
         try {
             port(config.getPort());
@@ -287,5 +290,36 @@ public class Main {
             response.status(500);
             return "The file could not be downloaded.";
         }
+    }
+
+    public static String updateSettings(Request request, Response response) {
+        
+        Document settings = Document.parse(request.body());
+
+        if (settings.containsKey("allowed_origins")) {
+            List<String> allowedOrigins = settings.getList("allowed_origins", String.class);
+            settings.put("allowed_origins", String.join(";", allowedOrigins));
+        }
+
+        settings = DUUIMongoDBStorage.Globals()
+            .findOneAndUpdate(
+                Filters.exists("settings"),
+                Updates.set("settings", settings),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+            );
+        
+        if (settings == null) {
+            throw new RuntimeException("Failed to create settings document");
+        }
+        
+        if (settings.get("settings", Document.class) != null) {
+            settings = settings.get("settings", Document.class);
+        }
+
+        return settings.toJson();
+    }
+
+    public static String getSettings(Request request, Response response) {
+        return DUUIMongoDBStorage.Settings().toJson();
     }
 }

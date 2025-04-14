@@ -68,6 +68,17 @@ type DUUIGroups = {
 	[groupId: string]: DUUIGroup
 }
 
+type DUUISettings = {
+	dbx_app_secret: string
+	dbx_app_key: string
+	dbx_redirect_url: string
+	google_client_id: string
+	google_client_secret: string
+	google_redirect_uri: string
+	allowed_origins: string[]
+	file_upload_directory: string
+}
+
 type ServiceConnections = {
 	[name: string]: OAuthConnectionDetails | MinioConnectionDetails | NextcloudConnectionDetails;
 };

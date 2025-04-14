@@ -46,7 +46,7 @@
 	const drawerStore = getDrawerStore()
 
 	export let data
-	let { user, dropbBoxURL, googleDriveURL, theme, users, labels, groups } = data
+	let { user, dropbBoxURL, googleDriveURL, theme, users, labels, groups, settings } = data
 
 
 	const themes = Object.keys(COLORS)
@@ -1374,6 +1374,32 @@
 							})}
 						}
 					/>
+
+					<div class="section-wrapper p-4 space-y-4">
+						<h3 class="h3">Global Setting</h3>
+						<p class="text-surface-500 dark:text-surface-200">
+							Set global configuration settings for this DUUI-Gateway instance. 
+							These settings will be saved to the database.
+						</p>
+						
+						<div class="ml-2">
+							<!-- Add Button -->
+							<button class="btn variant-filled-primary" on:click={() => 
+								drawerStore.open({
+									id: 'settings',
+									width: 'w-full lg:w-[60%] h-full',
+									position: 'right',
+									rounded: 'rounded-none',
+									border: 'border-l border-color',
+									meta: { 
+										settings: settings
+									}
+								})}>
+								<Fa icon="plus" class="mr-2"/>
+								Edit
+							</button>
+						</div>
+					</div>
 				</div>
 			{/if}
 		{/if}

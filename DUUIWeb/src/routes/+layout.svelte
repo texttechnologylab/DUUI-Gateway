@@ -61,6 +61,7 @@
 	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
 	import GroupEditor from "$lib/svelte/components/Drawer/GroupEditor.svelte";
 	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
+	import SettingsEditor from '$lib/svelte/components/Drawer/SettingsEditor.svelte'
 
 	export let data
 	let { user, theme } = data
@@ -155,6 +156,8 @@
 		<GroupEditor />
 	{:else if $drawerStore.id === 'label'}
 		<LabelsEditor />
+	{:else if $drawerStore.id === 'settings'}
+		<SettingsEditor />
 	{/if}
 </Drawer>
 

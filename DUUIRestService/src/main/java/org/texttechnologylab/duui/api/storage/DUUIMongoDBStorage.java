@@ -23,6 +23,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
@@ -267,6 +269,71 @@ public class DUUIMongoDBStorage {
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("components");
     }
 
+    public static void initSettings() {
+        
+        System.out.println("Init Settings");
+        Document settings = Globals()
+        .find(Filters.exists("settings"))
+        .first();
+        
+        System.out.println("Settings 1: " + settings);
+        
+        if (settings != null) {
+            // Document defaultSettings = new Document()
+            //     .append("dbx_app_secret", Main.config.getDropboxSecret())
+            //     .append("dbx_app_key", Main.config.getDropboxKey())
+            //     .append("dbx_redirect_url", Main.config.getDropboxRedirectUrl())
+            //     .append("google_client_id", Main.config.getGoogleClientId())
+            //     .append("google_client_secret", Main.config.getGoogleClientSecret())
+            //     .append("google_redirect_uri", Main.config.getGoogleRedirectUri())
+            //     .append("file_upload_directory", Main.config.getFileUploadPath())
+            //     .append("allowed_origins", String.join(";", Main.config.getAllowedOrigins()));
+            
+            Globals()
+                .findOneAndUpdate(
+                    Filters.exists("settings"),
+                    Updates.set("settings", new Document()),
+                    new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+                );
+
+        } 
+    }
+
+    public static void updateSettings(String setting, String value) {
+
+        Document existingSettings = Globals()
+                .find(Filters.exists("settings"))
+                .first();
+
+        if (existingSettings == null) {
+            throw new RuntimeException("Failed to create settings document");
+        }
+
+        DUUIMongoDBStorage.Globals()
+            .findOneAndUpdate(
+                Filters.exists("settings"),
+                Updates.set("settings." + setting, value),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+            );
+    }
+
+    public static Document Settings() {
+        
+        Document settings = Globals()
+                .find(Filters.exists("settings"))
+                .first();
+            
+        if (settings == null) {
+            throw new RuntimeException("Failed to create settings document");
+        }
+
+        if (settings.get("settings", Document.class) != null) {
+            settings = settings.get("settings", Document.class);
+        }
+
+        return settings;
+    }
+
     /**
      * Utility functions for fast access to collections in the database.
      *
@@ -318,9 +385,15 @@ public class DUUIMongoDBStorage {
                 .getCollection("globals");
 
         Document existingDocument = collection.find(Filters.exists("labels")).first();
+        Document existingSetting = collection.find(Filters.exists("settings")).first();
 
         if (existingDocument == null) {
             Document initialData = new Document("labels", new Document());
+            collection.insertOne(initialData);
+        }
+
+        if (existingSetting == null) {
+            Document initialData = new Document("settings", new Document());
             collection.insertOne(initialData);
         }
 

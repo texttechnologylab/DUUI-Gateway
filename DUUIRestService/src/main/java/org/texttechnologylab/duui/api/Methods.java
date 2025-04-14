@@ -71,6 +71,18 @@ public class Methods {
         });
 
 
+        path("/settings", () -> {
+            before("/*", (request, response) -> {
+                boolean isAuthorized = DUUIRequestHelper.isAuthorized(request);
+                if (!isAuthorized || !DUUIRequestHelper.isAdmin(request)) {
+                    halt(401, "Unauthorized");
+                }
+            });
+
+            get("", (request, response) ->  Main.getSettings(request, response));
+            put("", (request, response) -> Main.updateSettings(request, response));
+        });
+
         /* Users */
         path("/users", () -> {
             before("/*", (request, response) -> DUUIHTTPMetrics.incrementUsersRequests());

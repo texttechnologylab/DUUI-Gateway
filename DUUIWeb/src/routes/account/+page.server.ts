@@ -26,6 +26,28 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		}
 	})).json()
 
+	let settings: DUUISettings = {
+			dbx_app_key: '',
+			dbx_app_secret: '',
+			dbx_redirect_url: '',
+			google_client_id: '',
+			google_client_secret: '',
+			google_redirect_uri: '',
+			allowed_origins: [],
+			file_upload_directory: ''
+		}
+
+	try {
+		settings = await(await fetch(`${API_URL}/settings`, {
+			method: 'GET',
+			headers: {
+				Authorization: cookies.get('session') || ''
+			}
+		})).json()
+	} catch (error) {
+		console.error('Error fetching settings')
+	}
+
 	// Retrieve the Dropbox OAuth 2.0 credentials from the backend.
 	// These correspond to the properties set in the config file.
 	const response = await fetch(`${API_URL}/users/auth/dropbox`, {
@@ -128,6 +150,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		theme: +(cookies.get('theme') || '0'),
 		users: usrs,
 		labels: labels,
-		groups: groups
+		groups: groups,
+		settings: settings,
 	}
 }
