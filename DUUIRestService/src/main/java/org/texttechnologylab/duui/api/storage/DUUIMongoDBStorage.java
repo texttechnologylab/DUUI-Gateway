@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -287,7 +288,7 @@ public class DUUIMongoDBStorage {
             //     .append("google_client_secret", Main.config.getGoogleClientSecret())
             //     .append("google_redirect_uri", Main.config.getGoogleRedirectUri())
             //     .append("file_upload_directory", Main.config.getFileUploadPath())
-            //     .append("allowed_origins", String.join(";", Main.config.getAllowedOrigins()));
+            // .append("allowed_origins", String.join(";", Main.config.getAllowedOrigins()));
             
             Globals()
                 .findOneAndUpdate(
@@ -320,8 +321,18 @@ public class DUUIMongoDBStorage {
     public static Document Settings() {
         
         Document settings = Globals()
-                .find(Filters.exists("settings"))
-                .first();
+            .find(Filters.exists("settings"))
+            .map(doc -> {
+                Document s = doc.get("settings", Document.class);
+                if (s != null) {
+                    s.put("allowed_origins", 
+                        Optional.ofNullable(s.getString("allowed_origins"))
+                                .map(orig -> List.of(orig.split(";")))
+                                .orElse(List.of()));
+                }
+                return s;
+            })
+            .first();
             
         if (settings == null) {
             throw new RuntimeException("Failed to create settings document");

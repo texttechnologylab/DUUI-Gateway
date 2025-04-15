@@ -320,6 +320,10 @@ public class Main {
     }
 
     public static String getSettings(Request request, Response response) {
-        return DUUIMongoDBStorage.Settings().toJson();
+        String settings = DUUIMongoDBStorage.Settings().toJson();
+        
+        // System.out.println("Settings: " + settings);
+
+        return settings;
     }
 }

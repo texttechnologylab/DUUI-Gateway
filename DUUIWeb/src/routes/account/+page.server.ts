@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		}
 
 	try {
-		settings = await(await fetch(`${API_URL}/settings`, {
+		settings = await(await fetch(`${API_URL}/settings/`, {
 			method: 'GET',
 			headers: {
 				Authorization: cookies.get('session') || ''

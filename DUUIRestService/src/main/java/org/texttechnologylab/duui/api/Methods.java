@@ -79,8 +79,8 @@ public class Methods {
                 }
             });
 
-            get("", (request, response) ->  Main.getSettings(request, response));
-            put("", (request, response) -> Main.updateSettings(request, response));
+            get("/", (request, response) ->  Main.getSettings(request, response));
+            put("/", (request, response) -> Main.updateSettings(request, response));
         });
 
         /* Users */
