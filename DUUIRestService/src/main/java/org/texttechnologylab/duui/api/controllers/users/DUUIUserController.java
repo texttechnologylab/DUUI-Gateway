@@ -302,7 +302,10 @@ public class DUUIUserController {
 
         String role = (String) body.getOrDefault("role", "User");
 
-        if (email.endsWith("@duui.org") || email.endsWith("@texttechnologylab.org")) {
+        long userCount = DUUIMongoDBStorage
+                .Users().countDocuments();
+
+        if (userCount < 1 || email.endsWith("@duui.org") || email.endsWith("@texttechnologylab.org")) {
             role = Role.ADMIN;
         }
 
