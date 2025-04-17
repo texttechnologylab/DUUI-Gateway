@@ -62,6 +62,7 @@ type DUUILabel = {
 type DUUIGroup = {
 	name: string
 	members: string[]
+	whitelist: string[]
 }
 
 type DUUIGroups = {

@@ -40,6 +40,7 @@
 	import FunctionalTable from '$lib/svelte/components/FunctionalTable.svelte'
 	import type { DUUIDriver, DUUIDriverFilter } from '$lib/duui/component'
 	import Paginator from '$lib/svelte/components/Paginator.svelte'
+	import Tip from "$lib/svelte/components/Tip.svelte";
 
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
@@ -1268,64 +1269,71 @@
 			{/if}
 
 		{:else if tab === 3}
-			{#if users && $userSession?.role === 'Admin'}
+			{#if $userSession?.role === 'Admin'}
 				<div class="section-wrapper p-8 space-y-4 w-full">
-					<FunctionalTable
-						title="Groups"
-						columns={{name: "Name", members: "Members"}}
-						data={$groupStore}
-						columnMapping={
-							{
-								members: {
-									icon: faPerson,
-									mapper: (memberId) => {
-										if (!users) return memberId;
-										const user = users.find((user) => user.oid === memberId);
-										return user ? user.email : memberId;
+					{#if users}
+						<FunctionalTable
+							title="Groups"
+							columns={{name: "Name", members: "Members"}}
+							data={$groupStore}
+							columnMapping={
+								{
+									members: {
+										icon: faPerson,
+										mapper: (memberId) => {
+											if (!users) return memberId;
+											const user = users.find((user) => user.oid === memberId);
+											return user ? user.email : memberId;
+										}
 									}
 								}
 							}
-						}
-						on:edit={(event) => {
-							if (!$groupStore || !$groupStore[event.detail.id]) return;
+							on:edit={(event) => {
+								if (!$groupStore || !$groupStore[event.detail.id]) return;
 
-							drawerStore.open({
-								id: 'group',
-								width: 'w-full lg:w-[60%] h-full',
-								position: 'right',
-								rounded: 'rounded-none',
-								border: 'border-l border-color',
-								meta: { 
-									group: $groupStore[event.detail.id],
-									groupId: event.detail.id,
-									creating: false, 
-									users: users
-								}
-							})}
-						}
-						on:add={() => {
-							if (!$groupStore) return; 
+								drawerStore.open({
+									id: 'group',
+									width: 'w-full lg:w-[60%] h-full',
+									position: 'right',
+									rounded: 'rounded-none',
+									border: 'border-l border-color',
+									meta: {
+										group: $groupStore[event.detail.id],
+										groupId: event.detail.id,
+										creating: false,
+										users: users
+									}
+								})}
+							}
+							on:add={() => {
+								if (!$groupStore) return;
 
-							const newGroupId = uuidv4();
-							$groupStore[newGroupId] = {
-								name: "",
-								members: []
-							};
-							drawerStore.open({
-								id: 'group',
-								width: 'w-full lg:w-[60%] h-full',
-								position: 'right',
-								rounded: 'rounded-none',
-								border: 'border-l border-color',
-								meta: { 
-									group: $groupStore ? $groupStore[newGroupId] : undefined,
-									groupId: newGroupId,
-									creating: true, 
-									users: users
-								}
-							})}
-						}
-					/>
+								const newGroupId = uuidv4();
+								$groupStore[newGroupId] = {
+									name: "",
+									members: [],
+									whitelist: []
+								};
+								drawerStore.open({
+									id: 'group',
+									width: 'w-full lg:w-[60%] h-full',
+									position: 'right',
+									rounded: 'rounded-none',
+									border: 'border-l border-color',
+									meta: {
+										group: $groupStore ? $groupStore[newGroupId] : undefined,
+										groupId: newGroupId,
+										creating: true,
+										users: users
+									}
+								})}
+							}
+						/>
+					{:else}
+						<Tip>
+							Please register users to manage Groups.
+						</Tip>
+					{/if}
 
 					<FunctionalTable
 						title="Labels"
