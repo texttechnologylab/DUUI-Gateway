@@ -41,7 +41,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <!--        <duui.version>1.4.1</duui.version>-->
-        <duui.version>6dde5b0a686a8fc17592dbf404556d228017c7e5</duui.version>
+        <duui.version>duui-gateway-release-SNAPSHOT</duui.version>
         <uima.version>3.5.0</uima.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
     </properties>

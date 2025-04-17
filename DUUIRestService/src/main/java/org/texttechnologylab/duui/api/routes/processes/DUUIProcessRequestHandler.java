@@ -77,7 +77,7 @@ public class DUUIProcessRequestHandler {
 
             if (document == null) {
                 CompletableFuture<IDUUIFolderPickerApi.DUUIFolder> folderStructure =
-                        CompletableFuture.supplyAsync(() -> iDUUIFolderPickerApi.getFolderStructure());
+                        CompletableFuture.supplyAsync(iDUUIFolderPickerApi::getFolderStructure);
                 Map<String, Object> tree = folderStructure.get().toJson();
                 document = new Document(tree);
 

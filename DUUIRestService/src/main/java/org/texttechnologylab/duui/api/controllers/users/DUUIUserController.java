@@ -566,8 +566,6 @@ public class DUUIUserController {
 
         Document groups = doc.get("groups", Document.class);
 
-
-
         for (Map.Entry<String, Object> entry : groups.entrySet()) {
             Document group = (Document) entry.getValue();
 

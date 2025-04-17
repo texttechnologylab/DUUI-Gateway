@@ -26,9 +26,9 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.bson.Document;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
@@ -47,6 +47,11 @@ import com.mongodb.client.model.Updates;
 
 import spark.Request;
 import spark.Response;
+
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.Accumulators.*;
 import static spark.Spark.port;
 
 /*
@@ -290,6 +295,98 @@ public class Main {
             response.status(500);
             return "The file could not be downloaded.";
         }
+    }
+
+    public static String getFilteredFolderStructure(Request request, Response response) {
+        String rootPath = System.getProperty("user.home");
+        String userId = DUUIRequestHelper.getUserId(request);
+
+        List<Bson> pipeline = List.of(
+                project(fields(
+                        computed("groupsArr", new Document("$objectToArray", "$groups"))
+                )),
+                unwind("$groupsArr"),
+                match(in("groupsArr.v.members", userId)),
+                group(null, push("listOfLists", "$groupsArr.v.whitelist")),
+                project(fields(
+                        computed("combinedWhitelist",
+                                new Document("$reduce", new Document("input", "$listOfLists")
+                                        .append("initialValue", List.of())
+                                        .append("in", new Document("$concatArrays", List.of("$$value", "$$this")))
+                                )
+                        )
+                ))
+        );
+
+        Document result = DUUIMongoDBStorage.Globals().aggregate(pipeline).first();
+        if (result != null) result = new Document("combinedWhitelist", List.of());
+        List<Path> whitelist = result.getList("combinedWhitelist", String.class)
+            .stream().map(Path::of).toList();
+
+        try {
+            IDUUIFolderPickerApi.DUUIFolder folder;
+            DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
+            folder = handler.getFolderStructure();
+            folder = handler.filterTree(folder, whitelist);
+            Document fs = new Document(folder.toJson());
+            return fs.toJson();
+        } catch (Exception e) {
+            response.status(500);
+            return "Failed to get folder structure: " + e.getMessage();
+        }
+    }
+
+    public static String getLocalFolderStructure(Request request, Response response) {
+
+        String rootPath = System.getProperty("user.home");
+        boolean reset = request.queryParamOrDefault("reset", "false").equals("true");
+
+        try {
+            Document fs = getLFS(rootPath, reset);
+            return fs.toJson();
+        } catch (Exception e) {
+            response.status(500);
+            return "Failed to get folder structure: " + e.getMessage();
+        }
+
+    }
+
+    private static Document getLFS(String rootPath, boolean reset) {
+
+        Document fs = null;
+
+        if (reset) {
+            DUUIMongoDBStorage.Globals()
+                    .findOneAndUpdate(
+                            Filters.exists("settings"),
+                            Updates.unset("settings.local_folder_structure")
+                    );
+        } else {
+            Document result = DUUIMongoDBStorage.Globals().find(Filters.exists("settings")).first();
+            if (result != null) {
+                Document doc = result.getEmbedded(List.of("settings", "local_folder_structure"), Document.class);
+                if (doc != null) fs = doc;
+            }
+        }
+
+        if (fs == null) {
+            IDUUIFolderPickerApi.DUUIFolder folder;
+            try {
+                DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
+                folder = handler.getFolderStructure();
+
+                fs = new Document(folder.toJson());
+                DUUIMongoDBStorage.Globals()
+                        .findOneAndUpdate(
+                                Filters.exists("settings"),
+                                Updates.set("settings.local_folder_structure", fs)
+                        );
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+
+        return fs;
     }
 
     public static String updateSettings(Request request, Response response) {
