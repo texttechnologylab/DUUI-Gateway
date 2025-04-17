@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.json.JsonWriterSettings;
 import org.texttechnologylab.duui.api.Config;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.metrics.providers.DUUIStorageMetrics;
@@ -327,6 +328,7 @@ public class DUUIMongoDBStorage {
                 if (s != null) {
                     s.put("allowed_origins", 
                         Optional.ofNullable(s.getString("allowed_origins"))
+                                .filter(orig -> !orig.isBlank())
                                 .map(orig -> List.of(orig.split(";")))
                                 .orElse(List.of()));
                 }
@@ -341,6 +343,8 @@ public class DUUIMongoDBStorage {
         if (settings.get("settings", Document.class) != null) {
             settings = settings.get("settings", Document.class);
         }
+
+        System.out.println("Settings: " + formatDocument(settings));
 
         return settings;
     }
@@ -476,6 +480,15 @@ public class DUUIMongoDBStorage {
         return Stream.of(filter.split(";"))
             .map(DUUIRequestHelper::toTitleCase)
             .toList();
+    }
+
+    public static String formatDocument(Document document) {
+
+        JsonWriterSettings settings = JsonWriterSettings.builder()
+                .indent(true)
+                .build();
+
+        return document.toJson(settings);
     }
 
 }
