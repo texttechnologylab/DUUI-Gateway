@@ -238,7 +238,7 @@
 		</button>
 	{/if}
 	<Select
-		style="button-mobile hover:!bg-transparent border-0 !flex-col-reverse"
+		style={"button-mobile hover:!bg-transparent border-0 !flex-col-reverse"}
 		label="Status"
 		name="status-mobile"
 		icon={faFilter}
@@ -329,7 +329,7 @@
 						class="hidden ml-auto md:flex overflow-hidden justify-between section-wrapper !shadow-none !border-b-0 !rounded-b-none z-10"
 					>
 						<Search
-							style="bg-fancy py-3 "
+							style={"bg-fancy py-3"}
 							bind:query={searchText}
 							placeholder="Search..."
 							icon={faSearch}
@@ -341,7 +341,7 @@
 							}}
 						/>
 						<Select
-							style="z-50 !rounded-none hidden md:flex "
+							style={"z-50 !rounded-none hidden md:flex "}
 							border="border-l border-color"
 							label="Status"
 							name="Status"

@@ -159,7 +159,7 @@
 			bind:query={searchText}
 			icon={faSearch}
 			placeholder="Search..."
-			style="input-wrapper p-4 md:p-3"
+			style={"input-wrapper p-4 md:p-3"}
 		/>
 	</div>
 </div>
@@ -240,7 +240,7 @@
 
 					<Dropdown
 						name="driver"
-						style="button-menu"
+						style={"button-menu"}
 						border="border-none"
 						placement="bottom-end"
 						options={['Any'].concat(DUUIDrivers)}
@@ -251,7 +251,7 @@
 						bind:query={searchText}
 						icon={faSearch}
 						placeholder="Search"
-						style="input-no-highlight !border-y-0 !border-r-0 !border-l border-color !rounded-none !bg-transparent duration-300 transition-all focus-within:pr-32 focus-within:!bg-surface-50-900-token"
+						style={"input-no-highlight !border-y-0 !border-r-0 !border-l border-color !rounded-none !bg-transparent duration-300 transition-all focus-within:pr-32 focus-within:!bg-surface-50-900-token"}
 					/>
 				</div>
 			</div>

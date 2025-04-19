@@ -111,7 +111,7 @@
 										value = key
 									}
 								}}
-								style="button-menu px-4 py-2 !self-stretch"
+								style={"button-menu px-4 py-2 !self-stretch"}
 								options={dropdownList}
 						/>
 						<div class="flex flex-col pt-6 gap-y-1">

@@ -606,7 +606,7 @@
 					<div class="space-y-8">
 						{#if hasApiKey}
 							<div class="space-y-2">
-								<Secret value={$userSession?.connections.key} style="pt-2" />
+								<Secret value={$userSession?.connections.key} style={"pt-2"} />
 								<div
 									class="grid grid-cols-3 items-center justify-center section-wrapper divide-x divider text-sm"
 								>
@@ -697,7 +697,7 @@
 											<div class="space-y-4 p-4">
 												<TextInput
 													label="Alias"
-													style="grow"
+													style={"grow"}
 													name={name}
 													bind:value={dropboxConnections[name].alias}
 												/>
@@ -729,7 +729,7 @@
 										<div class="grid md:flex justify-between gap-4 mb-4">
 											<TextInput
 												label="Alias"
-												style="grow"
+												style={"grow"}
 												name="newDropboxAlias"
 												bind:value={newDropboxConnection.alias}
 											/>
@@ -780,14 +780,14 @@
 											<div class="space-y-4 p-4">
 												<Text
 														label="Alias"
-														style="grow"
+														style={"grow"}
 														name={name}
 														bind:value={minioConnections[name].alias}
 												/>
 												<Text
 													help="The correct endpoint is the s3 API endpoint. Do not use the Minio Console endpoint!"
 													label="Endpoint"
-													style="grow"
+													style={"grow"}
 													name="endpoint"
 													bind:value={minioConnections[name].endpoint}
 												/>
@@ -829,13 +829,13 @@
 										<div class="space-y-4 mb-4">
 											<Text
 													label="Alias"
-													style="grow"
+													style={"grow"}
 													name="newAlias"
 													bind:value={newMinioConnections.alias}
 											/>
 											<Text
 													label="Endpoint"
-													style="grow"
+													style={"grow"}
 													name="endpoint"
 													bind:value={newMinioConnections.endpoint}
 											/>
@@ -902,13 +902,13 @@
 										<div class="space-y-4 mb-4">
 											<Text
 												label="Alias"
-												style="grow"
+												style={"grow"}
 												name={name}
 												bind:value={nextcloudConnections[name].alias}
 											/>
 											<Text
 												label="Endpoint"
-												style="grow"
+												style={"grow"}
 												name="endpoint"
 												bind:value={nextcloudConnections[name].uri}
 											/>
@@ -948,13 +948,13 @@
 									<div class="space-y-4 mb-4">
 										<Text
 												label="Alias"
-												style="grow"
+												style={"grow"}
 												name="newAlias"
 												bind:value={newNextcloud.alias}
 										/>
 										<Text
 												label="Endpoint"
-												style="grow"
+												style={"grow"}
 												name="endpoint"
 												bind:value={newNextcloud.uri}
 										/>
@@ -1049,7 +1049,7 @@
 												<div class="space-y-4 p-4">
 													<TextInput
 															label="Alias"
-															style="grow"
+															style={"grow"}
 															name={name}
 															placeholder="Input alias "
 															bind:value={googledriveConnections[name].alias}
@@ -1083,7 +1083,7 @@
 											<div class="grid md:flex justify-between gap-4 mb-4">
 												<TextInput
 														label="Alias"
-														style="grow"
+														style={"grow"}
 														name="newGoogleAlias"
 														placeholder="Input alias "
 														bind:value={newGoogleConnection.alias}
@@ -1131,14 +1131,14 @@
 											offset={0}
 											on:change={() => updateRole(_user)}
 											bind:value={_user.role}
-											style="button-menu px-4 py-2 !self-stretch h-full"
+											style={"button-menu px-4 py-2 !self-stretch h-full"}
 											border="border-y-0 !border-x border-color"
 											options={['User', 'Admin', 'Trial']}
 									/>
 									<p class="hidden lg:block px-4 py-2 self-center">{_user.worker_count}</p>
 									<Secret
 											name="password"
-											style="button-menu px-4 py-2 !self-stretch h-full border-y-0 !border-x border-color"
+											style={"button-menu px-4 py-2 !self-stretch h-full border-y-0 !border-x border-color"}
 											disabled={false}
 											bind:value={_user.password}
 									/>

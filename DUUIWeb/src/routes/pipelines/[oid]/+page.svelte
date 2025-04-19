@@ -526,7 +526,7 @@
 				>
 					<Select
 						on:change={updateTable}
-						style="z-50 !rounded-none hidden sm:flex px-8"
+						style={"z-50 !rounded-none hidden sm:flex px-8"}
 						border="border-none"
 						label="Status"
 						name="Status"
@@ -536,7 +536,7 @@
 
 					<Select
 						on:change={updateTable}
-						style="z-50 !rounded-none hidden sm:flex px-8"
+						style={"z-50 !rounded-none hidden sm:flex px-8"}
 						border="border-x border-color"
 						label="Input"
 						name="input"
@@ -546,7 +546,7 @@
 
 					<Select
 						on:change={updateTable}
-						style="z-50 !rounded-none hidden sm:flex px-8"
+						style={"z-50 !rounded-none hidden sm:flex px-8"}
 						border="border-none"
 						label="Output"
 						name="output"
