@@ -3,9 +3,8 @@
 	A component that can be used to hide sensitive information like API keys and passwords.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let label: string = ''
 	export let name: string = ''

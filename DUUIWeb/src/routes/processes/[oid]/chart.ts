@@ -47,7 +47,7 @@ export const getTimelinePlotOptions = (
 	document: DUUIDocument,
 	darkmode: boolean
 ) => {
-	let steps: { x: string; y: number[] }[] = []
+	const steps: { x: string; y: number[] }[] = []
 
 	const gridSettings = {
 		borderColor: darkmode ? '#e7e7e720' : '#29292920',
@@ -58,14 +58,14 @@ export const getTimelinePlotOptions = (
 	}
 
 	const components = pipeline.components.map((c) => c.name)
-	let index: number = 0
+	let index = 0
 
-	for (let component of components) {
-		let start: DUUIEvent | undefined = document.events.find((event) =>
+	for (const component of components) {
+		const start: DUUIEvent | undefined = document.events.find((event) =>
 			event.event.message.includes(`is being processed by component ${component}`)
 		)
 
-		let end: DUUIEvent | undefined = document.events.find((event) =>
+		const end: DUUIEvent | undefined = document.events.find((event) =>
 			event.event.message.includes(`has been processed by component ${component}`)
 		)
 
@@ -135,8 +135,8 @@ export const getTimelinePlotOptions = (
 			}
 		},
 		tooltip: {
-			custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-				var data = w.globals.initialSeries[seriesIndex].data[dataPointIndex]
+			custom: function ({seriesIndex, dataPointIndex, w }) {
+				const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
 				// You can customize the tooltip content here
 				return (
 					'<div class="p-2 bg-surface-50 bordered-soft dimmed flex flex-col gap-1">' +

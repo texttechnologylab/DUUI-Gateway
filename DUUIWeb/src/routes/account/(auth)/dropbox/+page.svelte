@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { faRefresh } from '@fortawesome/free-solid-svg-icons'
 	import { onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	export let data
 	const { success, name } = data
 

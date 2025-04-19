@@ -8,13 +8,13 @@ export const GET: RequestHandler = async ({ cookies, fetch, url }) => {
 	const searchParams = url.searchParams
 
 	const id = searchParams.get('pipeline_id') || ''
-	let limit: number = Math.min(+(searchParams.get('limit') || '10'), 50)
-	let skip: number = Math.max(+(searchParams.get('skip') || '0'), 0)
-	let sort: string = searchParams.get('sort') || 'started_at'
-	let order: string = searchParams.get('order') || 'ascending'
-	let status: string = searchParams.get('status') || 'Any'
-	let input: string = searchParams.get('input') || 'Any'
-	let output: string = searchParams.get('output') || 'Any'
+	const limit: number = Math.min(+(searchParams.get('limit') || '10'), 50)
+	const skip: number = Math.max(+(searchParams.get('skip') || '0'), 0)
+	const sort: string = searchParams.get('sort') || 'started_at'
+	const order: string = searchParams.get('order') || 'ascending'
+	const status: string = searchParams.get('status') || 'Any'
+	const input: string = searchParams.get('input') || 'Any'
+	const output: string = searchParams.get('output') || 'Any'
 
 	const fetchProcesses = async () => {
 		const response = await fetch(

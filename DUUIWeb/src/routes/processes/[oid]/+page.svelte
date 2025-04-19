@@ -42,7 +42,7 @@
 	import Paginator from '$lib/svelte/components/Paginator.svelte'
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
 	import { onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let data
 	const toastStore = getToastStore()
@@ -94,7 +94,7 @@
 					process = await response.json()
 					progressPercent = progresAsPercent(process.progress, process.document_names.length)
 				} catch (err) {}
-				updateTable()
+				await updateTable()
 			}
 
 			if (!isActive(process.status)) {
@@ -148,13 +148,13 @@
 
 		if (response.ok) {
 			toastStore.trigger(infoToast('Process has been deleted'))
-			goto(`/pipelines/${pipeline.oid}?tab=1`)
+			await goto(`/pipelines/${pipeline.oid}?tab=1`)
 		}
 	}
 
 	async function restart() {
-		goto(
-			`/processes?pipeline_id=${pipeline.oid}
+		await goto(
+				`/processes?pipeline_id=${pipeline.oid}
 			&from=/processes/${process.oid}
 			&${processToSeachParams(process)}`
 		)

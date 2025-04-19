@@ -6,7 +6,7 @@
 	import Text from '$lib/svelte/components/Input/TextInput.svelte'
 	import { faGithub, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 	import { faGlobe } from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { fly } from 'svelte/transition'
 
 	let email: string = $page.url.searchParams.get('email') || ''
@@ -41,7 +41,7 @@
 		if (response.ok) {
 			userSession.set(result.user)
 
-			goto(redirectTo)
+			await goto(redirectTo)
 		} else {
 			if (response.status === 503) message = 'Could not reach the server. Try again later.'
 			else message = result

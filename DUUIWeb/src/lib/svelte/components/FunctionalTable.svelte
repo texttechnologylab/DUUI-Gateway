@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Fa from 'svelte-fa';
+	import { Fa } from 'svelte-fa';
 	import { createEventDispatcher, onMount } from 'svelte'
 	import Paginator from './Paginator.svelte'
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
@@ -15,7 +15,7 @@
 		}
 	}
 
-	export let data: {[id: string]: {}} = {};
+	export let data: {[id: string]: NonNullable<unknown>} = {};
 	export let columns;
 	export let title;
 	export let columnMapping: ColumnMapping = {};

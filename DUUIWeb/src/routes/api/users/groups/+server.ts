@@ -5,9 +5,8 @@ import {error} from '@sveltejs/kit'
  * Sends a put request to the backend to update or insert a Group.
  * The requesting user must be an admin.
  */
-export const GET = async ({ request, locals, url }) => {
+export const GET = async ({locals}) => {
 	const user = locals.user;
-	const driver = url.searchParams.get('driver');
 
 	if (!user) {
 		return error(401, { message: 'Unauthorized' })
@@ -48,7 +47,7 @@ export const PUT = async ({ request, locals }) => {
  * Sends a delete request to the backend to delete a Group.
  * The requesting user must be an admin.
  */
-export const DELETE = async ({ cookies, locals, request }) => {
+export const DELETE = async ({locals, request }) => {
 	const data = await request.json()
 	const user = locals.user
 

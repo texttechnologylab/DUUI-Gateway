@@ -3,7 +3,7 @@
 	import { successToast } from '$lib/duui/utils/ui'
 	import { faClipboardList, faClose } from '@fortawesome/free-solid-svg-icons'
 	import { clipboard, getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	const drawerStore = getDrawerStore()
 	const toastStore = getToastStore()
@@ -48,8 +48,7 @@
 	pre {
 		white-space: pre-wrap; /* Since CSS 2.1 */
 		white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
-		white-space: -pre-wrap; /* Opera 4-6 */
-		white-space: -o-pre-wrap; /* Opera 7 */
+		white-space: -o-pre-wrap; /* Opera 4-7 */
 		word-wrap: break-word; /* Internet Explorer 5.5+ */
 	}
 </style>

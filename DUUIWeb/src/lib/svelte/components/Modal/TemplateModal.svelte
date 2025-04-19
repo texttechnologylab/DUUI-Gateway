@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import type { DUUIComponent } from '$lib/duui/component'
-	import { getDrawerStore, getModalStore, type DrawerSettings } from '@skeletonlabs/skeleton'
+	import { getDrawerStore, getModalStore } from '@skeletonlabs/skeleton'
 	import ComponentTemplates from '../ComponentTemplates.svelte'
 	import { v4 as uuidv4 } from 'uuid'
 	import pkg from 'lodash'

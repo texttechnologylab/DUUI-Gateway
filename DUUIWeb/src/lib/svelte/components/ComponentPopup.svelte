@@ -12,7 +12,7 @@
 	import { currentPipelineStore } from '$lib/store'
 	import { faFileImport, faPlus, faToolbox } from '@fortawesome/free-solid-svg-icons'
 	import { FileButton, getDrawerStore, getModalStore } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 	import Popup from './Popup.svelte'
 

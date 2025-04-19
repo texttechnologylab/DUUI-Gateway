@@ -19,7 +19,7 @@ export const getColor = (alternate: boolean = false) => {
 	let color = COLORS.blue
 
 	try {
-		let THEME = document.body.dataset.theme || 'blue'
+		const THEME = document.body.dataset.theme || 'blue'
 		color = COLORS[THEME.replace('theme-', '')]
 		if (alternate) {
 			return getComplementaryColor(color)

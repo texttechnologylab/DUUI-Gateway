@@ -7,7 +7,7 @@
 	import PipelineComponent from '$lib/svelte/components/PipelineComponent.svelte'
 	import { faCheck, faClone, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons'
 	import { clipboard } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let data
 	$examplePipelineStore = data.examplePipeline

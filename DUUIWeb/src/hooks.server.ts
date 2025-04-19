@@ -9,7 +9,7 @@ import type { Handle, RequestEvent } from '@sveltejs/kit'
  */
 const fetchUser = async (
 	session: string,
-	event: RequestEvent<Partial<Record<string, string>>, string | null>
+	event: RequestEvent
 ) => {
 	const response = await fetch(`${API_URL}/users/auth/`, {
 		method: 'GET',
@@ -30,12 +30,12 @@ const fetchUser = async (
  */
 export const handle: Handle = async ({ event, resolve }) => {
 	const { cookies } = event;
-	let session = cookies.get('session') || event.url.searchParams.get('state') || '';
+	const session = cookies.get('session') || event.url.searchParams.get('state') || '';
 
 	if (session) {
 		try {
 			await fetchUser(session, event);
-		} catch (err) {}
+		} catch (err) { /* empty */ }
 	}
 
 	// The user is not authorized.

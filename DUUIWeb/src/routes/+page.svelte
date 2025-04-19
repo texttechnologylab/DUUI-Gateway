@@ -6,7 +6,6 @@
 		faCheck,
 		faChevronRight,
 		faCloud,
-		faCloudUpload,
 		faGlobe,
 		faPlus,
 		faRecycle,
@@ -23,7 +22,7 @@
 	import { userSession } from '$lib/store'
 	import Link from '$lib/svelte/components/Link.svelte'
 	import { faAmazon, faDropbox, faGithub, faXTwitter , faGoogleDrive} from '@fortawesome/free-brands-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	/**
 	 * Logout the user and redirect to the login page.
@@ -33,7 +32,7 @@
 		if (response.ok) {
 			userSession.set(undefined)
 
-			goto('/account/login')
+			await goto('/account/login')
 		} else {
 			console.error(response.status, response.statusText)
 		}

@@ -8,19 +8,17 @@
 	import type { DUUIPipeline } from '$lib/duui/pipeline'
 	import type { DUUIProcess } from '$lib/duui/process'
 	import { formatFileSize, includes } from '$lib/duui/utils/text'
-	import {errorToast, getStatusIcon, infoToast, successToast} from '$lib/duui/utils/ui'
+	import {errorToast, getStatusIcon, infoToast} from '$lib/duui/utils/ui'
 	import { isDarkModeStore, userSession } from '$lib/store'
 	import {
-		faCheck,
 		faChevronDown,
-		faChevronLeft, faChevronRight,
 		faClose,
 		faDownload,
 		faRefresh
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import {
 		getAnnotationsPlotOptions,
 		getTimelinePlotOptions
@@ -255,7 +253,6 @@
 	}
 
 	function handleBeforeUnload(event: BeforeUnloadEvent) {
-		alert("UNLOADING")
 		if (keyList.length > 0) {
 			clearLocalStorage()
 		}

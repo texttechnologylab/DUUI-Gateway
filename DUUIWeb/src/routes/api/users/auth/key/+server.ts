@@ -8,7 +8,7 @@ import { randomBytes } from 'crypto'
  * @param format The format of the API key. Default is base64.
  * @returns An API key.
  */
-const generatKey = (length: number = 128, format: BufferEncoding | undefined = 'base64') => {
+const generatKey = (length = 128, format: BufferEncoding | undefined = 'base64') => {
 	const buffer = randomBytes(length)
 	return buffer.toString(format)
 }

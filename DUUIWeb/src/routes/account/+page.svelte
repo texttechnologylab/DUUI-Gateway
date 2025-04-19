@@ -13,12 +13,9 @@
 	import {
 		faAdd,
 		faCheck,
-		faFilePen,
 		faFileText,
-		faGear,
 		faGlobe,
-		faLink, faPeopleGroup, faPerson, faPlus,
-		faRefresh,
+		faLink, faPeopleGroup, faPerson, faRefresh,
 		faTrash,
 		faUser,
 		faUserTie,
@@ -33,13 +30,10 @@
 		getDrawerStore
 	} from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
-	import GroupsTable from "$lib/svelte/components/GroupsTable.svelte";
 	import FunctionalTable from '$lib/svelte/components/FunctionalTable.svelte'
-	import type { DUUIDriver, DUUIDriverFilter } from '$lib/duui/component'
-	import Paginator from '$lib/svelte/components/Paginator.svelte'
 	import Tip from "$lib/svelte/components/Tip.svelte";
 
 	const toastStore = getToastStore()
@@ -109,102 +103,6 @@
 
 	$: hasApiKey = !!$userSession?.connections.key
 
-	let newLabel: string = ""
-	let newLabelDriver: string = ""
-	// let labels: {[id: string]: {label:string, driver: string}} = {}
-
-	const updateLabel = async (labelId: string) => {
-
-		for (const [otherLabelId, label] of Object.entries(labels) as [string, DUUILabel][]) {
-			if (label.label === labels[labelId].label
-				&& label.driver === labels[labelId].driver
-				&& otherLabelId !== labelId) {
-				toastStore.trigger(errorToast(`This label already exists for the ${label.driver}.`))
-				return;
-			}
-		}
-
-		let req = {
-			method: 'PUT', body: JSON.stringify({
-				labelId: labelId,
-				label: labels[labelId].label,
-				driver: labels[labelId].driver,
-			})
-		}
-
-		const response = await fetch('/api/users/labels', req)
-
-		if (response.ok) {
-			toastStore.trigger(successToast('Update successful'))
-		}
-
-		return response
-
-	}
-
-	const insertLabel = async () => {
-
-		for (const [_, label] of Object.entries(labels) as [string, DUUILabel][]) {
-			if (label.label === newLabel && label.driver === newLabelDriver) {
-				toastStore.trigger(errorToast(`This label already exists for the ${label.driver}.`))
-				return;
-			}
-		}
-
-		let req = {
-			method: 'PUT', body: JSON.stringify({
-				label: newLabel,
-				driver: newLabelDriver,
-			})
-		}
-
-		const response = await fetch('/api/users/labels', req)
-
-		if (response.ok) {
-			let body = await response.json()
-			let newLabelId:string = body["label_id"]
-			if (newLabelId.length > 0) {
-				labels[newLabelId] = {
-					label: newLabel,
-					driver: newLabelDriver as DUUIDriverFilter,
-					scope: "user",
-				}
-				toastStore.trigger(successToast('Inserted successfully'))
-			} else {
-				toastStore.trigger(errorToast("Something went wrong. Please try again"))
-			}
-
-
-		} else {
-			toastStore.trigger(errorToast((await response.json()).message))
-		}
-
-		newLabel = ""
-
-		return response
-
-	}
-
-	const deleteLabel = async (labelId: string) => {
-
-		delete labels[labelId]
-		labels = labels // Trigger rerendering
-		let req = {
-			method: 'DELETE', body: JSON.stringify({
-				labels
-			})
-		}
-
-		const response = await fetch('/api/users/labels', req)
-		if (response.ok) {
-			toastStore.trigger(successToast('Deleted successfully'))
-		}
-
-		return response
-
-	}
-
-
 	$: {
 		try {
 			const body = document.body
@@ -269,7 +167,7 @@
 		}
 	}
 
-	function checkAliasExists(connections: ServiceConnections, alias: string, name: string = ""): boolean {
+	function checkAliasExists(connections: ServiceConnections, alias: string, name = ""): boolean {
 		for (const [key, details] of Object.entries(connections)) {
 			let isSameName = name === "" ? false :  name === key
 			if (details.alias === alias && !isSameName) {

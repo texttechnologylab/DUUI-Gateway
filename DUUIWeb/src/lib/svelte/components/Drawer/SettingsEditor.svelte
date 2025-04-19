@@ -5,29 +5,14 @@
 <script lang="ts">
 	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import {
-		labelStore,
-		groupStore
-	} from '$lib/store'
-	import { showConfirmationModal } from '$lib/svelte/utils/modal'
-	import {
 		faAngleDoubleRight,
-		faCancel,
 		faFileCircleCheck,
-		faTrash,
-
-		faWarning
 
 	} from '@fortawesome/free-solid-svg-icons'
-	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
+	import { Fa } from 'svelte-fa'
 	import TextInput from '../Input/TextInput.svelte'
-	import Tip from '../Tip.svelte'
 	import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons'
-	import { DUUIDriverFilters } from '$lib/duui/component'
-	import Dropdown from '../Input/Dropdown.svelte'
-	import Popup from '../Popup.svelte'
-	import { get } from 'svelte/store'
-	import JsonDropdownInput from '../Input/JsonDropdownInput.svelte'
 	import Chips from '../Input/Chips.svelte'
 
 	const drawerStore = getDrawerStore()

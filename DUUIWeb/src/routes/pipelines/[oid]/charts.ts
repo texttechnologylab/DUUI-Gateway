@@ -98,7 +98,7 @@ export const getErrorsPlotOptions = (pipeline: DUUIPipeline, darkmode: boolean) 
 		}
 	}
 
-	const data: Object[] = []
+	const data: NonNullable<unknown>[] = []
 
 	x.forEach((element, index) => {
 		data.push({ x: element, y: y.at(index) })
@@ -151,13 +151,13 @@ export const getIOPlotOptions = (pipeline: DUUIPipeline, darkmode: boolean) => {
 
 	for (let index = 0; index < labels.length; index++) {
 		const label = labels[index]
-		for (let item of pipeline.statistics.input) {
+		for (const item of pipeline.statistics.input) {
 			if (equals(item._id, label)) {
 				input[index] = item.count
 			}
 		}
 
-		for (let item of pipeline.statistics.output) {
+		for (const item of pipeline.statistics.output) {
 			if (equals(item._id, label)) {
 				output[index] = item.count
 			}
@@ -271,7 +271,7 @@ export const getUsagePlotOptions = (pipeline: DUUIPipeline, darkmode: boolean) =
 
 	let yValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	for (let index = 0; index < xLabels.length; index++) {
-		for (let item of pipeline.statistics.usage) {
+		for (const item of pipeline.statistics.usage) {
 			if (item._id.year === year && item._id.month - 1 === index) {
 				yValues[index] = item.count
 			}

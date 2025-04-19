@@ -3,7 +3,7 @@
 	import JsonDropdownInput from '$lib/svelte/components/Input/JsonDropdownInput.svelte'
 	import { faPlus, faSave } from '@fortawesome/free-solid-svg-icons'
 	import Text from '$lib/svelte/components/Input/TextInput.svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	type Labels = {
 		[labelId: string]: {

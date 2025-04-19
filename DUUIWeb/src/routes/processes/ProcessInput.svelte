@@ -12,7 +12,6 @@
 	import TextArea from '$lib/svelte/components/Input/TextArea.svelte'
 	import TextInput from '$lib/svelte/components/Input/TextInput.svelte'
 	import { FileDropzone } from '@skeletonlabs/skeleton'
-	import Node from '$lib/svelte/components/Node.svelte'
 
 	export let input: DUUIDocumentProvider
 	export let language: string = 'Unspecified'

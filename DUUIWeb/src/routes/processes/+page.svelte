@@ -38,7 +38,7 @@
 		faCloudUpload,
 		faFileArrowUp, faRefresh, faRepeat
 	} from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { FileDropzone, ProgressBar, getToastStore, type TreeViewNode } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 
@@ -314,10 +314,10 @@
 		if (response.ok) {
 			try {
 				let process = await response.json()
-				goto(`/processes/${process.oid}`)
+				await goto(`/processes/${process.oid}`)
 			} catch (err) {
 				toastStore.trigger(errorToast(response.statusText))
-				goto(`/pipelines/${$processSettingsStore.pipeline_id}`)
+				await goto(`/pipelines/${$processSettingsStore.pipeline_id}`)
 			}
 		} else {
 			toastStore.trigger(errorToast(JSON.stringify(response.body)))

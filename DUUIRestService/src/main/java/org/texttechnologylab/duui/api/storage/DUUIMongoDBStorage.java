@@ -330,7 +330,7 @@ public class DUUIMongoDBStorage {
                         Optional.ofNullable(s.getString("allowed_origins"))
                                 .filter(orig -> !orig.isBlank())
                                 .map(orig -> List.of(orig.split(";")))
-                                .orElse(List.of()));
+                                .orElse(new ArrayList<>()));
                 }
                 return s;
             })

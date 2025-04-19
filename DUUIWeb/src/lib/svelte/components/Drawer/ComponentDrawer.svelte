@@ -17,15 +17,13 @@
 		faCancel,
 		faFileCircleCheck,
 		faFileExport,
-		faFileImport,
 		faFileUpload,
-		faInfo,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons'
-	import { FileButton, getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
+	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
 	import pkg from 'lodash'
 	import { createEventDispatcher } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 	import DriverIcon from '../DriverIcon.svelte'
 	import Chips from '../Input/Chips.svelte'
@@ -34,7 +32,6 @@
 	import JsonInput from '../Input/JsonInput.svelte'
 	import TextArea from '../Input/TextArea.svelte'
 	import TextInput from '../Input/TextInput.svelte'
-	import Popup from '../Popup.svelte'
 	import Tip from '../Tip.svelte'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
 	const { cloneDeep } = pkg

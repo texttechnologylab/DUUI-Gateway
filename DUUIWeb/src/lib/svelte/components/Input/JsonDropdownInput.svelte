@@ -4,10 +4,9 @@
 -->
 <script lang="ts">
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
-	import { faCheck, faClose, faPen, faPlus, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
+	import { faCheck, faClose, faPlus, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 	import { getModalStore } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
-	import TextInput from './TextInput.svelte'
+	import { Fa } from 'svelte-fa'
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
 	import Chip from "$lib/svelte/components/Chip.svelte";
 

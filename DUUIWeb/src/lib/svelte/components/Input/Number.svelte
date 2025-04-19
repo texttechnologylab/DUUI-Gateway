@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { faLightbulb } from '@fortawesome/free-solid-svg-icons'
 	import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 
 	export let label: string = ''

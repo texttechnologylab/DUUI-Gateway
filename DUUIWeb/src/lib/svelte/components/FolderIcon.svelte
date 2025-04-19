@@ -1,5 +1,5 @@
 <script>
-    import Fa from 'svelte-fa'
+    import { Fa } from 'svelte-fa'
     import { faFolder} from '@fortawesome/free-solid-svg-icons'
 
     export let icon = faFolder; // Prop to receive the icon name (e.g., "folder")

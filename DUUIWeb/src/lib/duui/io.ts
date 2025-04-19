@@ -118,10 +118,9 @@ export const isValidFileUpload = (storage: { provider: IO; path: string }) => {
 		return isValidS3BucketName(storage.path || '').length === 0
 	}
 
-	if (equals(storage.provider, IO.Dropbox) && (storage.path === '/' || storage.path === ''))
-		return false
+	return !(equals(storage.provider, IO.Dropbox) && (storage.path === '/' || storage.path === ''));
 
-	return true
+
 }
 
 /**

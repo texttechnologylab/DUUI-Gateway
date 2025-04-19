@@ -25,7 +25,7 @@
 		type DrawerSettings,
 		type ModalComponent
 	} from '@skeletonlabs/skeleton'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	import { afterNavigate, beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import { initializeStores, storePopup } from '@skeletonlabs/skeleton'
@@ -34,7 +34,6 @@
 	import Documentation from '$lib/svelte/components/Documentation.svelte'
 	import DocumentModal from '$lib/svelte/components/Drawer/DocumentDrawer.svelte'
 	import Sidebar from '$lib/svelte/components/Drawer/Sidebar.svelte'
-	import Link from '$lib/svelte/components/Link.svelte'
 	import ConfirmModal from '$lib/svelte/components/Modal/ConfirmModal.svelte'
 	import HelpModal from '$lib/svelte/components/Modal/HelpModal.svelte'
 	import PromptModal from '$lib/svelte/components/Modal/PromptModal.svelte'
@@ -117,7 +116,7 @@
 		if (response.ok) {
 			userSession.set(undefined)
 
-			goto('/account/login')
+			await goto('/account/login')
 		} else {
 			console.error(response.status, response.statusText)
 		}

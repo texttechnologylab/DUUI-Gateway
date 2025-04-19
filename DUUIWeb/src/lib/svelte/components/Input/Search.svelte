@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { faSearch, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let placeholder: string = ''
 	export let query: string

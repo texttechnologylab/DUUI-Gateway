@@ -17,7 +17,7 @@
 	import { getDrawerStore, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton'
 
 	import { dndzone, type DndEvent } from 'svelte-dnd-action'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { flip } from 'svelte/animate'
 	import { v4 as uuidv4 } from 'uuid'
 
@@ -151,7 +151,7 @@
 		})
 
 		if (response.ok) {
-			goto('/pipelines')
+			await goto('/pipelines')
 			toastStore.trigger(infoToast('Pipeline deleted successfully'))
 		} else {
 			toastStore.trigger(errorToast('Error: ' + response.statusText))
@@ -187,8 +187,7 @@
 			if (response.ok) {
 				const data = await response.json()
 				toastStore.trigger(infoToast('Pipeline copied successfully'))
-				goto(`/pipelines?id=${data.oid}`)
-			} else {
+				await goto(`/pipelines?id=${data.oid}`)
 			}
 		})
 	}
@@ -201,7 +200,7 @@
 			return
 		}
 
-		$currentPipelineStore.status === Status.Inactive ? startService() : stopService()
+		$currentPipelineStore.status === Status.Inactive ? await startService() : await stopService()
 	}
 
 	const startService = async () => {
@@ -279,8 +278,8 @@
 
 		sortedProcessses = processes
 
-		goto(
-			`/pipelines/${pipeline.oid}
+		await goto(
+				`/pipelines/${pipeline.oid}
 			?limit=${paginationSettings.limit}
 			&skip=${paginationSettings.page * paginationSettings.limit}
 			&sort=${sort.index}
@@ -318,14 +317,14 @@
 	let ApexCharts
 	let loaded: boolean = false
 
-	const chart = (node: HTMLDivElement, options: any) => {
+	const chart = (node: HTMLDivElement, options: never) => {
 		if (!loaded) return
 
 		let _chart = new ApexCharts(node, options)
 		_chart.render()
 
 		return {
-			update(options: any) {
+			update(options: never) {
 				_chart.updateOptions(options)
 			},
 			destroy() {

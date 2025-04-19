@@ -4,8 +4,6 @@ import { fail, redirect } from '@sveltejs/kit'
 import { DropboxAuth } from 'dropbox'
 import type { PageServerLoad } from './$types'
 import { OAuth2Client } from 'google-auth-library'
-import { groupStore, labelStore } from '$lib/store'
-import { get } from 'svelte/store'
 
 export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 	if (!locals.user) {
@@ -54,7 +52,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		method: 'GET'
 	})
 
-	let dropbBoxURL = new String('')
+	let dropbBoxURL = String('')
 
 	try {
 		const credentials: {
@@ -77,7 +75,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 			undefined,
 			false
 		)
-	} catch (error) { /* empty */ }
+	} catch (error) {}
 
 
 	let googleDriveURL = ""

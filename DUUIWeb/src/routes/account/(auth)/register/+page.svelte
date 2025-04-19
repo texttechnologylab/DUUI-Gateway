@@ -6,7 +6,7 @@
 	import Text from '$lib/svelte/components/Input/TextInput.svelte'
 	import { faGithub, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 	import { faGlobe } from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { fly } from 'svelte/transition'
 
 	let email: string
@@ -47,7 +47,7 @@
 
 		if (response.ok) {
 			userSession.set(result.user)
-			goto('/account')
+			await goto('/account')
 		} else {
 			message = result
 		}

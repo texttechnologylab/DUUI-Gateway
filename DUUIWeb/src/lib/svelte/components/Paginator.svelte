@@ -9,11 +9,9 @@
 		faAnglesLeft,
 		faAnglesRight
 	} from '@fortawesome/free-solid-svg-icons'
-	import { createEventDispatcher, onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { createEventDispatcher } from 'svelte'
+	import { Fa } from 'svelte-fa'
 	import Dropdown from './Input/Dropdown.svelte'
-	import pkg from 'lodash';
-	const {cloneDeep} = pkg;
 
 	const dispatcher = createEventDispatcher()
 

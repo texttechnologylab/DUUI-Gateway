@@ -24,7 +24,7 @@
 	import PipelineCard from '$lib/svelte/components/PipelineCard.svelte'
 	import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let data
 
@@ -82,7 +82,7 @@
 		})
 
 		if (response.ok) {
-			goto(`/pipelines
+			await goto(`/pipelines
 			?limit=${paginationSettings.limit}
 			&skip=${paginationSettings.page * paginationSettings.limit}
 			&sort=${sortCriteria.at(sort.index)}
@@ -110,7 +110,7 @@
 		if (response.ok) {
 			const json = await response.json()
 			pipelines = json.pipelines
-			goto(`/pipelines
+			await goto(`/pipelines
 			?limit=${paginationSettings.limit}
 			&skip=${paginationSettings.page * paginationSettings.limit}
 			&sort=${sortCriteria.at(sort.index)}

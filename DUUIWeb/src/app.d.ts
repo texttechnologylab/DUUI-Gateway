@@ -1,9 +1,6 @@
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 
-// import type { DUUIDriver, DUUIDriverFilter } from "$lib/duui/component"
-
-
 /// <reference types="@sveltejs/kit" />
 
 declare namespace App {
@@ -117,10 +114,10 @@ type NextcloudConnectionDetails = {
 
 // Types related to the pagination of tables
 type PaginationSettings = {
-	page: number = 0
-	limit: number = 20
+	page: number
+	limit: number
 	total: number
-	sizes: number[] = [5, 10, 20, 50]
+	sizes: number[]
 }
 
 enum Order {
@@ -147,5 +144,5 @@ type APIEndpoint = {
 	returns: { code: number; message: string }[]
 	parameters: APIParameter[]
 	description: string
-	exampleRequest: string = ''
+	exampleRequest: string
 }

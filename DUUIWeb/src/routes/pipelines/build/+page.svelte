@@ -34,7 +34,7 @@
 	import pkg from 'lodash'
 	import { onMount } from 'svelte'
 	import { dndzone, type DndEvent } from 'svelte-dnd-action'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 	import { flip } from 'svelte/animate'
 	import { v4 as uuidv4 } from 'uuid'
 	import ComponentTemplates from '../../../lib/svelte/components/ComponentTemplates.svelte'
@@ -126,7 +126,7 @@
 		if (response.ok) {
 			const data = await response.json()
 			toastStore.trigger(successToast('Pipeline created successfully'))
-			goto(`/pipelines/${data.oid}`)
+			await goto(`/pipelines/${data.oid}`)
 		}
 	}
 
@@ -167,7 +167,7 @@
 
 		if (response.ok) {
 			toastStore.trigger(successToast('Pipeline uploaded successfully'))
-			goto(`/pipelines`)
+			await goto(`/pipelines`)
 		}
 	}
 
@@ -178,7 +178,7 @@
 	<button
 		class="button-mobile"
 		on:click={() => {
-			if (step == 0) {
+			if (step === 0) {
 				goto('/pipelines')
 			} else {
 				step -= 1
@@ -220,7 +220,7 @@
 				<button
 					class="button-menu border-r border-color"
 					on:click={() => {
-						if (step == 0) {
+						if (step === 0) {
 							goto('/pipelines')
 						} else {
 							step -= 1

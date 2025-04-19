@@ -6,13 +6,12 @@
 <script lang="ts">
     import { equals } from '$lib/duui/utils/text'
     import type { Placement } from '@floating-ui/dom'
-    import {faCheck, faFolder, faChevronDown, type IconDefinition} from '@fortawesome/free-solid-svg-icons'
+    import {faFolder, type IconDefinition} from '@fortawesome/free-solid-svg-icons'
     import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
     import { RecursiveTreeView, type TreeViewNode } from '@skeletonlabs/skeleton'
     import FolderIcon from "$lib/svelte/components/FolderIcon.svelte";
 
-    import Fa from 'svelte-fa'
-    import type {ComponentType} from "svelte";
+    import { Fa } from 'svelte-fa'
 
     export let label: string = ''
     export let name: string = label

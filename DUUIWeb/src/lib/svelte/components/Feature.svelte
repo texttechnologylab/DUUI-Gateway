@@ -1,7 +1,7 @@
 <!-- @component A component that represents a feature on the front page. -->
 <script lang="ts">
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
-	import Fa from 'svelte-fa'
+	import { Fa } from 'svelte-fa'
 
 	export let title: string
 	export let content: string

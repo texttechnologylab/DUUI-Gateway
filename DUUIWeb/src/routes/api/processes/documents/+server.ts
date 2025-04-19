@@ -14,21 +14,21 @@ export const GET: RequestHandler = async ({ cookies, fetch, url }) => {
 
 	const keys: string[] = ['name', 'progress', 'status', 'size', 'duration']
 
-	let limit: number = Math.min(+(searchParams.get('limit') || '10'), 50)
-	let skip: number = Math.max(0, +(searchParams.get('skip') || '0'))
+	const limit: number = Math.min(+(searchParams.get('limit') || '10'), 50)
+	const skip: number = Math.max(0, +(searchParams.get('skip') || '0'))
 	let sort: string = searchParams.get('sort') || 'name'
 	if (!keys.includes(sort)) {
 		sort = 'name'
 	}
 
-	let order: number = searchParams.get('order') === '1' ? 1 : -1
+	const order: number = searchParams.get('order') === '1' ? 1 : -1
 
-	let text: string = searchParams.get('search') || ''
-	let statusFilters: string = searchParams.get('status') || 'Any'
+	const text: string = searchParams.get('search') || ''
+	const statusFilters: string = searchParams.get('status') || 'Any'
 
 	const fetchDocuments = async (): Promise<{
 		documents: DUUIDocument[]
-		pipelineProgress: Object
+		pipelineProgress: NonNullable<unknown>
 		count: number
 	}> => {
 		const response = await fetch(

@@ -34,9 +34,9 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	}
 
 	const loadProcesses = async (): Promise<{ processes: DUUIProcess[]; count: number }> => {
-		let statusFilter: string[] = (url.searchParams.get('status') || 'Any').split(';')
-		let inputFilter: string[] = (url.searchParams.get('input') || 'Any').split(';')
-		let outputFilter: string[] = (url.searchParams.get('output') || 'Any').split(';')
+		const statusFilter: string[] = (url.searchParams.get('status') || 'Any').split(';')
+		const inputFilter: string[] = (url.searchParams.get('input') || 'Any').split(';')
+		const outputFilter: string[] = (url.searchParams.get('output') || 'Any').split(';')
 
 		const result = await fetch(
 			`${API_URL}/processes?pipeline_id=${params.oid}

@@ -111,7 +111,7 @@ export const includesText = (values: string[], text: string, ignoreCase: boolean
 	if (!values) return false
 
 	if (ignoreCase) {
-		for (let value of values) {
+		for (const value of values) {
 			if (equals(value, text)) return true
 		}
 		return false
