@@ -198,7 +198,7 @@
 		}
 
 		const fileUpload = await fetch(
-			`/api/files/upload?store=${fileStorage.storeFiles}&provider=${fileStorage.provider}&path=${fileStorage.path}`,
+			`/api/files/upload?store=${fileStorage.storeFiles}&provider=${fileStorage.provider}&path=${fileStorage.path}&provider_id=${fileStorage.provider_id}`,
 			{
 				method: 'POST',
 				body: formData
@@ -254,18 +254,10 @@
 		if ($processSettingsStore.input.provider !== IO.Text) {
 			$processSettingsStore.input.content = ''
 		}
-
-		if ($processSettingsStore.input.provider_id !== "") {
-			$processSettingsStore.input.provider_id = inputAliases[$processSettingsStore.input.provider_id]
-		}
-
+		
 		if ($processSettingsStore.output.provider === IO.None) {
 			$processSettingsStore.output.path = ''
 			$processSettingsStore.output.content = ''
-		}
-
-		if ($processSettingsStore.output.provider_id !== "") {
-			$processSettingsStore.output.provider_id = outputAliases[$processSettingsStore.output.provider_id]
 		}
 
 		const response = await fetch('/api/processes', {
