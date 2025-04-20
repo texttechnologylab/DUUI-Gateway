@@ -6,7 +6,7 @@
 	import { includesText, toTitleCase } from '$lib/duui/utils/text'
 	import { faClose } from '@fortawesome/free-solid-svg-icons'
 	import { createEventDispatcher } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import Tip from '../Tip.svelte'
 
 	const dispatcher = createEventDispatcher()

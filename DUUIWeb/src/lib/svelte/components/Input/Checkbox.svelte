@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { faCheck, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let label: string
 	export let name: string = ''

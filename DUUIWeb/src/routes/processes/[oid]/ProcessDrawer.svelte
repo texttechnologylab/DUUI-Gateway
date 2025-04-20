@@ -3,7 +3,7 @@
 	import { successToast } from '$lib/duui/utils/ui'
 	import { faClipboardList, faClose } from '@fortawesome/free-solid-svg-icons'
 	import { clipboard, getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	const drawerStore = getDrawerStore()
 	const toastStore = getToastStore()

@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { faEllipsis } from '@fortawesome/free-solid-svg-icons'
 	import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	const dial: PopupSettings = {
 		placement: 'top',

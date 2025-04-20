@@ -16,7 +16,7 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { ProgressBar, getModalStore } from '@skeletonlabs/skeleton'
 	import { dndzone } from 'svelte-dnd-action'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import { flip } from 'svelte/animate'
 	import DriverIcon from '../DriverIcon.svelte'
 	import PipelineComponent from '../PipelineComponent.svelte'

@@ -84,26 +84,23 @@ export const isValidIO = (
  */
 export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user: User): boolean => {
 
-	if (!isValidCloudProvider(input)) return false
+	if (isStatelessProvider(input.provider)) {
+		if (equals(input.provider.toString(), IO.None)) {
+			return false;
+		}
 
-	if (equals(input.provider, IO.Text)) {
-		return !!input.content && input.content.length > 0
+		if (equals(input.provider.toString(), IO.Text)) {
+			return input.content.length > 0
+		}
+
+		if (equals(input.provider.toString(), IO.File)) {
+			return files?.length > 0
+		}
+
+		return true
 	}
 
-	if (equals(input.provider, IO.File)) {
-		return files?.length > 0
-	}
-
-	if (equals(input.provider, IO.Minio)) {
-		if (!user?.connections.minio[input.provider_id]?.endpoint) return false
-		return isValidS3BucketName(input.path || '').length === 0
-	}
-
-	if (equals(input.provider, IO.Dropbox)) {
-		return (input.path === '/' || !user?.connections.dropbox[input.provider_id])
-	}
-
-	return true
+	return isValidCloudProvider(input, user)
 
 }
 
@@ -120,7 +117,6 @@ export const isValidFileUpload = (storage: { provider: IO; path: string }) => {
 
 	return !(equals(storage.provider, IO.Dropbox) && (storage.path === '/' || storage.path === ''));
 
-
 }
 
 /**
@@ -131,40 +127,79 @@ export const isValidFileUpload = (storage: { provider: IO; path: string }) => {
  * @returns whether the output settings are valid.
  */
 export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean => {
-
-	if (!isValidCloudProvider(output)) return false
-
-	if (equals(output.provider, IO.Minio)) {
-		if (!user?.connections.minio[output.provider_id]?.endpoint) return false
-		return isValidS3BucketName(output.path || '').length === 0
-	}
-
-	// if (equals(output.provider, IO.Dropbox)) {
-	// 	return !(['/', ''].includes(output.path) || user?.connections.dropbox[output.provider_id] === null)
-	// }
-
-	return true
-}
-
-export const isValidCloudProvider = (provider: DUUIDocumentProvider) => {
-	return equals(provider.provider.toString(), IO.Minio) ||
-		equals(provider.provider.toString(), IO.Dropbox) ||
-		equals(provider.provider.toString(), IO.NextCloud) ||
-		equals(provider.provider.toString(), IO.Google)
-}
-
-export const getCloudProviderAliases = (connections: ServiceConnections) : Record<string, string> => {
-	const inverted: Record<string, string> = {};
-
-	for (const [name, details] of Object.entries(connections)) {
-		if (details.alias) {
-			inverted[details.alias] = name;
+	if (isStatelessProvider(output.provider)) {
+		if (equals(output.provider.toString(), IO.None)) {
+			return true
 		}
+
+		return true
 	}
 
-	return inverted;
+	return isValidCloudProvider(output, user)
 }
 
+export const isStatelessProvider = (provider: IOProvider) => {
+	return equals(provider.toString(), IO.File) ||
+		equals(provider.toString(), IO.Text) ||
+		equals(provider.toString(), IO.None)
+}
+
+export const hasFolderPicker = (provider: IOProvider) => {
+	return provider === IO.Dropbox || provider === IO.Google || provider === IO.NextCloud
+}
+
+export const isValidCloudProvider = (provider: DUUIDocumentProvider, user: User) => {
+	if (isStatelessProvider(provider.provider)) return true
+
+	if (isOAuthProvider(provider.provider)) {
+		return isValidOAuthProvider(provider, user)
+	}
+
+	if (equals(provider.provider.toString(), IO.Minio)) {
+		return isValidMinioProvider(provider, user)
+	}
+
+	if (equals(provider.provider.toString(), IO.NextCloud)) {
+		return isValidNextCloudProvider(provider, user)
+	}
+}
+
+export const isValidMinioProvider = (provider: DUUIDocumentProvider, user: User) => {
+	const minio = user?.connections.minio[provider.provider_id]
+
+	return minio 
+		&& minio.alias.length > 0 
+		&& minio.endpoint !== null
+		&& minio.access_key !== null
+		&& minio.secret_key !== null
+}
+
+export const isValidNextCloudProvider = (provider: DUUIDocumentProvider, user: User) => {
+	const nextcloud = user?.connections.nextcloud[provider.provider_id]
+
+	return nextcloud 
+		&& nextcloud.alias.length > 0 
+		&& nextcloud.uri !== null
+		&& nextcloud.username !== null
+		&& nextcloud.password !== null
+}
+
+export const isValidOAuthProvider = (provider: DUUIDocumentProvider, user: User) => {
+
+	const oauth = user?.connections[provider.provider.toLowerCase() as keyof ServiceConnections]
+
+	return oauth 
+		&& oauth[provider.provider_id]?.alias?.length > 0 
+		&& oauth[provider.provider_id]?.access_token !== null
+}
+
+export const getCloudProviderAliases = (connections: ServiceConnections) : Map<string, string> => {
+	return new Map(
+		Object.entries(connections).map(([key, value]) => [key, value.alias] as [string, string])
+	);
+}
+
+const isOAuthProvider = (provider: IOProvider) => provider === IO.Google || provider === IO.Dropbox
 /**
  * Check if the process settings are valid.
  *

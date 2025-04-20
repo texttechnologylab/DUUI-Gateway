@@ -18,7 +18,7 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import {
 		getAnnotationsPlotOptions,
 		getTimelinePlotOptions

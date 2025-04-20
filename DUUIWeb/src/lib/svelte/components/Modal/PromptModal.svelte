@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { faClose } from '@fortawesome/free-solid-svg-icons'
 	import { getModalStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import TextInput from '../Input/TextInput.svelte'
 
 	const modalStore = getModalStore()

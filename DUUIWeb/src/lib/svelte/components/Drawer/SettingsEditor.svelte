@@ -10,7 +10,7 @@
 
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import TextInput from '../Input/TextInput.svelte'
 	import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons'
 	import Chips from '../Input/Chips.svelte'

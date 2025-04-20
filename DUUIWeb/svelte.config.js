@@ -10,17 +10,20 @@ const config = {
 	preprocess: [ vitePreprocess()],
 	
 	kit: {
-		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-		// If your environment is not supported or you settled on a specific environment, switch out the adapter.
-		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
-		adapter: adapter(),
-		csrf: {
-			checkOrigin: false // Fix potential CORS/CSRF issues in production
-		},
+		adapter: adapter({
+			out: 'build'
+		  }),
+		  
+		files: { 
+			assets: 'static'
+		 },
+
+		csrf: { checkOrigin: false },
+
+		env: {
+			dir: process.cwd()
+		  }
 	},
 
-	files: {
-		assets: 'static' // Ensure assets are copied
-	}
 };
 export default config;

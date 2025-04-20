@@ -10,7 +10,7 @@
 		faAnglesRight
 	} from '@fortawesome/free-solid-svg-icons'
 	import { createEventDispatcher } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import Dropdown from './Input/Dropdown.svelte'
 
 	const dispatcher = createEventDispatcher()

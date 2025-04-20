@@ -24,7 +24,7 @@
 	import PipelineCard from '$lib/svelte/components/PipelineCard.svelte'
 	import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let data
 

@@ -21,7 +21,7 @@
 		faUserPlus
 	} from '@fortawesome/free-solid-svg-icons'
 	import { LightSwitch, getDrawerStore, getModalStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	const drawerStore = getDrawerStore()
 

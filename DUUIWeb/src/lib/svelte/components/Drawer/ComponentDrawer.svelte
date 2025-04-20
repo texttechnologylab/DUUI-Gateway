@@ -23,7 +23,7 @@
 	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
 	import pkg from 'lodash'
 	import { createEventDispatcher } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 	import DriverIcon from '../DriverIcon.svelte'
 	import Chips from '../Input/Chips.svelte'

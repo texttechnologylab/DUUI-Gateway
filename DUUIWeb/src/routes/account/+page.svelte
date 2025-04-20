@@ -30,11 +30,15 @@
 		getDrawerStore
 	} from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 	import FunctionalTable from '$lib/svelte/components/FunctionalTable.svelte'
 	import Tip from "$lib/svelte/components/Tip.svelte";
+	import _ from 'lodash';
+	import { toTitleCase } from '$lib/duui/utils/text.js'
+	import { IO, isStatelessProvider, type IOProvider } from '$lib/duui/io.js'
+	const { set, isEmpty } = _;
 
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
@@ -113,6 +117,8 @@
 	let tab: number = +($page.url.searchParams.get('tab') || '0')
 
 	onMount(() => {
+
+
 		if ($userSession?.preferences.tutorial) {
 			modalStore.trigger({
 				type: 'component',
@@ -652,7 +658,7 @@
 					</p>
 				</div>
 				<Accordion class="space-y-4" id="connections">
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="dropbox">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -759,7 +765,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="minio">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -882,7 +888,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="nextcloud">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -1002,7 +1008,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="google">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
