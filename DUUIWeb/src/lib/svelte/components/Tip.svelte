@@ -5,7 +5,7 @@
 	export let showIcon: boolean = true
 	export let transparent: boolean = true
 	export let customIcon: IconDefinition = faLightbulb
-	export let tipTheme: "primary" | "secondary" | "tertiary" | "warning" | "error" | "success" | "surface"  = "primary"
+	export let tipTheme: "primary" | "secondary" | "tertiary" | "error" | "success" | "surface"  = "primary"
 </script>
 
 {#if transparent}

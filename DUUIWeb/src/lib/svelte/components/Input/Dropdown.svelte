@@ -62,7 +62,7 @@
 	}
 
 	$: rawLabel = (optionsMap.get(value) ?? value) as string;
-	$: displayLabel = value
+	$: displayLabel = rawLabel
 		? (capitalize ? toTitleCase(rawLabel) : rawLabel)
 		: '';
 </script>
