@@ -6,6 +6,7 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDrivesDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
@@ -32,6 +33,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.texttechnologylab.duui.api.Main.getFilteredFolderStructure;
 import static org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController.findOneById;
 import static org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController.getHandler;
 
@@ -49,27 +51,34 @@ public class DUUIProcessRequestHandler {
      * @return A JSON Document containing the folder structure.
      */
     public static String getFolderStructure(Request request, Response response) throws DbxException, ExecutionException, InterruptedException, GeneralSecurityException, IOException {
-        String id = request.params(":id");
+        String userId = request.params(":id");
         String provider = request.params(":provider") != null ? request.params(":provider") : "";
         String providerId = request.params(":providerId") != null ? request.params(":providerId") : "";
         boolean reset = request.params(":reset").equals("true");
 
-        if (provider.isEmpty() || providerId.isEmpty())
+        if (provider.isEmpty())
             return DUUIRequestHelper.badRequest(response, "The provider and provider-id cannot be empty");
 
-        IDUUIDocumentHandler handler = getHandler(provider, providerId, id);
+        IDUUIDocumentHandler handler = getHandler(provider, providerId, userId);
+
+        if (handler instanceof DUUILocalDrivesDocumentHandler) {
+            return getFilteredFolderStructure(request, response);
+        }
+
+        if (providerId.isEmpty())
+            return DUUIRequestHelper.badRequest(response, "The provider-id cannot be empty.");
 
         if (reset) {
             DUUIMongoDBStorage.Users()
                 .findOneAndUpdate(
-                        Filters.eq("_id", new ObjectId(id)),
+                        Filters.eq("_id", new ObjectId(userId)),
                         Updates.unset("connections." + provider.toLowerCase() + "." + providerId + ".folder_structure")
                 );
         }
 
         if (handler instanceof IDUUIFolderPickerApi iDUUIFolderPickerApi) {
             Document document = null;
-            Document result = DUUIMongoDBStorage.Users().find(Filters.eq(new ObjectId(id))).first();
+            Document result = DUUIMongoDBStorage.Users().find(Filters.eq(new ObjectId(userId))).first();
             if (result != null) {
                 Document fs = result.getEmbedded(List.of("connections", provider.toLowerCase(), providerId, "folder_structure"), Document.class);
                 if (fs != null) document = fs;
@@ -83,7 +92,7 @@ public class DUUIProcessRequestHandler {
 
                 DUUIMongoDBStorage.Users()
                     .findOneAndUpdate(
-                        Filters.eq("_id", new ObjectId(id)),
+                        Filters.eq("_id", new ObjectId(userId)),
                         Updates.set("connections." + provider.toLowerCase() + "." + providerId + ".folder_structure", document)
                     );
             }

@@ -298,30 +298,41 @@ public class Main {
     }
 
     public static String getFilteredFolderStructure(Request request, Response response) {
-        String rootPath = System.getProperty("user.home");
+        String rootPath = config.getLocalDriveRoot();
         String userId = DUUIRequestHelper.getUserId(request);
 
-        List<Bson> pipeline = List.of(
-                project(fields(
-                        computed("groupsArr", new Document("$objectToArray", "$groups"))
-                )),
-                unwind("$groupsArr"),
-                match(in("groupsArr.v.members", userId)),
-                group(null, push("listOfLists", "$groupsArr.v.whitelist")),
-                project(fields(
-                        computed("combinedWhitelist",
-                                new Document("$reduce", new Document("input", "$listOfLists")
-                                        .append("initialValue", List.of())
-                                        .append("in", new Document("$concatArrays", List.of("$$value", "$$this")))
-                                )
-                        )
-                ))
-        );
+        boolean isAdmin = DUUIRequestHelper.isAdmin(request);
 
-        Document result = DUUIMongoDBStorage.Globals().aggregate(pipeline).first();
-        if (result != null) result = new Document("combinedWhitelist", List.of());
-        List<Path> whitelist = result.getList("combinedWhitelist", String.class)
-            .stream().map(Path::of).toList();
+        List<Path> whitelist = List.of();
+
+        if (isAdmin) {
+            whitelist = List.of(Path.of(rootPath));
+        } else {
+            List<Bson> pipeline = List.of(
+                    project(fields(
+                            computed("groupsArr", new Document("$objectToArray", "$groups"))
+                    )),
+                    unwind("$groupsArr"),
+                    match(in("groupsArr.v.members", userId)),
+                    group(null, push("listOfLists", "$groupsArr.v.whitelist")),
+                    project(fields(
+                            computed("combinedWhitelist",
+                                    new Document("$reduce", new Document("input", "$listOfLists")
+                                            .append("initialValue", List.of())
+                                            .append("in", new Document("$concatArrays", List.of("$$value", "$$this")))
+                                    )
+                            )
+                    ))
+            );
+
+            Document result = DUUIMongoDBStorage.Globals().aggregate(pipeline).first();
+            if (result != null) {
+                result = new Document("combinedWhitelist", List.of());
+
+                whitelist = result.getList("combinedWhitelist", String.class)
+                    .stream().map(Path::of).toList();
+            }
+        }
 
         try {
             IDUUIFolderPickerApi.DUUIFolder folder;
@@ -338,8 +349,8 @@ public class Main {
 
     public static String getLocalFolderStructure(Request request, Response response) {
 
-        String rootPath = System.getProperty("user.home");
-        boolean reset = request.queryParamOrDefault("reset", "false").equals("true");
+        String rootPath = config.getLocalDriveRoot();
+        boolean reset = request.params(":reset").equals("reset");
 
         try {
             Document fs = getLFS(rootPath, reset);

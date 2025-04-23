@@ -195,7 +195,7 @@ public class Methods {
             get("", Main::downloadFile);
             get("/preprocess", Main::preprocessCas);
             post("", Main::uploadFile);
-            get("/local_folder_structure", Main::getLocalFolderStructure);
+            get("/local_folder_structure/:reset", Main::getLocalFolderStructure);
             get("/filtered_folder_structure", Main::getFilteredFolderStructure);
         });
     }

@@ -19,13 +19,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDropboxDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIGoogleDriveDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import org.texttechnologylab.duui.analysis.document.Provider;
@@ -578,6 +572,8 @@ public class DUUIProcessController {
                     .setAccessToken(credentials.getString("access_token"));
 
             return new DUUIGoogleDriveDocumentHandler(credential);
+        } else if (provider.equalsIgnoreCase(Provider.LOCAL)) {
+            return new DUUILocalDrivesDocumentHandler(Main.config.getLocalDriveRoot());
         }
 
         return null;
