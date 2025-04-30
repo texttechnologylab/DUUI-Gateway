@@ -8,12 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
@@ -52,6 +47,7 @@ import static com.mongodb.client.model.Aggregates.*;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.Accumulators.*;
+import static org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage.formatDocument;
 import static spark.Spark.port;
 
 /*
@@ -114,7 +110,6 @@ public class Main {
 
         Methods.init();
 
-
         DUUIComponentRequestHandler.insertSpacyTemplate();
 
         File fileUploadDirectory = Paths.get(config.getFileUploadPath()).toFile();
@@ -122,7 +117,6 @@ public class Main {
         if (!fileUploadDirectory.exists()) {
             boolean ignored = fileUploadDirectory.mkdirs();
         }
-
 
         Runtime.getRuntime().addShutdownHook(
             new Thread(
@@ -335,9 +329,13 @@ public class Main {
         }
 
         try {
-            IDUUIFolderPickerApi.DUUIFolder folder;
+
+            Document lfs = getLFS(rootPath, false);
+            Map<String, Object> lfsMap = new HashMap<>();
+            lfs.putAll(lfsMap);
+            IDUUIFolderPickerApi.DUUIFolder folder = IDUUIFolderPickerApi.DUUIFolder.fromJson(lfsMap);;
             DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
-            folder = handler.getFolderStructure();
+//            folder = handler.getFolderStructure();
             folder = handler.filterTree(folder, whitelist);
             Document fs = new Document(folder.toJson());
             return fs.toJson();

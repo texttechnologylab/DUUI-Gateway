@@ -344,7 +344,7 @@ public class DUUIMongoDBStorage {
             settings = settings.get("settings", Document.class);
         }
 
-        System.out.println("Settings: " + formatDocument(settings));
+//        System.out.println("Settings: " + formatDocument(settings));
 
         return settings;
     }

@@ -3,29 +3,27 @@
 	A component to edit DUUIComponents that appears on the right side on the screen (Sidebar Drawer).
 -->
 <script lang="ts">
-	import { errorToast, successToast } from '$lib/duui/utils/ui'
-	import {
-		groupStore,
-	} from '$lib/store'
-	import { showConfirmationModal } from '$lib/svelte/utils/modal'
+	import {errorToast, successToast} from '$lib/duui/utils/ui'
+	import {groupStore,} from '$lib/store'
+	import {showConfirmationModal} from '$lib/svelte/utils/modal'
 	import {
 		faAngleDoubleRight,
 		faCancel,
 		faFileCircleCheck,
+		faPeopleGroup,
 		faPerson,
 		faTrash,
-
 		faWarning
-
 	} from '@fortawesome/free-solid-svg-icons'
-	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import {getDrawerStore, getModalStore, getToastStore, type TreeViewNode} from '@skeletonlabs/skeleton'
+	import {Fa} from 'svelte-fa'
 	import TextInput from '../Input/TextInput.svelte'
 	import Tip from '../Tip.svelte'
-	import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
 	import Popup from '../Popup.svelte'
-	
+	import FolderStructure from "$lib/svelte/components/Input/FolderStructure.svelte";
+	import {onMount} from "svelte";
+
 	const drawerStore = getDrawerStore()
 	
 	let groupId: string = $drawerStore.meta.groupId
@@ -110,6 +108,33 @@
 		}
 		
 		drawerStore.close()
+	}
+
+	let whiteListString: string = ""
+	let lfs: TreeViewNode
+
+	onMount(async () => {
+
+		if (!lfs) {
+			const response = await fetch('/api/settings/local_folder_structure', {
+				method: 'GET',
+			})
+
+			if (response.ok) {
+				lfs = await response.json()
+			} else {
+				toastStore.trigger(errorToast('Error fetching local directory tree: ' + response.statusText))
+			}
+		}
+
+		if (group.whitelist) {
+			whiteListString = group.whitelist.join(", ")
+		}
+	})
+
+
+	$: {
+		group.whitelist = whiteListString ? whiteListString.split(", ") : []
 	}
 
 </script>
@@ -202,6 +227,24 @@
 		<div class="space-y-2 ">
 			<h4 class="h4">Members</h4>
 			<JsonDropdownInput bind:dropdownList={membersMap} bind:data={selectedMembersMap} leadingIcon={faPerson}/>
+		</div>
+
+		<div class="space-y-2 ">
+			<h4 class="h4">Local Drive Access</h4>
+			{#if !lfs}
+				<Tip customIcon={faWarning} tipTheme="tertiary"> Loading local directory tree... </Tip>
+			{:else if Object.keys(lfs).length === 0}
+				<Tip customIcon={faWarning} tipTheme="tertiary"> No local directory tree found. </Tip>
+			{:else}
+				<Tip customIcon={faWarning} tipTheme="tertiary"> Select folders to whitelist. </Tip>
+				<FolderStructure
+					label="Folder"
+					name="folder"
+					bind:value={whiteListString}
+					isMultiple={true}
+					tree={lfs}
+				/>
+			{/if}
 		</div>
 
 	</div>

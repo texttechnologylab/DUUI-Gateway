@@ -146,6 +146,7 @@
 </div>
 <div data-popup={name} class="fixed">
     <div class="overflow-scroll max-h-96 popup-solid p-1 md:min-w-[768px]">
+        <!--TODO: Allow non-recursive selection by turning relation={false} -->
         <RecursiveTreeView
             selection
             multiple={isMultiple}
