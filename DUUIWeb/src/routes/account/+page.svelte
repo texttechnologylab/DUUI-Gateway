@@ -30,11 +30,15 @@
 		getDrawerStore
 	} from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import TextInput from "$lib/svelte/components/Input/TextInput.svelte";
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 	import FunctionalTable from '$lib/svelte/components/FunctionalTable.svelte'
 	import Tip from "$lib/svelte/components/Tip.svelte";
+	import _ from 'lodash';
+	import { toTitleCase } from '$lib/duui/utils/text.js'
+	import { IO, isStatelessProvider, type IOProvider } from '$lib/duui/io.js'
+	const { set, isEmpty } = _;
 
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
@@ -113,6 +117,8 @@
 	let tab: number = +($page.url.searchParams.get('tab') || '0')
 
 	onMount(() => {
+
+
 		if ($userSession?.preferences.tutorial) {
 			modalStore.trigger({
 				type: 'component',
@@ -652,7 +658,7 @@
 					</p>
 				</div>
 				<Accordion class="space-y-4" id="connections">
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="dropbox">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -759,7 +765,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="minio">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -882,7 +888,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="nextcloud">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -1002,7 +1008,7 @@
 						</AccordionItem>
 					</div>
 
-					<div class="section-wrapper rounded-md">
+					<div class="section-wrapper rounded-md" id="google">
 						<AccordionItem open>
 							<svelte:fragment slot="summary">
 								<b class="h2 scroll-mt-16 text-primary-500">
@@ -1106,62 +1112,68 @@
 				</Accordion>
 			</div>
 		{:else if tab === 2}
-			{#if users && $userSession?.role === 'Admin'}
+			{#if $userSession?.role === 'Admin'}
 				<div class="section-wrapper p-8 space-y-4 w-full">
 					<h3 class="h3">Users</h3>
 
-					<div class="bordered-soft rounded-md overflow-hidden max-w-full">
-						<div class="overflow-x-auto">
-							<div
-									class="grid w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] bg-surface-100-800-token gap-0.5 p-2"
-							>
-								<p class="p-4 break-words max-w-[10ch] md:max-w-none">Email</p>
-								<p class="p-4 hidden lg:block text-center">Role</p>
-								<p class="p-4 hidden lg:block text-center">Workers</p>
-								<p class="p-4 hidden lg:block text-center">Password</p>
-							</div>
-
-							{#each users as _user}
+					{#if users}
+						<div class="bordered-soft rounded-md overflow-hidden max-w-full">
+							<div class="overflow-x-auto">
 								<div
-										class="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] lg:grid-cols-[1fr_1fr_1fr_auto_auto_auto]  border-t border-color gap-0.5 p-1"
+										class="grid w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] bg-surface-100-800-token gap-0.5 p-2"
 								>
-									<p class="px-4 py-2 self-center">{_user.email}</p>
-									<Dropdown
-											name={_user.email}
-											offset={0}
-											on:change={() => updateRole(_user)}
-											bind:value={_user.role}
-											style={"button-menu px-4 py-2 !self-stretch h-full"}
-											border="border-y-0 !border-x border-color"
-											options={['User', 'Admin', 'Trial']}
-									/>
-									<p class="hidden lg:block px-4 py-2 self-center">{_user.worker_count}</p>
-									<Secret
-											name="password"
-											style={"button-menu px-4 py-2 !self-stretch h-full border-y-0 !border-x border-color"}
-											disabled={false}
-											bind:value={_user.password}
-									/>
-									<button
-											class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-primary transition-300 !border-r-0 !border-l-0 !border-x border-color"
-											on:click={() => updatePassword(_user.password, _user.password, _user.oid)}
-									>
-<!--											on:click={() => alert(JSON.stringify(_user))}-->
-
-										<Fa icon={faRefresh} />
-										<span>Update Password</span>
-									</button>
-									<button
-											class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-error transition-300 border-l !border-r-0 !border-x border-color"
-											on:click={() => deleteUser(_user)}
-									>
-										<Fa icon={faTrash} />
-										<span class="hidden md:inline">Delete</span>
-									</button>
+									<p class="p-4 break-words max-w-[10ch] md:max-w-none">Email</p>
+									<p class="p-4 hidden lg:block text-center">Role</p>
+									<p class="p-4 hidden lg:block text-center">Workers</p>
+									<p class="p-4 hidden lg:block text-center">Password</p>
 								</div>
-							{/each}
+
+								{#each users as _user}
+									<div
+											class="grid w-full grid-cols-[1fr_1fr_1fr_auto_auto_auto] lg:grid-cols-[1fr_1fr_1fr_auto_auto_auto]  border-t border-color gap-0.5 p-1"
+									>
+										<p class="px-4 py-2 self-center">{_user.email}</p>
+										<Dropdown
+												name={_user.email}
+												offset={0}
+												on:change={() => updateRole(_user)}
+												bind:value={_user.role}
+												style={"button-menu px-4 py-2 !self-stretch h-full"}
+												border="border-y-0 !border-x border-color"
+												options={['User', 'Admin', 'Trial']}
+										/>
+										<p class="hidden lg:block px-4 py-2 self-center">{_user.worker_count}</p>
+										<Secret
+												name="password"
+												style={"button-menu px-4 py-2 !self-stretch h-full border-y-0 !border-x border-color"}
+												disabled={false}
+												bind:value={_user.password}
+										/>
+										<button
+												class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-primary transition-300 !border-r-0 !border-l-0 !border-x border-color"
+												on:click={() => updatePassword(_user.password, _user.password, _user.oid)}
+										>
+	<!--											on:click={() => alert(JSON.stringify(_user))}-->
+
+											<Fa icon={faRefresh} />
+											<span>Update Password</span>
+										</button>
+										<button
+												class="h-10 px-4 py-2 button-menu self-center hover:!variant-soft-error transition-300 border-l !border-r-0 !border-x border-color"
+												on:click={() => deleteUser(_user)}
+										>
+											<Fa icon={faTrash} />
+											<span class="hidden md:inline">Delete</span>
+										</button>
+									</div>
+								{/each}
+							</div>
 						</div>
-					</div>
+					{:else}
+						<Tip tipTheme={ "tertiary" } >
+							There are currently no additional users to manage.
+						</Tip>
+					{/if}
 				</div>
 
 			{/if}

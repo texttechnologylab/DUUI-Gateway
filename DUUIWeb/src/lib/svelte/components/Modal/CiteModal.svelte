@@ -6,7 +6,7 @@
 	import {clipboard, getModalStore, getToastStore} from '@skeletonlabs/skeleton'
 	import { successToast } from '$lib/duui/utils/ui.js'
 	import {faClipboard, faClose} from "@fortawesome/free-solid-svg-icons";
-	import { Fa } from "svelte-fa";
+	import Fa from "svelte-fa";
 
 	const modalStore = getModalStore()
 	const toastStore = getToastStore()

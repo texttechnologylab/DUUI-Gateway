@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 	import { CodeBlock } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let endpoint: APIEndpoint
 	export let expanded: boolean = false

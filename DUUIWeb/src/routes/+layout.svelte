@@ -25,7 +25,7 @@
 		type DrawerSettings,
 		type ModalComponent
 	} from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	import { afterNavigate, beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import { initializeStores, storePopup } from '@skeletonlabs/skeleton'
@@ -105,7 +105,7 @@
 
 	afterNavigate((params: AfterNavigate) => {
 		const isNewPage = params.from?.url.pathname !== params.to?.url.pathname
-		const elemPage = document.querySelector('#page')
+		const elemPage: Element | null = document.querySelector('#page')
 		if (isNewPage && elemPage !== null) {
 			elemPage.scrollTop = 0
 		}

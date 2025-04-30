@@ -1,3 +1,6 @@
+import _ from 'lodash';
+const { isEmpty } = _;
+
 /**
  * Convert any string to a slug meaning words are separated by hyphens.
  *
@@ -19,7 +22,7 @@ export const slugify = (text: string) =>
  * @returns A string in snake case.
  */
 export const toTitleCase = (text: string) => {
-	return text[0].toUpperCase() + text.slice(1)
+	return !isEmpty(text) ? text[0].toUpperCase() + text.slice(1) : "";
 }
 
 /**

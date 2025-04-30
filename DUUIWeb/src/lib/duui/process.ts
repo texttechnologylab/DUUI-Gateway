@@ -69,7 +69,7 @@ export const blankSettings = () => {
 			provider: IO.None,
 			path: '',
 			content: '',
-			file_extension: '.txt' as OutputFileExtension,
+			file_extension: '.xmi' as OutputFileExtension,
 			provider_id: ""
 		},
 		settings: {

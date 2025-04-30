@@ -6,17 +6,19 @@
 <script lang="ts">
 	import { equals, toTitleCase } from '$lib/duui/utils/text'
 	import type { Placement } from '@floating-ui/dom'
-	import { faCheck, faChevronDown, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
+	import { faCheck, faChevronDown, faL, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 	import { ListBox, ListBoxItem, popup, type PopupSettings } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let label: string = ''
 	export let name: string = label
 
 	export let capitalize = true
 
-	export let options: string[] | number[] | Map<string | number, string | number>
+	export let options: string[] | number[] | Map<string | number, string | number> | Record<string, string | number>
 	export let value: string | number
+
+	export let initFirst: boolean = false 
 
 	export let icon: IconDefinition = faChevronDown
 	export let placement: Placement = 'bottom-end'
@@ -47,9 +49,22 @@
 		optionsMap = new Map(
 			options.map(item => [item, item] as [string | number, string | number])
 		)
+	} else if (typeof options === 'object' && options !== null && !Array.isArray(options)) {
+		optionsMap = new Map(
+			Object.entries(options) as [string, string|number][]
+		);
 	} else {
 		throw new Error("options must be an array or a Map")
 	}
+
+	if (initFirst && !value && Object.keys(optionsMap)[0]) {
+		value  = Object.keys(optionsMap)[0]
+	}
+
+	$: rawLabel = (optionsMap.get(value) ?? value) as string;
+	$: displayLabel = rawLabel
+		? (capitalize ? toTitleCase(rawLabel) : rawLabel)
+		: '';
 </script>
 <div class="label flex flex-col {minWidth}">
 	{#if label}
@@ -59,19 +74,12 @@
 		class="flex items-center !justify-between gap-2 px-3 py-2 leading-6  {border} {rounded} {style}"
 		use:popup={dropdown}
 	>
-		<span>
-			{value === ""
-					? ""
-					: capitalize
-							? toTitleCase('' + (optionsMap.get(value) ?? value))
-							: '' + (optionsMap.get(value) ?? value)
-			}
-		</span>
+	<span>{displayLabel}</span>
 		<Fa {icon} />
 	</button>
 </div>
 
-<div data-popup={name} class="fixed overflow-y-auto h64 mt-1">
+<div data-popup={name} class="fixed overflow-y-auto h64 mt-1 z-10">
 	<div class="popup-solid p-2 {minWidth} overflow-scroll max-h-96">
 		<ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
 			{#each Array.from(optionsMap.entries()) as [key, displayValue]}

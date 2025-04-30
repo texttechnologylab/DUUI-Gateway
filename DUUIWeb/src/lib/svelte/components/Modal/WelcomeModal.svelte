@@ -13,7 +13,7 @@
 		faMapSigns
 	} from '@fortawesome/free-solid-svg-icons'
 	import { ProgressBar, getModalStore } from '@skeletonlabs/skeleton'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	const modalStore = getModalStore()
 	let step: number = 0

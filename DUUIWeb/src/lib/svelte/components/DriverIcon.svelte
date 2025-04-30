@@ -11,7 +11,7 @@
 	import { equals } from '$lib/duui/utils/text'
 	import { faDocker, faJava } from '@fortawesome/free-brands-svg-icons'
 	import { faCircleNodes, faWifi } from '@fortawesome/free-solid-svg-icons'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let driver: DUUIDriver | string
 </script>

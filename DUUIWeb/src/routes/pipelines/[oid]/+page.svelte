@@ -17,7 +17,7 @@
 	import { getDrawerStore, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton'
 
 	import { dndzone, type DndEvent } from 'svelte-dnd-action'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import { flip } from 'svelte/animate'
 	import { v4 as uuidv4 } from 'uuid'
 
@@ -317,14 +317,14 @@
 	let ApexCharts
 	let loaded: boolean = false
 
-	const chart = (node: HTMLDivElement, options: never) => {
+	const chart = (node: HTMLDivElement, options: any) => {
 		if (!loaded) return
 
 		let _chart = new ApexCharts(node, options)
 		_chart.render()
 
 		return {
-			update(options: never) {
+			update(options: any) {
 				_chart.updateOptions(options)
 			},
 			destroy() {

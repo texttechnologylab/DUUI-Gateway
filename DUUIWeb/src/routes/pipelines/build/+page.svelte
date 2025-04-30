@@ -34,7 +34,7 @@
 	import pkg from 'lodash'
 	import { onMount } from 'svelte'
 	import { dndzone, type DndEvent } from 'svelte-dnd-action'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import { flip } from 'svelte/animate'
 	import { v4 as uuidv4 } from 'uuid'
 	import ComponentTemplates from '../../../lib/svelte/components/ComponentTemplates.svelte'

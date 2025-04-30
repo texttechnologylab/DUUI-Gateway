@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 </script>
 
 {#if $page.url.pathname.includes('/documentation')}

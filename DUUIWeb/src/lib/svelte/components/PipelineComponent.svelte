@@ -14,7 +14,7 @@
 	import { faClone, faEdit } from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton'
 	import { createEventDispatcher } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import { componentDrawerSettings } from '$lib/config'
 
 	export let component: DUUIComponent

@@ -11,7 +11,7 @@
     import { RecursiveTreeView, type TreeViewNode } from '@skeletonlabs/skeleton'
     import FolderIcon from "$lib/svelte/components/FolderIcon.svelte";
 
-    import { Fa } from 'svelte-fa'
+    import Fa from 'svelte-fa'
 
     export let label: string = ''
     export let name: string = label

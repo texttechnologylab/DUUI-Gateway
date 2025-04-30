@@ -26,3 +26,4 @@ replay_pid*
 /DUUIRestService/.idea/*
 .vscode/
 mongodb_data/*
+package-lock.json

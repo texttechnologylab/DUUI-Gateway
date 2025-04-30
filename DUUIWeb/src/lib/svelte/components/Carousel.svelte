@@ -1,7 +1,7 @@
 <!-- @component Unused Component. Use this as a horizontal scroll container.-->
 <script lang="ts">
 	import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	let elemCarousel: HTMLDivElement
 	export let index: number = 0

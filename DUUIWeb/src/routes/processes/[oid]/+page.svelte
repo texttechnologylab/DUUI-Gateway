@@ -42,7 +42,7 @@
 	import Paginator from '$lib/svelte/components/Paginator.svelte'
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
 	import { onMount } from 'svelte'
-	import { Fa } from 'svelte-fa'
+	import Fa from 'svelte-fa'
 
 	export let data
 	const toastStore = getToastStore()

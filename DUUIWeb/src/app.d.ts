@@ -45,38 +45,6 @@ interface UserProperties {
 	}
 }
 
-type DUUILabels = {
-	[labelId: string]: DUUILabel
-}
-
-type DUUILabel = {
-	label: string
-	driver: DUUIDriverFilter
-	scope: string
-	groups: string[]
-}
-
-type DUUIGroup = {
-	name: string
-	members: string[]
-	whitelist: string[]
-}
-
-type DUUIGroups = {
-	[groupId: string]: DUUIGroup
-}
-
-type DUUISettings = {
-	dbx_app_secret: string
-	dbx_app_key: string
-	dbx_redirect_url: string
-	google_client_id: string
-	google_client_secret: string
-	google_redirect_uri: string
-	allowed_origins: string[]
-	file_upload_directory: string
-}
-
 type ServiceConnections = {
 	[name: string]: OAuthConnectionDetails | MinioConnectionDetails | NextcloudConnectionDetails;
 };
@@ -111,6 +79,38 @@ type NextcloudConnectionDetails = {
 	password: string | null
 }
 
+
+type DUUILabels = {
+	[labelId: string]: DUUILabel
+}
+
+type DUUILabel = {
+	label: string
+	driver: DUUIDriverFilter
+	scope: string
+	groups: string[]
+}
+
+type DUUIGroup = {
+	name: string
+	members: string[]
+	whitelist: string[]
+}
+
+type DUUIGroups = {
+	[groupId: string]: DUUIGroup
+}
+
+type DUUISettings = {
+	dbx_app_secret: string
+	dbx_app_key: string
+	dbx_redirect_url: string
+	google_client_id: string
+	google_client_secret: string
+	google_redirect_uri: string
+	allowed_origins: string[]
+	file_upload_directory: string
+}
 
 // Types related to the pagination of tables
 type PaginationSettings = {
