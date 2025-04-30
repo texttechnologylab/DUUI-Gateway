@@ -35,7 +35,7 @@ export type DUUIDocumentProvider = {
 	provider_id: string;
 }
 
-export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'NextCloud' | 'Google'| 'None'
+export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'NextCloud' | 'Google'| 'LocalDrive' | 'None'
 export type FileExtension = '.txt' | '.xmi' | '.gz'
 export type OutputFileExtension = '.xmi' | '.gz'
 
@@ -46,13 +46,14 @@ export enum IO {
 	Text = 'Text',
 	NextCloud = 'NextCloud',
 	Google = 'Google',
+	LocalDrive = 'LocalDrive',
 	None = 'None'
 }
 
-export const IO_INPUT: string[] = ['Dropbox', 'File', 'Minio', 'Text', 'NextCloud', 'Google']
+export const IO_INPUT: string[] = ['Dropbox', 'File', 'Minio', 'Text', 'NextCloud', 'Google', 'LocalDrive']
 export const INPUT_EXTENSIONS: string[] = ['.txt', '.xmi', '.gz']
 
-export const IO_OUTPUT: string[] = ['Dropbox', 'Minio', 'NextCloud', 'Google', 'None']
+export const IO_OUTPUT: string[] = ['Dropbox', 'Minio', 'NextCloud', 'Google', 'LocalDrive', 'None']
 export const OUTPUT_EXTENSIONS: string[] = ['.xmi', '.gz']
 
 /**
@@ -100,6 +101,10 @@ export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user:
 		return true
 	}
 
+	if (equals(input.provider.toString(), IO.LocalDrive)) {
+		return input.path.length > 0;
+	}
+
 	return isValidCloudProvider(input, user)
 
 }
@@ -135,6 +140,10 @@ export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean
 		return true
 	}
 
+	if (equals(output.provider.toString(), IO.LocalDrive)) {
+		return output.path.length > 0;
+	}
+
 	return isValidCloudProvider(output, user)
 }
 
@@ -144,8 +153,8 @@ export const isStatelessProvider = (provider: IOProvider) => {
 		equals(provider.toString(), IO.None)
 }
 
-export const hasFolderPicker = (provider: IOProvider) => {
-	return provider === IO.Dropbox || provider === IO.Google || provider === IO.NextCloud
+export const hasFolderPicker = (provider: IOProvider, checkCloudProvider: boolean = false) => {
+	return provider === IO.Dropbox || provider === IO.Google || provider === IO.NextCloud || (provider === IO.LocalDrive && !checkCloudProvider)
 }
 
 export const isValidCloudProvider = (provider: DUUIDocumentProvider, user: User) => {
@@ -167,8 +176,8 @@ export const isValidCloudProvider = (provider: DUUIDocumentProvider, user: User)
 export const isValidMinioProvider = (provider: DUUIDocumentProvider, user: User) => {
 	const minio = user?.connections.minio[provider.provider_id]
 
-	return minio 
-		&& minio.alias.length > 0 
+	return minio
+		&& minio.alias.length > 0
 		&& minio.endpoint !== null
 		&& minio.access_key !== null
 		&& minio.secret_key !== null
@@ -177,8 +186,8 @@ export const isValidMinioProvider = (provider: DUUIDocumentProvider, user: User)
 export const isValidNextCloudProvider = (provider: DUUIDocumentProvider, user: User) => {
 	const nextcloud = user?.connections.nextcloud[provider.provider_id]
 
-	return nextcloud 
-		&& nextcloud.alias.length > 0 
+	return nextcloud
+		&& nextcloud.alias.length > 0
 		&& nextcloud.uri !== null
 		&& nextcloud.username !== null
 		&& nextcloud.password !== null
@@ -188,8 +197,8 @@ export const isValidOAuthProvider = (provider: DUUIDocumentProvider, user: User)
 
 	const oauth = user?.connections[provider.provider.toLowerCase() as keyof ServiceConnections]
 
-	return oauth 
-		&& oauth[provider.provider_id]?.alias?.length > 0 
+	return oauth
+		&& oauth[provider.provider_id]?.alias?.length > 0
 		&& oauth[provider.provider_id]?.access_token !== null
 }
 

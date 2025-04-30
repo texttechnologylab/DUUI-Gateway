@@ -15,5 +15,5 @@ public class Provider {
     public static final String ONEDRIVE = "OneDrive";
     public static final String NEXTCLOUD = "NextCloud";
     public static final String GOOGLE = "Google";
-    public static final String LOCAL = "Local";
+    public static final String LOCAL_DRIVE = "LocalDrive";
 }

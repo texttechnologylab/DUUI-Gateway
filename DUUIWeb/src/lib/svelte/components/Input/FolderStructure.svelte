@@ -44,7 +44,7 @@
 
     let isStart = true
 
-    let checkedNodes : string[] = value.toString().split(",")
+    let checkedNodes : string[] = value?.length > 0 ? value.toString().split(",") : []
     let prevNode: string = ""
     let indeterminateNodes: string[] = []
     let parentNodes = {}

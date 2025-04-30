@@ -37,13 +37,13 @@
 	import TextArea from '$lib/svelte/components/Input/TextArea.svelte'
 	import TextInput from '$lib/svelte/components/Input/TextInput.svelte'
 	import Tip from '$lib/svelte/components/Tip.svelte'
-	import {
-		faArrowLeft,
-		faCheck,
-		faCloud,
-		faCloudUpload,
-		faFileArrowUp, faRefresh, faRepeat,
-	} from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowLeft,
+	faCheck,
+	faCloud,
+	faCloudUpload,
+	faFileArrowUp, faRefresh, faRepeat, faWarning,
+} from '@fortawesome/free-solid-svg-icons'
 	import Fa from 'svelte-fa'
 	import { FileDropzone, ProgressBar, getToastStore, type TreeViewNode } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
@@ -67,6 +67,7 @@
 			path: '/upload'
 		}
 
+	let lfs: TreeViewNode
 	let inputAliases:  Map<string, string>
 	let outputAliases:  Map<string, string>
 	let fileUploadAliases:  Map<string, string>
@@ -77,9 +78,24 @@
 		return Object.keys($userSession?.connections[key] ?? {}).length > 0;
 	}
 	
-	onMount(() => {
-		
+	onMount(async () => {
+
 		$userSession = user
+
+		const getLFS = async () => {
+			const response = await fetch('/api/settings/filtered-folder-structure', {
+				method: 'GET'
+			})
+
+			if (response.ok) {
+				return (await response.json()) as TreeViewNode
+			} else {
+				toastStore.trigger(errorToast(response.statusText))
+				return {} as TreeViewNode
+			}
+		}
+
+		lfs = await getLFS();
 
 		fileStorage = {
 			storeFiles: false,
@@ -103,71 +119,71 @@
 		}
 
 		$processSettingsStore.pipeline_id =
-			params.get('pipeline_id') || $processSettingsStore.pipeline_id
+				params.get('pipeline_id') || $processSettingsStore.pipeline_id
 
 		$processSettingsStore.settings.language =
-			params.get('language') || $processSettingsStore.settings.language
+				params.get('language') || $processSettingsStore.settings.language
 
 		$processSettingsStore.settings.notify =
-			params.get('notify') === 'true' || $processSettingsStore.settings.notify
+				params.get('notify') === 'true' || $processSettingsStore.settings.notify
 
 		$processSettingsStore.settings.check_target =
-			params.get('check_target') === 'true' || $processSettingsStore.settings.check_target
+				params.get('check_target') === 'true' || $processSettingsStore.settings.check_target
 
 		$processSettingsStore.settings.recursive =
-			params.get('recursive') === 'true' || $processSettingsStore.settings.recursive
+				params.get('recursive') === 'true' || $processSettingsStore.settings.recursive
 
 		$processSettingsStore.settings.overwrite =
-			params.get('overwrite') === 'true' || $processSettingsStore.settings.overwrite
+				params.get('overwrite') === 'true' || $processSettingsStore.settings.overwrite
 
 		$processSettingsStore.settings.sort_by_size =
-			params.get('sort_by_size') === 'true' || $processSettingsStore.settings.sort_by_size
+				params.get('sort_by_size') === 'true' || $processSettingsStore.settings.sort_by_size
 
 		$processSettingsStore.settings.ignore_errors =
-			params.get('ignore_errors') === 'true' || $processSettingsStore.settings.ignore_errors
+				params.get('ignore_errors') === 'true' || $processSettingsStore.settings.ignore_errors
 
 		$processSettingsStore.settings.minimum_size = +(
-			params.get('minimum_size') || $processSettingsStore.settings.minimum_size
+				params.get('minimum_size') || $processSettingsStore.settings.minimum_size
 		)
 		$processSettingsStore.settings.worker_count = +(
-			params.get('worker_count') || $processSettingsStore.settings.worker_count
+				params.get('worker_count') || $processSettingsStore.settings.worker_count
 		)
 
 		$processSettingsStore.input.provider =
-			(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
+				(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
 
-		$processSettingsStore.input.provider_id ||= 
-			params.get('input_provider_id') || Array.from(inputAliases.keys())[0] || "";
+		$processSettingsStore.input.provider_id ||=
+				params.get('input_provider_id') || Array.from(inputAliases.keys())[0] || "";
 
 		$processSettingsStore.input.path = params.get('input_path') || $processSettingsStore.input.path
 		$processSettingsStore.input.content =
-			params.get('input_content') || $processSettingsStore.input.content
+				params.get('input_content') || $processSettingsStore.input.content
 		$processSettingsStore.input.file_extension =
-			(params.get('input_file_extension') as FileExtension) ||
-			$processSettingsStore.input.file_extension
+				(params.get('input_file_extension') as FileExtension) ||
+				$processSettingsStore.input.file_extension
 
 		$processSettingsStore.output.provider =
-			(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
+				(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
 
-		$processSettingsStore.output.provider_id ||= 
-			params.get('output_provider_id') || Array.from(outputAliases.keys())[0] || "";
+		$processSettingsStore.output.provider_id ||=
+				params.get('output_provider_id') || Array.from(outputAliases.keys())[0] || "";
 		$processSettingsStore.output.path =
-			params.get('output_path') || $processSettingsStore.output.path
+				params.get('output_path') || $processSettingsStore.output.path
 		$processSettingsStore.output.content =
-			params.get('output_content') || $processSettingsStore.output.content
+				params.get('output_content') || $processSettingsStore.output.content
 		$processSettingsStore.output.file_extension =
-			(params.get('output_file_extension') as OutputFileExtension) ||
-			$processSettingsStore.output.file_extension
+				(params.get('output_file_extension') as OutputFileExtension) ||
+				$processSettingsStore.output.file_extension
 
-		if (hasFolderPicker($processSettingsStore.input.provider)) {
+		if (hasFolderPicker($processSettingsStore.input.provider, true)) {
 			setInputTree($processSettingsStore.input.provider, $processSettingsStore.input.provider_id, false)
 		}
-		
-		if (hasFolderPicker($processSettingsStore.output.provider)) {
+
+		if (hasFolderPicker($processSettingsStore.output.provider, true)) {
 			setOutputTree($processSettingsStore.output.provider, $processSettingsStore.output.provider_id, false)
 		}
 
-		if (hasFolderPicker(fileStorage.provider)) {
+		if (hasFolderPicker(fileStorage.provider, true)) {
 			setFileUploadTree(fileStorage.provider, fileStorage.provider_id, false)
 		}
 
@@ -284,7 +300,7 @@
 
 	const getFolderStructure = async (provider: IOProvider, providerId: string, isReset: boolean) => {
 		
-		if (!hasFolderPicker(provider)) {
+		if (!hasFolderPicker(provider, true)) {
 			return undefined;
 		}
 		
@@ -370,11 +386,11 @@
 	let isFileUploadError = false;
 
 	$: isInputError  =
-		![IO.File, IO.Text, IO.None].includes($processSettingsStore.input.provider as IO) &&
+		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.input.provider as IO) &&
 		!hasConnections($processSettingsStore.input.provider);
 
 	$: isOutputError =
-		![IO.File, IO.Text, IO.None].includes($processSettingsStore.output.provider as IO) &&
+		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.output.provider as IO) &&
 		!hasConnections($processSettingsStore.output.provider);
 
 	$: isFileUploadError = 
@@ -637,6 +653,21 @@
 										{/if}
 									{/if}
 								{/if}
+							{:else if equals($processSettingsStore.input.provider, IO.LocalDrive) }
+								{#if Object.keys(lfs).length > 0}
+									<FolderStructure
+											tree={lfs}
+											label="Folder Picker"
+											name="inputPaths"
+											isMultiple={true}
+											bind:value={$processSettingsStore.input.path}
+									/>
+								{:else}
+									<Tip tipTheme="error" customIcon={faWarning}>
+										The local drive is not available. Please select a different provider.
+										To gain access to the local drive, please contact your administrator.
+									</Tip>
+								{/if}
 							{:else if (!isInputError && !isEmpty($processSettingsStore.input.provider_id)) && equals($processSettingsStore.input.provider, IO.Minio)}
 								<TextInput
 									label="Path (bucket/path/to/folder)"
@@ -787,7 +818,22 @@
 									/>
 								{/if}	
 							</div>
-							{#if !isOutputError && equals($processSettingsStore.output.provider, IO.Minio)}
+							{#if equals($processSettingsStore.output.provider, IO.LocalDrive) }
+								{#if Object.keys(lfs).length > 0}
+									<FolderStructure
+											tree={lfs}
+											label="Folder Picker"
+											name="outputPaths"
+											isMultiple={true}
+											bind:value={$processSettingsStore.output.path}
+									/>
+								{:else}
+									<Tip tipTheme="error" customIcon={faWarning}>
+										The local drive is not available. Please select a different provider.
+										To gain access to the local drive, please contact your administrator.
+									</Tip>
+								{/if}
+							{:else if !isOutputError && equals($processSettingsStore.output.provider, IO.Minio)}
 								<TextInput
 									label="Path (bucket/path/to/folder)"
 									error={outputBucketIsValid}

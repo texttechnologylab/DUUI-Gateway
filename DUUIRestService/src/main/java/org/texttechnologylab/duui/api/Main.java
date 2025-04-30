@@ -330,12 +330,12 @@ public class Main {
 
         try {
 
-            Document lfs = getLFS(rootPath, false);
-            Map<String, Object> lfsMap = new HashMap<>();
-            lfs.putAll(lfsMap);
-            IDUUIFolderPickerApi.DUUIFolder folder = IDUUIFolderPickerApi.DUUIFolder.fromJson(lfsMap);;
+//            Document lfs = getLFS(rootPath, false);
+//            Map<String, Object> lfsMap = new HashMap<>();
+//            lfs.putAll(lfsMap);
+//            IDUUIFolderPickerApi.DUUIFolder folder = IDUUIFolderPickerApi.DUUIFolder.fromJson(lfsMap);;
             DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
-//            folder = handler.getFolderStructure();
+            IDUUIFolderPickerApi.DUUIFolder folder = handler.getFolderStructure();
             folder = handler.filterTree(folder, whitelist);
             Document fs = new Document(folder.toJson());
             return fs.toJson();

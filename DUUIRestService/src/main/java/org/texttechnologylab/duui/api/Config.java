@@ -170,6 +170,10 @@ public class Config {
         return getValue("HOST", "localhost");
     }
 
+    public String getLocalDriveRoot() {
+        return getValue("LOCAL_DRIVE_ROOT", null);
+    }
+
     public String getFileUploadPath() {
         
         String value; 

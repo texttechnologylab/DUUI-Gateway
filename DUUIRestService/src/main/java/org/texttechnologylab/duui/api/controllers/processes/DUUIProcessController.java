@@ -572,7 +572,7 @@ public class DUUIProcessController {
                     .setAccessToken(credentials.getString("access_token"));
 
             return new DUUIGoogleDriveDocumentHandler(credential);
-        } else if (provider.equalsIgnoreCase(Provider.LOCAL)) {
+        } else if (provider.equalsIgnoreCase(Provider.LOCAL_DRIVE)) {
             return new DUUILocalDrivesDocumentHandler(Main.config.getLocalDriveRoot());
         }
 
