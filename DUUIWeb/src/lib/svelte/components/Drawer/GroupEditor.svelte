@@ -16,7 +16,7 @@
 		faWarning
 	} from '@fortawesome/free-solid-svg-icons'
 	import {getDrawerStore, getModalStore, getToastStore, type TreeViewNode} from '@skeletonlabs/skeleton'
-	import {Fa} from 'svelte-fa'
+	import Fa from 'svelte-fa'
 	import TextInput from '../Input/TextInput.svelte'
 	import Tip from '../Tip.svelte'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
@@ -52,9 +52,8 @@
 
 
 	const onUpdate = async () => {
-
 		group.members = Array.from(selectedMembersMap.keys())
-		
+
 		const response = await fetch('/api/users/groups', {
 			method: 'PUT',
 			body: JSON.stringify({
@@ -110,13 +109,13 @@
 		drawerStore.close()
 	}
 
-	let whiteListString: string = ""
+	let whiteListString: string = group.whitelist.join(",")
 	let lfs: TreeViewNode
 
 	onMount(async () => {
 
 		if (!lfs) {
-			const response = await fetch('/api/settings/local_folder_structure', {
+			const response = await fetch('/api/settings/local-folder-structure/', {
 				method: 'GET',
 			})
 
@@ -127,14 +126,18 @@
 			}
 		}
 
-		if (group.whitelist) {
-			whiteListString = group.whitelist.join(", ")
-		}
+		// if (group.whitelist) {
+		// 	alert(JSON.stringify(group))
+		// 	whiteListString = group.whitelist.join(",")
+		// }
 	})
 
+	if (group.whitelist) {
+		whiteListString = group.whitelist.join(",")
+	}
 
 	$: {
-		group.whitelist = whiteListString ? whiteListString.split(", ") : []
+		group.whitelist = whiteListString ? whiteListString.split(",") : []
 	}
 
 </script>
@@ -236,9 +239,8 @@
 			{:else if Object.keys(lfs).length === 0}
 				<Tip customIcon={faWarning} tipTheme="tertiary"> No local directory tree found. </Tip>
 			{:else}
-				<Tip customIcon={faWarning} tipTheme="tertiary"> Select folders to whitelist. </Tip>
 				<FolderStructure
-					label="Folder"
+					label="Select folders to whitelist"
 					name="folder"
 					bind:value={whiteListString}
 					isMultiple={true}

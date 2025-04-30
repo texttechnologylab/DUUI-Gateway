@@ -7,14 +7,22 @@ export const GET = async ({ locals, url }) => {
         return error(401, { message: 'Unauthorized' })
     }
 
-    const withReset = url.searchParams("reset") ? `/reset` : '';
+    console.log(url.toString())
 
-    const response = await fetch(`${API_URL}/files/local_folder_structure${withReset}`, {
+    const withReset = url.searchParams.get("reset") ? `reset` : 'cached';
+
+    const response = await fetch(`${API_URL}/files/local-folder-structure/${withReset}`, {
         method: 'GET',
         headers: {
             Authorization: user.session || ''
         }
     })
+
+    if (!response.ok) {
+        console.log(response)
+
+    }
+
 
     return response
 }

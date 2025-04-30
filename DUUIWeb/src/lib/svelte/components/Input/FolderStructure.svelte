@@ -42,7 +42,9 @@
         }
     }
 
-    let checkedNodes : string[] = []
+    let isStart = true
+
+    let checkedNodes : string[] = value.toString().split(",")
     let prevNode: string = ""
     let indeterminateNodes: string[] = []
     let parentNodes = {}
@@ -58,12 +60,6 @@
                 addFolderIcon(child, height + 1)
             }
         }
-    }
-
-    for (let node of myTreeViewNodes) {
-        parentNodes[node.id] = node.id
-        addFolderIcon(node, 1)
-
     }
 
     let getNode = (nodes: TreeViewNode[], id: string) => {
@@ -86,21 +82,38 @@
         return null;
     }
 
+    for (let node of myTreeViewNodes) {
+        parentNodes[node.id] = node.id
+        addFolderIcon(node, 1)
+
+    }
+
+    if (checkedNodes.length > 0) {
+        for (let node of checkedNodes) {
+            if (!checkedNodes.includes(parentNodes[node])) {
+                indeterminateNodes.push(parentNodes[node])
+            }
+        }
+    }
+
     let displayCheckedNodes = (nodes: string[], inde: string[]) => {
         let v:string
 
 
         if (isMultiple) {
 
-            if (nodes.length === 0 && value !== "") {
+            if (nodes.length === 0 && value?.length > 0) {
                 nodes = value.toString().split(",")
                 v = nodes.map((x) => getNode(myTreeViewNodes, x)).filter(x => x !== null).map(x => x.content).join(", ")
             } else {
+
                 let isInIndeterminates = (id) => {
                     return inde.includes(id)
                 }
+
                 let filtered = nodes
-                  .filter((x) => parentNodes[x] === x || isInIndeterminates(parentNodes[x]))
+                    .filter((x) => parentNodes[x] === x || isInIndeterminates(parentNodes[x]))
+
                 value = filtered.join(",")
                 v = filtered.map((x) => getNode(myTreeViewNodes, x).content).join(", ")
             }
@@ -126,8 +139,16 @@
             }
         }
 
+        isStart = false;
         return v;
     }
+
+    $: displayedCheckedNodes = displayCheckedNodes(checkedNodes, indeterminateNodes)
+
+    // {
+    //     console.log("checkedNodes", checkedNodes)
+    //     console.log("indeterminateNodes", indeterminateNodes)
+    // }
 
 </script>
 
@@ -139,8 +160,7 @@
             class="flex items-center !justify-between gap-2 px-3 py-2 leading-6 border rounded-md input-wrapper"
             use:popup={dropdown}
     >
-        <span>{ displayCheckedNodes(checkedNodes, indeterminateNodes) }</span>
-
+        <span>{ displayedCheckedNodes }</span>
         <Fa {icon} />
     </button>
 </div>
