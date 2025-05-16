@@ -1,6 +1,9 @@
 FROM node:18-alpine AS builder
 
-ENV API_URL=http://duui-backend:2605
+ARG API_URL
+ENV API_URL=http://duui-gateway-backend:2605
+ARG DBX_URL
+ENV DBX_URL=${DBX_URL}
 
 RUN mkdir /app
 
@@ -20,5 +23,6 @@ RUN cd /app && \
 WORKDIR /app
 
 EXPOSE 5173
+
 
 CMD ["node", "./build/index.js" ]

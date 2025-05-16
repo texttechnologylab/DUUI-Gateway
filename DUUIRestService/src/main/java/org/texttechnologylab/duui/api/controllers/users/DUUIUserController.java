@@ -21,6 +21,8 @@ import org.texttechnologylab.duui.analysis.document.Provider;
 import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
+
+import static com.amazonaws.regions.ServiceAbbreviations.Config;
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.authenticate;
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.badRequest;
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.getUserId;
@@ -413,19 +415,48 @@ public class DUUIUserController {
      */
     public static String getGroups(Request request, Response response) {
 
-        Document groupsDoc = DUUIMongoDBStorage.Globals()
-            .findOneAndUpdate(
-                Filters.exists("groups"),
+        Bson filter = Filters.exists("groups");
+
+        // 1) Fetch (or create) the doc and get it back
+        Document groupsDoc = DUUIMongoDBStorage.Globals().findOneAndUpdate(
+                filter,
                 Updates.setOnInsert("groups", new Document()),
-                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-            );
+                new FindOneAndUpdateOptions()
+                        .upsert(true)
+                        .returnDocument(ReturnDocument.AFTER)
+        );
+
+
 
         if (groupsDoc == null || !groupsDoc.containsKey("groups")) {
             response.status(404);
             return new Document("error", "Groups document not found or could not be created.").toJson();
         }
 
+        // 2) Prepare any “clear whitelist” operations
+        String localRoot = Main.config.getLocalDriveRoot();
         Document groups = groupsDoc.get("groups", Document.class);
+        List<Bson> updateOps = new ArrayList<>();
+
+        for (Map.Entry<String, Object> e : groups.entrySet()) {
+            String groupKey = e.getKey();
+            Document group = (Document) e.getValue();
+
+            List<String> whitelist = group.getList("whitelist", String.class);
+            if (whitelist != null && whitelist.stream().anyMatch(w -> !w.contains(localRoot))) {
+                // schedule clearing this group’s whitelist
+                updateOps.add(
+                        Updates.set("groups." + groupKey + ".whitelist", Collections.emptyList())
+                );
+                // also clear it in our in-memory copy if you’ll re-use groupsDoc
+                group.put("whitelist", Collections.emptyList());
+            }
+        }
+
+        // 3) If we found any bad whitelists, apply them all in one update
+        if (!updateOps.isEmpty()) {
+            DUUIMongoDBStorage.Globals().updateOne(filter, Updates.combine(updateOps));
+        }
 
         System.out.println("Fetched groups: " + groups.toJson());
 

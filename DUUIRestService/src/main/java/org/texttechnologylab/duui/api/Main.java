@@ -374,7 +374,12 @@ public class Main {
             Document result = DUUIMongoDBStorage.Globals().find(Filters.exists("settings")).first();
             if (result != null) {
                 Document doc = result.getEmbedded(List.of("settings", "local_folder_structure"), Document.class);
-                if (doc != null) fs = doc;
+                if (doc != null) {
+                    String cachedRootPath = doc.getString("id");
+                    if (cachedRootPath.contains( config.getLocalDriveRoot())) {
+                        fs = doc;
+                    }
+                }
             }
         }
 

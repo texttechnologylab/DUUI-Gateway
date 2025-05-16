@@ -2,6 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+DUUIWeb/package-lock.json
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

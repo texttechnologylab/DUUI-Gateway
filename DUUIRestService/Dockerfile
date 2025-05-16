@@ -7,7 +7,6 @@ WORKDIR /app
 
 COPY ./pom.xml ./pom.xml
 COPY ./src ./src
-COPY ./config.ini  ./config.ini
 
 # Install Kubernetes command line tool
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
@@ -20,6 +19,7 @@ EXPOSE 2605
 # # Compile Java project and create the JAR-file
 RUN mvn package
 
+COPY ./config.ini  ./config.ini
 
 # Setzen des Einstiegspunkts, um die Main-Datei auszuführen
 ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar"]
