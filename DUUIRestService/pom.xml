@@ -36,12 +36,11 @@
 
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <!--        <duui.version>1.4.1</duui.version>-->
-        <duui.version>duui-gateway-release-SNAPSHOT</duui.version>
+        <duui.version>duui-gateway-main-merge-SNAPSHOT</duui.version>
         <uima.version>3.5.0</uima.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
     </properties>
@@ -141,15 +140,6 @@
                         <!--                        <include>src/main/resources/org/texttechnologylab/types/reproducibleAnnotations.xml</include>-->
                     </typeSystemIncludes>
                 </configuration>
-                <!--                <executions>-->
-                <!--                    <execution>-->
-                <!--                        &lt;!&ndash;call it in the generate-source phase &ndash;&gt;-->
-                <!--                        <phase>generate-sources</phase>-->
-                <!--                        <goals>-->
-                <!--                            <goal>generate</goal>-->
-                <!--                        </goals>-->
-                <!--                    </execution>-->
-                <!--                </executions>-->
             </plugin>
             <!--            <plugin>-->
             <!--                <groupId>org.codehaus.mojo</groupId>-->
