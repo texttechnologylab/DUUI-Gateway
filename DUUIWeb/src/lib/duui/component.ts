@@ -27,6 +27,36 @@ export const DUUIDriverFilters = [
 	'DUUIKubernetesDriver'
 ]
 
+// optional language info in each meta entry
+export type Language = {
+	name: string;
+	code: string;
+};
+
+export type DUUIComponentMetaData = {
+	tag: string;
+	search_tags: string[];
+	documentation: string;
+	description: string;
+	short_description: string;
+	references: string[];
+	language: Language | null;
+	required_types: string[];
+	resulting_types: string[];
+};
+
+export type DUUIRegistryEntry = {
+	_id: string;
+	name: string;
+	meta_data: DUUIComponentMetaData[];
+	registry_id: string;
+	registry_name: string;
+	registry_url: string;
+};
+
+export type DUUIRegistryEntryList = DUUIRegistryEntry[];
+
+
 export const DUUIDrivers: string[] = [
 	DUUIRemoteDriver,
 	DUUIDockerDriver,

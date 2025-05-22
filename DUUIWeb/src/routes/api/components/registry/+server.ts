@@ -1,0 +1,88 @@
+import {REGISTRY_URL} from '$env/static/private'
+import {json, redirect} from '@sveltejs/kit'
+import {handleLoginRedirect} from "$lib/utils";
+
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Attempts to fetch component list from the DUUI registry.
+ * @returns the list or null.
+ */
+export const GET = async ({ cookies, fetch, locals, url }) => {
+	if (!locals.user) {
+		redirect(302, handleLoginRedirect(url))
+	}
+
+
+	// TEST:
+	// try {
+	// 	const filePath = path.resolve('src/routes/api/components/registry/test-registry.json');
+	// 	const fileContent = fs.readFileSync(filePath, 'utf-8');
+	// 	const data = JSON.parse(fileContent);
+	//
+	// 	return json(data, {
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		status: 200
+	// 	});
+	// } catch (error) {
+	// 	return json({ error: 'Failed to load test-registry.json' }, { status: 500 });
+	// }
+
+	// REQUEST
+	// const response = await fetch(`${REGISTRY_URL}/api/images/list`, {
+	// 	method: 'GET'
+	// })
+	//
+	// if (response.ok) {
+	// 	return json(await response.json(), {
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		status: 200
+	// 	})
+	// }
+	//
+	// return response
+}
+
+/**
+ * Attempts to fetch component list from the DUUI registry filtered by a search string.
+ * @returns the list or null.
+ */
+export async function PUT({ request, fetch, locals, url}) {
+	if (!locals.user) {
+		redirect(302, handleLoginRedirect(url))
+	}
+
+	const data = await request.json()
+	const registrySearchQuery = data.registrySearchQuery
+
+	//
+	// const response = await fetch(
+	// 	`${REGISTRY_URL}/api/images/generalSearch/
+	// 		${registrySearchQuery}
+	// 		?name=true
+	// 		&resultingTypes=true
+	// 		&requiredTypes=true
+	// 		&searchTags=true,
+	// 		&language=true,
+	// 		&shortDescription=true`,
+	// 	{
+	// 		method: 'GET'
+	// 	}
+	// )
+	//
+	// if (response.ok) {
+	// 	return json(await response.json(), {
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		status: 200
+	// 	})
+	// }
+	//
+	// return response
+}

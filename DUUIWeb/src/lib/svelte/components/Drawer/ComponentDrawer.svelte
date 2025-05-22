@@ -3,7 +3,13 @@
 	A component to edit DUUIComponents that appears on the right side on the screen (Sidebar Drawer).
 -->
 <script lang="ts">
-	import { DUUIDrivers, type DUUIComponent, componentToJson } from '$lib/duui/component'
+	import {
+		DUUIDrivers,
+		type DUUIComponent,
+		componentToJson,
+		type DUUIRegistryEntryList,
+		type DUUIRegistryEntry, type DUUIComponentMetaData
+	} from '$lib/duui/component'
 	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import {
 		currentPipelineStore,
@@ -22,7 +28,7 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
 	import pkg from 'lodash'
-	import { createEventDispatcher } from 'svelte'
+	import {createEventDispatcher, onMount} from 'svelte'
 	import Fa from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 	import DriverIcon from '../DriverIcon.svelte'
@@ -34,6 +40,7 @@
 	import TextInput from '../Input/TextInput.svelte'
 	import Tip from '../Tip.svelte'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
+	import RegistryDropdown from "$lib/svelte/components/Input/RegistryDropdown.svelte";
 	const { cloneDeep } = pkg
 
 	const drawerStore = getDrawerStore()
@@ -86,7 +93,6 @@
 
 	fetchDriverLabels()
 
-
 	const onUpdate = async () => {
 		if (!inEditor) {
 			component.parameters = Object.fromEntries(parameters)
@@ -133,6 +139,7 @@
 			toastStore.trigger(errorToast(response.statusText))
 		}
 	}
+
 
 	const onCreate = async () => {
 		if (example) {
@@ -384,6 +391,28 @@
 
 			<TextInput label="Name" name="name" bind:value={component.name} />
 
+			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} on:change={fetchDriverLabels} />
+
+			{#if component.driver === "DUUIDockerDriver"}
+
+				<RegistryDropdown
+					on:change={
+						(event) => {
+							const registryEntry = event.detail.entry
+							const entryMetadata = event.detail.metaData
+
+							component.name = registryEntry.name
+							component.target = registryEntry.registry_url
+								? `${registryEntry.registry_url}${registryEntry.name}:${entryMetadata.tag}`
+								: "";
+
+							component.description = entryMetadata.description
+						}
+					}
+				/>
+
+			{/if}
+
 			<div class="space-y-4 group">
 				<TextInput
 					style="md:col-span-2"
@@ -401,7 +430,6 @@
 				</div>
 			</div>
 
-			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} on:change={fetchDriverLabels} />
 
 			<Chips style="md:col-span-2" label="Tags" bind:values={component.tags} />
 			<TextArea

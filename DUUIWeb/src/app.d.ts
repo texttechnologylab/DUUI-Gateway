@@ -9,7 +9,8 @@ declare namespace App {
 	}
 	interface Platform {
 		env: {
-		  API_URL: string
+	  		API_URL: string
+	  		REGISTRY_URL: string
 		}
 	  }
 }
