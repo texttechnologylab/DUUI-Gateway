@@ -15,6 +15,8 @@ import java.util.UUID;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIMinioDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUINextcloudDocumentHandler;
 import org.texttechnologylab.duui.analysis.document.Provider;
@@ -62,6 +64,8 @@ import spark.Response;
  * @author Cedric Borkowski
  */
 public class DUUIUserController {
+
+    private static Logger log = LoggerFactory.getLogger(DUUIUserController.class);
 
     /**
      * The allowed updates for a user.
@@ -1044,6 +1048,8 @@ public class DUUIUserController {
      * @return a {@link Document} containing the properties.
      */
     private static Document getUserProperties(String id) {
+
+        log.info("Fetching user properties for id: '{}'", id);
 
         if (isNullOrEmpty(id)) return new Document();
         return DUUIMongoDBStorage

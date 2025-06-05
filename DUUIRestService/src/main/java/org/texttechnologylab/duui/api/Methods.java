@@ -1,5 +1,7 @@
 package org.texttechnologylab.duui.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
 import org.texttechnologylab.duui.api.metrics.DUUIMetricsManager;
 import org.texttechnologylab.duui.api.metrics.providers.DUUIHTTPMetrics;
@@ -25,6 +27,8 @@ import static spark.Spark.put;
  * @author Cedric Borkowski
  */
 public class Methods {
+
+    private static Logger log = LoggerFactory.getLogger(Methods.class);
 
     /**
      * Initializes all endpoints including filters and options.
@@ -60,6 +64,7 @@ public class Methods {
             if (!request.url().endsWith("metrics")) {
                 DUUIHTTPMetrics.incrementTotalRequests();
                 DUUIHTTPMetrics.incrementActiveRequests();
+                log.info("Incoming request: {} {}", request.requestMethod(), request.url());
             }
             response.header("Access-Control-Allow-Origin", "*");
         });
@@ -75,6 +80,7 @@ public class Methods {
             before("/*", (request, response) -> {
                 boolean isAuthorized = DUUIRequestHelper.isAuthorized(request);
                 if (!isAuthorized || !DUUIRequestHelper.isAdmin(request)) {
+                    log.info("Settings access denied for user: {}", request.userAgent());
                     halt(401, "Unauthorized");
                 }
             });

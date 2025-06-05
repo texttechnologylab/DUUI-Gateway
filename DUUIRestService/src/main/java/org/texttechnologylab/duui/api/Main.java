@@ -23,6 +23,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
@@ -66,38 +68,40 @@ import static spark.Spark.port;
 public class Main {
     public static Config config;
 
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
         if(args.length>0) {
             try {
                 String configFilePath = args[0];
                 config = new Config(configFilePath);
-                System.out.println("Starting DUUI REST Service");
+                log.info("Starting DUUI REST Service");
             } catch (ArrayIndexOutOfBoundsException | IOException exception) {
-                System.err.println("Create a config (ini, properties, ...) file and pass the path to this file as the first application argument.");
-                System.err.println("The config file should contain the following variables: ");
-                System.err.println("\t> DBX_APP_KEY");
-                System.err.println("\t> DBX_APP_SECRET");
-                System.err.println("\t> DBX_REDIRECT_URL");
-                System.err.println("\t> GOOGLE_CLIENT_ID");
-                System.err.println("\t> GOOGLE_CLIENT_SECRET");
-                System.err.println("\t> GOOGLE_REDIRECT_URI");
-                System.err.println("\t> PORT");
-                System.err.println("\t> HOST");
-                System.err.println("\t> FILE_UPLOAD_DIRECTORY");
-                System.err.println("\t> MONGO_HOST");
-                System.err.println("\t> MONGO_PORT");
-                System.err.println("\t> MONGO_DB");
-                System.err.println("\t> MONGO_USER");
-                System.err.println("\t> MONGO_PASSWORD");
-                System.err.println("\t> MONGO_DB_CONNECTION_STRING");
-                System.err.println("Dropbox related variables are found in the App Console at https://www.dropbox.com/developers/apps");
+                log.error("Create a config (ini, properties, ...) file and pass the path to this file as the first application argument.");
+                log.error("The config file should contain the following variables: ");
+                log.error("\t> DBX_APP_KEY");
+                log.error("\t> DBX_APP_SECRET");
+                log.error("\t> DBX_REDIRECT_URL");
+                log.error("\t> GOOGLE_CLIENT_ID");
+                log.error("\t> GOOGLE_CLIENT_SECRET");
+                log.error("\t> GOOGLE_REDIRECT_URI");
+                log.error("\t> PORT");
+                log.error("\t> HOST");
+                log.error("\t> FILE_UPLOAD_DIRECTORY");
+                log.error("\t> MONGO_HOST");
+                log.error("\t> MONGO_PORT");
+                log.error("\t> MONGO_DB");
+                log.error("\t> MONGO_USER");
+                log.error("\t> MONGO_PASSWORD");
+                log.error("\t> MONGO_DB_CONNECTION_STRING");
+                log.error("Dropbox related variables are found in the App Console at https://www.dropbox.com/developers/apps");
                 System.exit(0);
             }
         }
         else{
             config = new Config();
         }
-        
+
         DUUIMongoDBStorage.init(config);
         DUUIMetricsManager.init();
 
@@ -105,6 +109,7 @@ public class Main {
         try {
             port(config.getPort());
         } catch (NumberFormatException exception) {
+            log.warn("The port specified in the config is not a valid number. Using default port 2605 instead.");
             port(2605);
         }
 
@@ -115,9 +120,11 @@ public class Main {
         File fileUploadDirectory = Paths.get(config.getFileUploadPath()).toFile();
 
         if (!fileUploadDirectory.exists()) {
+            log.info("Creating file upload directory at: {}", fileUploadDirectory.getAbsolutePath());
             boolean ignored = fileUploadDirectory.mkdirs();
         }
 
+        log.debug("Initiating shutdown hook for cleanup tasks.");
         Runtime.getRuntime().addShutdownHook(
             new Thread(
                 () -> {
