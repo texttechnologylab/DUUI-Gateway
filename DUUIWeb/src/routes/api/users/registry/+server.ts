@@ -12,7 +12,9 @@ export const GET = async ({locals, url }) => {
 		return error(401, { message: 'Unauthorized' })
 	}
 
-	return await fetch(`${API_URL}/users/registries/filtered`, {
+	const filter = url.searchParams.get('filter') || 'False';
+
+	return await fetch(`${API_URL}/users/registries/${user.oid}`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',

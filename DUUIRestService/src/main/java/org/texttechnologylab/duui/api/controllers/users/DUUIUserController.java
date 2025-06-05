@@ -1,17 +1,9 @@
 package org.texttechnologylab.duui.api.controllers.users;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -25,13 +17,8 @@ import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineControll
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 
 import static com.amazonaws.regions.ServiceAbbreviations.Config;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.authenticate;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.badRequest;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.getUserId;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.missingField;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.notFound;
-import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.unauthorized;
+import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
+
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 
 import com.dropbox.core.DbxAppInfo;
@@ -45,11 +32,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -468,6 +450,102 @@ public class DUUIUserController {
         return groups.toJson();
     }
 
+
+    public static String getRegistryEndpoints(Request request, Response response) {
+
+        if (!isAdmin(request)) {
+            log.info("Unauthorized access to registry endpoints by user: {}", request.userAgent());
+            response.status(401);
+            return new Document("error", "Unauthorized access to registry endpoints.").toJson();
+        }
+
+        Document registryDoc = DUUIMongoDBStorage.Globals()
+            .findOneAndUpdate(
+                Filters.exists("registries"),
+                Updates.setOnInsert("registries", new Document()),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+            );
+
+        if (registryDoc == null || !registryDoc.containsKey("registries")) {
+            response.status(404);
+            return new Document("error", "Registry document not found or could not be created.").toJson();
+        }
+
+        Document registries = registryDoc.get("registries", Document.class);
+
+        log.info("Fetched registries: {}", registries.toJson());
+
+        response.status(200);
+        return registries.toJson();
+    }
+
+    public static String getFilteredRegistryEndpoints(Request request, Response response) {
+        String id = request.params(":id");
+        String role = request.headers("x-user-role").isEmpty()
+            ? request.headers("x-user-role")
+            : "USER";
+
+        if (DUUIRequestHelper.isNullOrEmpty(id) || DUUIRequestHelper.isNullOrEmpty(role)) {
+            log.debug("Missing user-id or role in request: {}", request.body());
+            return DUUIRequestHelper.missingField(response, "id");
+        }
+
+
+        response.status(200);
+        Document result = getAccessibleRegistries(role, id);
+        log.debug("Fetched filtered registry endpoint:  role={}, id={} with data: {}", role, id, result.toJson());
+        return result.toJson();
+    }
+
+    public static String upsertRegistryEndpoint(Request request, Response response) {
+        Document body = Document.parse(request.body());
+        String id = request.params(":id");
+
+        if (DUUIRequestHelper.isNullOrEmpty(id)) {
+            log.debug("Missing registry endpoint id in request: {}", request.body());
+            return DUUIRequestHelper.missingField(response, "id");
+        }
+
+        Document result = DUUIMongoDBStorage.Globals().findOneAndUpdate(
+            Filters.exists("registries"),
+            Updates.set("registries." + id, body),
+            new FindOneAndUpdateOptions()
+                .upsert(true)
+                .returnDocument(ReturnDocument.AFTER)
+        );
+
+        if (result == null) {
+            response.status(404);
+            log.debug("Failed to insert registry endpoint: {}", id);
+            return new Document("error", "Failed to insert registry endpoint").toJson();
+        }
+
+        log.debug("Upserted registry endpoint: {} with data: {}", id, body.toJson());
+
+        response.status(200);
+        return new Document("message", "Successfully updated.").toJson();
+    }
+
+    public static String deleteRegistryEndpoint(Request request, Response response) {
+        String id = request.params(":id");
+
+        if (DUUIRequestHelper.isNullOrEmpty(id)) {
+            return DUUIRequestHelper.missingField(response, "id");
+        }
+
+        DeleteResult result = DUUIMongoDBStorage.Globals()
+                .deleteOne(Filters.exists("registries." + id));
+
+        if (result.wasAcknowledged() && result.getDeletedCount() < 1) {
+            return DUUIRequestHelper.badRequest(response, "Registry endpoint " + id + " could not be deleted.");
+        }
+
+        response.status(204);
+        System.out.println("Deleted registry endpoint: " + id);
+
+        return "Successfully deleted registry endpoint: " + id;
+    }
+
     public static String upsertLabel(Request request, Response response) {
         Document body = Document.parse(request.body());
         String labelId = UUID.randomUUID().toString();
@@ -566,6 +644,111 @@ public class DUUIUserController {
         return new Document("labels", filterLabelsByDriver(driver, userId, role)).toJson();
     }
 
+
+    /**
+            * Returns all registry documents that this user is allowed to see, based on role + userId.
+     * For "ADMIN" → returns every registry.
+     * For "USER" → returns:
+            *   • all registries whose scope == "USER", OR
+     *   • all registries whose scope == "GROUP" AND the given userId is actually a member
+     *     of at least one of the groups listed in that registry's "groups" array.
+            *
+            * All filtering happens in one aggregation pipeline—no Java-side loops for filtering logic.
+            *
+            * @param role   either "ADMIN" or "USER"
+            * @param userId the UUID string of the user
+     * @return a List of registry Documents (each has an "id" field + its own fields)
+     */
+    public static Document getAccessibleRegistries(String role, String userId) {
+        List<Bson> pipeline = new ArrayList<>();
+
+        // 1) MATCH the two container docs: one has "registries", one has "groups"
+        pipeline.add(Aggregates.match(
+                Filters.or(
+                        Filters.exists("registries", true),
+                        Filters.exists("groups", true)
+                )
+        ));
+
+        // 2) GROUP them into a single doc with fields { registries: <map>, groups: <map> }
+        pipeline.add(new Document("$group", new Document("_id", null)
+                .append("registries", new Document("$max", "$registries"))
+                .append("groups",    new Document("$max", "$groups"))
+        ));
+
+        // 3) PROJECT each map → an array of { k: <uuid>, v: <sub-doc> }
+        pipeline.add(new Document("$project", new Document()
+                .append("registriesArr", new Document("$objectToArray", "$registries"))
+                .append("groupsArr",    new Document("$objectToArray", "$groups"))
+        ));
+
+        // 4) PROJECT a new field "filteredRegistries" using $cond on role:
+        //    If role == "ADMIN", keep every element of registriesArr.
+        //    Else (role == "USER"), $filter registriesArr by:
+        //      – v.scope == "USER"
+        //      – OR (v.scope == "GROUP" AND ⇒ there exists at least one element gr in groupsArr
+        //                 such that gr.k ∈ reg.v.groups AND userId ∈ gr.v.members)
+        //
+        //   We do this with a nested $filter inside the $and check for the scope == "GROUP" case.
+        pipeline.add(new Document("$project", new Document("filteredRegistries",
+                new Document("$cond", List.of(
+                        new Document("$eq", List.of(role, "ADMIN")),
+                        "$registriesArr",
+                        new Document("$filter", new Document()
+                                .append("input", "$registriesArr")
+                                .append("as", "reg")
+                                .append("cond", new Document("$or", List.of(
+                                        // Keep if scope == "USER"
+                                        new Document("$eq", List.of("$$reg.v.scope", "USER")),
+
+                                        // OR scope == "GROUP" AND nested membership-check is non-empty
+                                        new Document("$and", List.of(
+                                                new Document("$eq", List.of("$$reg.v.scope", "GROUP")),
+
+                                                // Now check: does any element of groupsArr satisfy
+                                                //   (gr.k ∈ $$reg.v.groups)  AND  (userId ∈ gr.v.members) ?
+                                                // We do another $filter over groupsArr for that, then check $size > 0.
+                                                new Document("$gt", List.of(
+                                                        new Document("$size", new Document("$filter", new Document()
+                                                                .append("input", "$groupsArr")
+                                                                .append("as", "gr")
+                                                                .append("cond", new Document("$and", List.of(
+                                                                        // gr.k ∈ $$reg.v.groups
+                                                                        new Document("$in", List.of("$$gr.k", "$$reg.v.groups")),
+                                                                        // userId ∈ gr.v.members
+                                                                        new Document("$in", List.of(userId, "$$gr.v.members"))
+                                                                )))
+                                                        )),
+                                                        0
+                                                ))
+                                        ))
+                                )))
+                        )
+                ))
+        )));
+
+        // 5) Finally, PROJECT only the "filteredRegistries" array (drop _id, registriesArr, groupsArr)
+        pipeline.add(new Document("$project", new Document("_id", 0).append("filteredRegistries", 1)));
+
+        // Run the aggregation. It should return exactly one document (or empty if nothing matched).
+        List<Document> aggResult = DUUIMongoDBStorage.Globals().aggregate(pipeline).into(new ArrayList<>());
+
+        if (aggResult.isEmpty()) {
+            return new Document();
+        }
+
+        // 6) Unwrap the array of { k: <registryId>, v: <registryObject> } into a List<Document>
+        List<Document> rawList = aggResult.get(0).getList("filteredRegistries", Document.class, List.of());
+        Document finalResult = new Document();
+
+        for (Document kv : rawList) {
+            String registryId = kv.getString("k");
+            Document registryFields = kv.get("v", Document.class);
+            finalResult.put(registryId, registryFields);
+        }
+
+        return finalResult;
+    }
 
     public static List<String> filterLabelsByDriver(String driver, String memberId, String role) {
         Document labels = DUUIMongoDBStorage.Globals().find(Filters.exists("labels")).first();
@@ -1215,4 +1398,5 @@ public class DUUIUserController {
             .append("url", Main.config.getDropboxRedirectUrl())
             .toJson();
     }
+
 }

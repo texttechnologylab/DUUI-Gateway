@@ -100,6 +100,13 @@ public class Methods {
                 get("", DUUIUserController::getLabels);
             });
 
+            path("/registries", () -> {
+                get("/", DUUIUserController::getRegistryEndpoints);
+                get("/:id", DUUIUserController::getFilteredRegistryEndpoints);
+                put("/:id", DUUIUserController::upsertRegistryEndpoint);
+                delete("/:id", DUUIUserController::deleteRegistryEndpoint);
+            });
+
             path("/groups", () -> {
                 // before("/*", (request, response) -> {
                 //     boolean isAuthorized = DUUIRequestHelper.isAdmin(request);
