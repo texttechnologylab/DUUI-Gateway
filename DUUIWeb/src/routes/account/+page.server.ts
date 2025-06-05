@@ -157,5 +157,6 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		labels: labels,
 		groups: groups,
 		settings: settings,
+		registries: registries
 	}
 }
