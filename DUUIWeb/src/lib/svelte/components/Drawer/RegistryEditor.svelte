@@ -1,11 +1,11 @@
 <!--	
 	@component
-	A component to edit DUUILabels that appears on the right side on the screen (Sidebar Drawer).
+	A component to edit DUUIRegistry that appears on the right side on the screen (Sidebar Drawer).
 -->
 <script lang="ts">
 	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import {
-		labelStore,
+		registryStore,
 		groupStore
 	} from '$lib/store'
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
@@ -23,7 +23,6 @@
 	import TextInput from '../Input/TextInput.svelte'
 	import Tip from '../Tip.svelte'
 	import { faPeopleGroup } from '@fortawesome/free-solid-svg-icons'
-	import { DUUIDriverFilters } from '$lib/duui/component'
 	import Dropdown from '../Input/Dropdown.svelte'
 	import Popup from '../Popup.svelte'
 	import JsonDropdownInput from '../Input/JsonDropdownInput.svelte'
@@ -31,12 +30,12 @@
 	const drawerStore = getDrawerStore()
 	
 	
-	let labelId: string = $drawerStore.meta.labelId
-	let currentLabel: DUUILabel = $drawerStore.meta.label
-	let driverOptions = DUUIDriverFilters
+	let registryId: string = $drawerStore.meta.registryId
+	let currentRegistry: DUUIRegistry = $drawerStore.meta.registry
+	let registryScopes = GlobalScopes
 
 	let groups = $groupStore as DUUIGroups
-	let selectedGroups = currentLabel.groups || []
+	let selectedGroups = currentRegistry.groups || []
 
 	let selectedGroupsMap: Map<string, string> = new Map(
 		selectedGroups
@@ -47,7 +46,7 @@
 	)
 
 
-	const isNewLabel: boolean = $drawerStore.meta.creating
+	const isNewRegistry: boolean = $drawerStore.meta.creating
 
 	const modalStore = getModalStore()
 	const toastStore = getToastStore()
@@ -55,22 +54,22 @@
 
 	const onUpdate = async () => {
 
-		currentLabel.groups = Array.from(selectedGroupsMap.keys())
+		currentRegistry.groups = Array.from(selectedGroupsMap.keys())
 
-		const response = await fetch('/api/users/labels', {
+		const response = await fetch('/api/users/registry', {
 			method: 'PUT',
 			body: JSON.stringify({
-				labelId: labelId,
-				label: currentLabel
+				registryId: registryId,
+				registry: currentRegistry
 			})
 		})
 
 		if (response.ok) {
-			if ($labelStore) {
-				$labelStore[labelId] = currentLabel
-				$labelStore = $labelStore
+			if ($registryStore) {
+				$registryStore[registryId] = currentRegistry
+				$registryStore = $registryStore
 			}
-			toastStore.trigger(successToast('Label updated successfully'))
+			toastStore.trigger(successToast('Registry updated successfully'))
 		} else {
 			toastStore.trigger(errorToast('Error: ' + response.statusText))
 		}
@@ -81,8 +80,8 @@
 	const onDelete = async () => {
 		const confirm = await showConfirmationModal(
 			{
-				title: 'Delete Label',
-				message: `Are you sure you want to delete ${currentLabel.label}?`,
+				title: 'Delete Registry',
+				message: `Are you sure you want to delete ${currentRegistry.name}?`,
 				textYes: 'Delete'
 			},
 			modalStore
@@ -91,19 +90,19 @@
 		if (!confirm) return
 
 
-		if ($labelStore) {
-			delete $labelStore[labelId]
-			$labelStore = $labelStore
+		if ($registryStore) {
+			delete $registryStore[registryId]
+			$registryStore = $registryStore
 		}
 
-		const response = await fetch('/api/users/labels', {
+		const response = await fetch('/api/users/registry', {
 			method: 'DELETE',
 			body: JSON.stringify({
-				labelId: labelId
+				registryId: registryId
 			})
 		})
 		if (response.ok) {
-			toastStore.trigger(successToast('Label deleted successfully'))
+			toastStore.trigger(successToast('Registry deleted successfully'))
 
 			// dispatcher('deleteComponent', { oid: component.oid })
 		} else {
@@ -123,15 +122,15 @@
 	</button>
 
 	<button class="button-mobile" on:click={() => onUpdate()}
-			disabled={!currentLabel.label}
+			disabled={!currentRegistry.name}
 	>
 		<Fa icon={faFileCircleCheck} />
 		Save
-		{#if !currentLabel.label}
-			<Tip> A label name is required to save. </Tip>
+		{#if !currentRegistry.name}
+			<Tip> A name is required to save. </Tip>
 		{/if}
 	</button>
-	{#if isNewLabel}
+	{#if isNewRegistry}
 		<button type="button" class="button-mobile" on:click={drawerStore.close}>
 			<Fa icon={faCancel} />
 			Cancel
@@ -149,7 +148,7 @@
 	<div class="p-4 flex justify-between items-center sticky top-0 z-10 bg-surface-100-800-token border-b border-color">
 		<div class="flex-center-4">
 			<Fa icon={faPeopleGroup} size="lg" />
-			<h3 class="h3">Label Editor</h3>
+			<h3 class="h3">Registry Editor</h3>
 		</div>
 
 		<div class="hidden md:flex space-x-2">
@@ -160,19 +159,19 @@
 
 			<Popup autoPopupWidth={true}>
 				<svelte:fragment slot="trigger">
-					<button class="button-neutral" on:click={() => onUpdate()} disabled={!currentLabel.label}>
+					<button class="button-neutral" on:click={() => onUpdate()} disabled={!currentRegistry.name}>
 						<Fa icon={faFileCircleCheck} />
 						Save
 					</button>
 				</svelte:fragment>
 				<svelte:fragment slot="popup">
-					{#if !currentLabel.label}
-						<Tip customIcon={faWarning} tipTheme="tertiary"> A label name is required to save. </Tip>
+					{#if !currentRegistry.name}
+						<Tip customIcon={faWarning} tipTheme="tertiary"> A name is required to save. </Tip>
 					{/if}
 				</svelte:fragment>
 			</Popup>
 
-			{#if isNewLabel}
+			{#if isNewRegistry}
 				<button type="button" class="button-neutral" on:click={drawerStore.close}>
 					<Fa icon={faCancel} />
 					Cancel
@@ -189,18 +188,21 @@
 	<div class="space-y-8 p-4 bg-surface-50-900-token pb-16 md:pb-4">
 		<div class="space-y-4">
 			<h4 class="h4">Properties</h4>
+			<TextInput label="Name" name="name" bind:value={currentRegistry.name} />
 
-			<TextInput label="Name" name="name" bind:value={currentLabel.label} />
-
+			<TextInput label="Endpoint" name="endpoint" bind:value={currentRegistry.endpoint} />
 		</div>
 
 		<div class="space-y-2 ">
-			<Dropdown label="Driver" name="driver" options={driverOptions} bind:value={currentLabel.driver} />
+			<Dropdown label="Scope" name="driver" options={registryScopes} bind:value={currentRegistry.scope} />
 		</div>
 
-		<div class="space-y-2">
-			<h4 class="h4">Groups</h4>
-			<JsonDropdownInput bind:dropdownList={groupsMap} bind:data={selectedGroupsMap} leadingIcon={faPeopleGroup}/>
-		</div>
+		{#if currentRegistry.scope === "GROUP"}
+			<div class="space-y-2">
+				<h4 class="h4">Groups</h4>
+				<JsonDropdownInput bind:dropdownList={groupsMap} bind:data={selectedGroupsMap} leadingIcon={faPeopleGroup}/>
+			</div>
+
+		{/if}
 	</div>
 </div>

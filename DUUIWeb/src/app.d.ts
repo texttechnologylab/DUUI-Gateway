@@ -102,6 +102,19 @@ type DUUIGroups = {
 	[groupId: string]: DUUIGroup
 }
 
+type DUUIRegistries = {
+	[registryId: string]: DUUIRegistry
+}
+
+type DUUIRegistry = {
+	name: string
+	endpoint: string
+	scope: "ADMIN" | "USER" | "GROUP"
+	groups: string[]
+}
+
+const GlobalScopes: string[] = ["ADMIN", "USER", "GROUP"] as const
+
 type DUUISettings = {
 	dbx_app_secret: string
 	dbx_app_key: string

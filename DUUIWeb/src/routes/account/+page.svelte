@@ -4,7 +4,7 @@
 	import { page } from '$app/stores'
 	import { COLORS } from '$lib/config.js'
 	import { errorToast, successToast } from '$lib/duui/utils/ui.js'
-	import { groupStore, labelStore, userSession } from '$lib/store.js'
+	import { groupStore, labelStore, userSession, registryStore } from '$lib/store.js'
 	import Dropdown from '$lib/svelte/components/Input/Dropdown.svelte'
 	import Secret from '$lib/svelte/components/Input/Secret.svelte'
 	import Text from '$lib/svelte/components/Input/TextInput.svelte'
@@ -45,7 +45,7 @@
 	const drawerStore = getDrawerStore()
 
 	export let data
-	let { user, dropbBoxURL, googleDriveURL, theme, users, labels, groups, settings } = data
+	let { user, dropbBoxURL, googleDriveURL, theme, users, labels, groups, settings, registries } = data
 
 
 	const themes = Object.keys(COLORS)
@@ -128,6 +128,7 @@
 
 		$labelStore = labels
 		$groupStore = groups
+		$registryStore = registries
 		
 		const newDropboxConnectionId = $page.url.searchParams.get("newDropboxConnectionId");
 		if (newDropboxConnectionId && $userSession?.connections.dropbox[newDropboxConnectionId]) {
@@ -1290,6 +1291,47 @@
 									},
 								}
 							})}
+						}
+					/>
+
+					<FunctionalTable
+							title="Registries"
+							columns={{name: "Name", endpoint: "Endpoint", scope: "Scope"}}
+							data={$registryStore}
+							on:edit={(event) => {
+								drawerStore.open({
+									id: 'registry',
+									width: 'w-full lg:w-[60%] h-full',
+									position: 'right',
+									rounded: 'rounded-none',
+									border: 'border-l border-color',
+									meta: {
+										creating: false,
+										registryId: event.detail.id,
+										registry: $registryStore?.[event.detail.id] ?? {},
+									}
+								})
+							}
+						}
+							on:add={() => {
+								drawerStore.open({
+									id: 'registry',
+									width: 'w-full lg:w-[60%] h-full',
+									position: 'right',
+									rounded: 'rounded-none',
+									border: 'border-l border-color',
+									meta: {
+										creating: true,
+										registryId: uuidv4(),
+										registry: {
+											name: "",
+											endpoint: "",
+											scope: "USER",
+											groups: []
+										},
+									}
+								})
+							}
 						}
 					/>
 

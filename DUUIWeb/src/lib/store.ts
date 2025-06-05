@@ -27,3 +27,5 @@ export const userSession: Writable<User> = writable(undefined)
 export const labelStore: Writable<DUUILabels | undefined> = writable(undefined)
 
 export const groupStore: Writable<DUUIGroups | undefined> = writable(undefined)
+
+export const registryStore: Writable<DUUIRegistries | undefined> = writable(undefined)

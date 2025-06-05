@@ -61,6 +61,7 @@
 	import GroupEditor from "$lib/svelte/components/Drawer/GroupEditor.svelte";
 	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
 	import SettingsEditor from '$lib/svelte/components/Drawer/SettingsEditor.svelte'
+	import RegistryEditor from "$lib/svelte/components/Drawer/RegistryEditor.svelte";
 
 	export let data
 	let { user, theme } = data
@@ -157,6 +158,10 @@
 		<LabelsEditor />
 	{:else if $drawerStore.id === 'settings'}
 		<SettingsEditor />
+	{:else if $drawerStore.id === 'registry'}
+		<RegistryEditor />
+	{:else}
+		<div class="p-4">No drawer content available</div>
 	{/if}
 </Drawer>
 
