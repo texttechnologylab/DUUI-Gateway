@@ -88,7 +88,7 @@
     }
 
     const fetchFilteredRegistryEndpoints = async () => {
-        const response = await fetch(`/api/users/registry/`, {
+        const response = await fetch(`/api/users/registry?filter=True`, {
             method: 'GET',
             body: JSON.stringify({})
         })
