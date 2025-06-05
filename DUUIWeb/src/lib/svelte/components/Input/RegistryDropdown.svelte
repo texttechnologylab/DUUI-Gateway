@@ -7,7 +7,8 @@
     import { faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons';
     import type { Placement } from '@floating-ui/dom'
     import { onMount, createEventDispatcher } from 'svelte';
-    import type {DUUIComponentMetaData, DUUIRegistryEntry} from "$lib/duui/component"; // wherever you put the types
+    import type {DUUIComponentMetaData, DUUIRegistryEntry} from "$lib/duui/component";
+    import Tip from "$lib/svelte/components/Tip.svelte"; // wherever you put the types
 
 
     const empty: DUUIRegistryEntry = {
@@ -36,6 +37,10 @@
     let popupWidth = 'auto';
 
     /** Props */
+    let selectedRegistryEndpoint: string = "";
+    let filteredRegistryEndpoints: Map<string, string> = new Map<string, string>();
+
+
     let entries: DUUIRegistryEntry[] = [];
     let selectedEntry: DUUIRegistryEntry = empty;
     let selectedTag: string = "";
@@ -65,7 +70,7 @@
 
     const filterRegistry = async (query: string) => {
 
-        const response = await fetch(`/api/components/registry/`, {
+        const response = await fetch(`/api/components/registry?endpoint=${selectedRegistryEndpoint}`, {
             method: 'PUT',
             body: JSON.stringify({
                 registrySearchQuery: query
@@ -82,9 +87,25 @@
         }
     }
 
+    const fetchFilteredRegistryEndpoints = async () => {
+        const response = await fetch(`/api/users/registry/`, {
+            method: 'GET',
+            body: JSON.stringify({})
+        })
+
+        if (response.ok) {
+            const filreg: DUUIRegistries = await response.json();
+            filteredRegistryEndpoints = new Map<string, string>(
+                Object.values(filreg).map((reg: DUUIRegistry) => [reg.endpoint, reg.name])
+            );
+
+
+        }
+    }
+
     const fetchRegistry = async () => {
 
-        const response = await fetch(`/api/components/registry/`, {
+        const response = await fetch(`/api/components/registry?endpoint=${selectedRegistryEndpoint}`, {
             method: 'GET'
         })
 
@@ -94,6 +115,7 @@
     }
 
     onMount(async () => {
+        await fetchFilteredRegistryEndpoints();
         await fetchRegistry();
 
         if (dropdownElement) {
@@ -167,16 +189,28 @@
         <div class="popup-solid p-2 md:min-w-[220px] overflow-scroll max-h-96">
             <!-- Filter inside dropdown pane -->
             <div class="flex items-center  mb-2 gap-2">
-                <input
-                        type="text"
-                        placeholder="Filter..."
-                        bind:value={filterTerm}
-                        on:input={handleFilterInput}
-                        class="px-2 py-1 border rounded-md"
+                <Dropdown
+                        label="Registries"
+                        bind:value={selectedRegistryEndpoint}
+                        options={filteredRegistryEndpoints}
+                        on:change={() => {
+                            reset();
+                            change();
+                        }}
                 />
-                <button on:click={applyFilter} class="px-3 py-1 variant-filled-primary text-white rounded-md">
-                    Filter
-                </button>
+
+                {#if selectedRegistryEndpoint }
+                    <input
+                            type="text"
+                            placeholder="Filter..."
+                            bind:value={filterTerm}
+                            on:input={handleFilterInput}
+                            class="px-2 py-1 border rounded-md"
+                    />
+                    <button on:click={applyFilter} class="px-3 py-1 variant-filled-primary text-white rounded-md">
+                        Filter
+                    </button>
+                {/if}
 
     <!--                <button on:click={fetchRegistry} class="px-3 py-1 bg-blue-600 text-white rounded-md">-->
     <!--                    Reset-->
@@ -185,30 +219,41 @@
 
             <div class="divider my-4 border-t border-gray-300"></div>
 
-            <ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
-                {#each entries as entry (entry._id)}
-                    <ListBoxItem
-                            class="listbox-item"
-                            on:change
-                            bind:group={selectedEntry}
-                            name="entry-dropdown"
-                            value={entry}
-                            rounded="rounded-md"
-                            hover="hover:bg-surface-100-800-token"
-                            active="variant-filled-primary"
-                    >
-                        <svelte:fragment slot="lead">
-                            <Fa class={equals(selectedEntry?._id, entry._id) ? '' : 'invisible'} icon={faCheck} />
-                        </svelte:fragment>
-                        <div class="flex justify-between">
-                            <span>{entry.name}</span>
-                            <small class="text-gray-500">
-                                {entry.meta_data[0]?.language?.name ?? '—'}
-                            </small>
-                        </div>
-                    </ListBoxItem>
-                {/each}
-            </ListBox>
+            {#if filteredRegistryEndpoints.size < 1}
+                <Tip tipTheme="error">
+                        You have no registries available. Access can be granted by an administrator.
+                </Tip>
+            {:else if !selectedRegistryEndpoint }
+                <Tip tipTheme="tertiary">
+                    Please select a registry endpoint to view entries.
+                </Tip>
+            {:else}
+                <ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
+                    {#each entries as entry (entry._id)}
+                        <ListBoxItem
+                                class="listbox-item"
+                                on:change
+                                bind:group={selectedEntry}
+                                name="entry-dropdown"
+                                value={entry}
+                                rounded="rounded-md"
+                                hover="hover:bg-surface-100-800-token"
+                                active="variant-filled-primary"
+                        >
+                            <svelte:fragment slot="lead">
+                                <Fa class={equals(selectedEntry?._id, entry._id) ? '' : 'invisible'} icon={faCheck} />
+                            </svelte:fragment>
+                            <div class="flex justify-between">
+                                <span>{entry.name}</span>
+                                <small class="text-gray-500">
+                                    {entry.meta_data[0]?.language?.name ?? '—'}
+                                </small>
+                            </div>
+                        </ListBoxItem>
+                    {/each}
+                </ListBox>
+            {/if}
+
         </div>
     </div>
 </div>
