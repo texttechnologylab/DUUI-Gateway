@@ -112,8 +112,6 @@ type DUUIRegistry = {
 	groups: string[]
 }
 
-const GlobalScopes: string[] = ["ADMIN", "USER", "GROUP"] as const
-
 type DUUISettings = {
 	dbx_app_secret: string
 	dbx_app_key: string

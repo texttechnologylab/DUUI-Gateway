@@ -26,6 +26,7 @@
 	import Dropdown from '../Input/Dropdown.svelte'
 	import Popup from '../Popup.svelte'
 	import JsonDropdownInput from '../Input/JsonDropdownInput.svelte'
+	import {GlobalScopes} from "$lib/duui/globals";
 
 	const drawerStore = getDrawerStore()
 	
@@ -194,7 +195,7 @@
 		</div>
 
 		<div class="space-y-2 ">
-			<Dropdown label="Scope" name="driver" options={registryScopes} bind:value={currentRegistry.scope} />
+			<Dropdown label="Scope" name="driver" placement="bottom-start" options={registryScopes} bind:value={currentRegistry.scope} />
 		</div>
 
 		{#if currentRegistry.scope === "GROUP"}

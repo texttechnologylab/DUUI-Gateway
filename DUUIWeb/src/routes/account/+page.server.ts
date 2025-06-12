@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 		}
 	})).json()
 
-	const registries: DUUIRegistries = await(await fetch(`${API_URL}/users/registries`, {
+	const registries: DUUIRegistries = await(await fetch(`${API_URL}/users/registries/`, {
 		method: 'GET',
 		headers: {
 			Authorization: cookies.get('session') || ''

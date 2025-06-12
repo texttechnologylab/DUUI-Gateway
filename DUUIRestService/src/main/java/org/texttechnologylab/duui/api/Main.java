@@ -117,6 +117,8 @@ public class Main {
 
         DUUIComponentRequestHandler.insertSpacyTemplate();
 
+        log.info("Local drive root path: {}", config.getLocalDriveRoot());
+
         File fileUploadDirectory = Paths.get(config.getFileUploadPath()).toFile();
 
         if (!fileUploadDirectory.exists()) {
