@@ -57,6 +57,7 @@
     }
 
     const change = () => {
+
         dispatch('change', { entry: selectedEntry, tag: selectedTag, metaData: selectedMetaData });
     }
 
@@ -80,6 +81,8 @@
         if (response.ok) {
             entries = await response.json()
 
+
+
             if (!entries.find(e => e._id === selectedEntry?._id)) {
                 reset()
                 change()
@@ -89,18 +92,22 @@
 
     const fetchFilteredRegistryEndpoints = async () => {
         const response = await fetch(`/api/users/registry?filter=True`, {
-            method: 'GET',
-            body: JSON.stringify({})
+            method: 'GET'
         })
+
+
 
         if (response.ok) {
             const filreg: DUUIRegistries = await response.json();
-            filteredRegistryEndpoints = new Map<string, string>(
-                Object.values(filreg).map((reg: DUUIRegistry) => [reg.endpoint, reg.name])
+
+            return new Map<string, string>(
+                Object.entries(filreg).map(([key, value]) => [value.endpoint, value.name] as [string, string])
             );
 
 
+            // alert(JSON.stringify(Object.fromEntries(filteredRegistryEndpoints)))
         }
+        return new Map<string, string>()
     }
 
     const fetchRegistry = async () => {
@@ -115,7 +122,8 @@
     }
 
     onMount(async () => {
-        await fetchFilteredRegistryEndpoints();
+
+        filteredRegistryEndpoints = await fetchFilteredRegistryEndpoints();
         await fetchRegistry();
 
         if (dropdownElement) {
@@ -142,6 +150,7 @@
     }
 
     // whenever selection changes, reset tag and notify parent
+
     $: if (selectedEntry) {
         // default to first meta-data tag if none selected
         if (!selectedTag && selectedEntry.meta_data.length) {
@@ -189,15 +198,20 @@
         <div class="popup-solid p-2 md:min-w-[220px] overflow-scroll max-h-96">
             <!-- Filter inside dropdown pane -->
             <div class="flex items-center  mb-2 gap-2">
-                <Dropdown
-                        label="Registries"
-                        bind:value={selectedRegistryEndpoint}
-                        options={filteredRegistryEndpoints}
-                        on:change={() => {
-                            reset();
-                            change();
-                        }}
-                />
+                {#key filteredRegistryEndpoints.size}
+                    <Dropdown
+                            name="availableRegistries"
+                            label="Registries"
+                            bind:value={selectedRegistryEndpoint}
+                            options={filteredRegistryEndpoints}
+
+                            on:change={async () => {
+                                await fetchRegistry();
+                                reset();
+                                change();
+                            }}
+                    />
+                {/key}
 
                 {#if selectedRegistryEndpoint }
                     <input

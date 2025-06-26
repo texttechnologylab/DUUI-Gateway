@@ -148,7 +148,7 @@
 							</div>
 						{:else}
 							<p class="p-4 break-words text-center">
-								{row[colKey] !== undefined ? row[colKey] : ''}
+								{row[colKey] ? row[colKey] : ''}
 							</p>
 						{/if}
 					{/each}

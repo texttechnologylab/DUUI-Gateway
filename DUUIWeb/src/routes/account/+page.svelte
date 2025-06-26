@@ -38,6 +38,8 @@
 	import _ from 'lodash';
 	import { toTitleCase } from '$lib/duui/utils/text.js'
 	import { IO, isStatelessProvider, type IOProvider } from '$lib/duui/io.js'
+	import FunctionalTable2 from "$lib/svelte/components/FunctionalTable2.svelte";
+	import Chip from "$lib/svelte/components/Chip.svelte";
 	const { set, isEmpty } = _;
 
 	const toastStore = getToastStore()
@@ -1182,26 +1184,77 @@
 		{:else if tab === 3}
 			{#if $userSession?.role === 'Admin'}
 				<div class="section-wrapper p-8 space-y-4 w-full">
-					{#if users}
-						<FunctionalTable
-							title="Groups"
-							columns={{name: "Name", members: "Members"}}
-							data={$groupStore}
-							columnMapping={
-								{
-									members: {
-										icon: faPerson,
-										mapper: (memberId) => {
-											if (!users) return memberId;
-											const user = users.find((user) => user.oid === memberId);
-											return user ? user.email : memberId;
-										}
-									}
-								}
-							}
-							on:edit={(event) => {
-								if (!$groupStore || !$groupStore[event.detail.id]) return;
+					<!--{#if users}-->
+					<!--	<FunctionalTable-->
+					<!--		title="Groups"-->
+					<!--		columns={{name: "Name", members: "Members"}}-->
+					<!--		data={$groupStore}-->
+					<!--		columnMapping={-->
+					<!--			{-->
+					<!--				members: {-->
+					<!--					icon: faPerson,-->
+					<!--					mapper: (memberId) => {-->
+					<!--						if (!users) return memberId;-->
+					<!--						const user = users.find((user) => user.oid === memberId);-->
+					<!--						return user ? user.email : memberId;-->
+					<!--					}-->
+					<!--				}-->
+					<!--			}-->
+					<!--		}-->
+					<!--		on:edit={(event) => {-->
+					<!--			if (!$groupStore || !$groupStore[event.detail.id]) return;-->
 
+					<!--			drawerStore.open({-->
+					<!--				id: 'group',-->
+					<!--				width: 'w-full lg:w-[60%] h-full',-->
+					<!--				position: 'right',-->
+					<!--				rounded: 'rounded-none',-->
+					<!--				border: 'border-l border-color',-->
+					<!--				meta: {-->
+					<!--					group: $groupStore[event.detail.id],-->
+					<!--					groupId: event.detail.id,-->
+					<!--					creating: false,-->
+					<!--					users: users-->
+					<!--				}-->
+					<!--			})}-->
+					<!--		}-->
+					<!--		on:add={() => {-->
+					<!--			if (!$groupStore) return;-->
+
+					<!--			const newGroupId = uuidv4();-->
+					<!--			$groupStore[newGroupId] = {-->
+					<!--				name: "",-->
+					<!--				members: [],-->
+					<!--				whitelist: []-->
+					<!--			};-->
+					<!--			drawerStore.open({-->
+					<!--				id: 'group',-->
+					<!--				width: 'w-full lg:w-[60%] h-full',-->
+					<!--				position: 'right',-->
+					<!--				rounded: 'rounded-none',-->
+					<!--				border: 'border-l border-color',-->
+					<!--				meta: {-->
+					<!--					group: $groupStore ? $groupStore[newGroupId] : undefined,-->
+					<!--					groupId: newGroupId,-->
+					<!--					creating: true,-->
+					<!--					users: users-->
+					<!--				}-->
+					<!--			})}-->
+					<!--		}-->
+					<!--	/>-->
+					<!--{:else}-->
+					<!--	<Tip>-->
+					<!--		Please register users to manage Groups.-->
+					<!--	</Tip>-->
+					<!--{/if}-->
+					{#if users && users.length > 0 && $groupStore !== undefined}
+						<FunctionalTable2
+							title="Groups"
+							columns={{ name: "Name", members: "Members" }}
+							data={$groupStore}
+							on:edit={(e) => {
+								const id = e.detail.id;
+								if (!$groupStore?.[id]) return;
 								drawerStore.open({
 									id: 'group',
 									width: 'w-full lg:w-[60%] h-full',
@@ -1209,22 +1262,19 @@
 									rounded: 'rounded-none',
 									border: 'border-l border-color',
 									meta: {
-										group: $groupStore[event.detail.id],
-										groupId: event.detail.id,
+										group: $groupStore[id],
+										groupId: id,
 										creating: false,
-										users: users
+										users
 									}
-								})}
-							}
+								});
+							}}
 							on:add={() => {
 								if (!$groupStore) return;
 
-								const newGroupId = uuidv4();
-								$groupStore[newGroupId] = {
-									name: "",
-									members: [],
-									whitelist: []
-								};
+								const newId = uuidv4();
+								$groupStore[newId] = { name: "", members: [], whitelist: [] };
+
 								drawerStore.open({
 									id: 'group',
 									width: 'w-full lg:w-[60%] h-full',
@@ -1232,108 +1282,211 @@
 									rounded: 'rounded-none',
 									border: 'border-l border-color',
 									meta: {
-										group: $groupStore ? $groupStore[newGroupId] : undefined,
-										groupId: newGroupId,
+										group: $groupStore[newId],
+										groupId: newId,
 										creating: true,
-										users: users
+										users
 									}
-								})}
-							}
-						/>
+								});
+							}}
+						>
+							<svelte:fragment slot="cell" let:row let:colKey let:value>
+								{#if colKey === 'members'}
+									<div class="flex flex-wrap gap-1 p-1">
+										{#each /** cast to array **/ value as memberId}
+											{@const user = users.find(u => u.oid === memberId)}
+											<Chip
+													text={user ? user.email : memberId}
+													leftIcon={faPerson}
+											/>
+										{/each}
+									</div>
+								{:else}
+									{@html value}
+								{/if}
+							</svelte:fragment>
+						</FunctionalTable2>
 					{:else}
-						<Tip>
-							Please register users to manage Groups.
-						</Tip>
+						<Tip>Please register users to manage Groups.</Tip>
 					{/if}
 
-					<FunctionalTable
-						title="Labels"
-						columns={{label: "Name", driver: "Driver", groups: "Groups"}}
-						data={$labelStore}
-						columnMapping={
-							{
-								groups: {
-									icon: faPeopleGroup,
-									mapper: (groupId) => {
-										if (!groups) return "";
-										return groups[groupId] ? groups[groupId].name : groupId;
-									}
-								}
-							}
-						}
-						on:edit={(event) => {
+<!--					<FunctionalTable-->
+<!--						title="Labels"-->
+<!--						columns={{label: "Name", driver: "Driver", groups: "Groups"}}-->
+<!--						data={$labelStore}-->
+<!--						columnMapping={-->
+<!--							{-->
+<!--								groups: {-->
+<!--									icon: faPeopleGroup,-->
+<!--									mapper: (groupId) => {-->
+<!--										if (!groups) return "";-->
+<!--										return groups[groupId] ? groups[groupId].name : groupId;-->
+<!--									}-->
+<!--								}-->
+<!--							}-->
+<!--						}-->
+<!--						on:edit={(event) => {-->
+<!--							drawerStore.open({-->
+<!--								id: 'label',-->
+<!--								width: 'w-full lg:w-[60%] h-full',-->
+<!--								position: 'right',-->
+<!--								rounded: 'rounded-none',-->
+<!--								border: 'border-l border-color',-->
+<!--								meta: { -->
+<!--									creating: false, -->
+<!--									labelId: event.detail.id, -->
+<!--									label: $labelStore?.[event.detail.id] ?? {},-->
+<!--								}-->
+<!--							})}-->
+<!--						}-->
+<!--						on:add={() => {-->
+<!--							drawerStore.open({-->
+<!--								id: 'label',-->
+<!--								width: 'w-full lg:w-[60%] h-full',-->
+<!--								position: 'right',-->
+<!--								rounded: 'rounded-none',-->
+<!--								border: 'border-l border-color',-->
+<!--								meta: { -->
+<!--									creating: true, -->
+<!--									labelId: uuidv4(), -->
+<!--									label: {-->
+<!--										label: "",-->
+<!--										driver: "Any"-->
+<!--									},-->
+<!--								}-->
+<!--							})}-->
+<!--						}-->
+<!--					/>-->
+					<FunctionalTable2
+							title="Labels"
+							columns={{ label: "Name", driver: "Driver", groups: "Groups" }}
+							data={$labelStore}
+							on:edit={(e) => {
 							drawerStore.open({
-								id: 'label',
-								width: 'w-full lg:w-[60%] h-full',
-								position: 'right',
-								rounded: 'rounded-none',
-								border: 'border-l border-color',
-								meta: { 
-									creating: false, 
-									labelId: event.detail.id, 
-									label: $labelStore?.[event.detail.id] ?? {},
-								}
-							})}
-						}
-						on:add={() => {
+							  id: 'label',
+							  width: 'w-full lg:w-[60%] h-full',
+							  position: 'right',
+							  rounded: 'rounded-none',
+							  border: 'border-l border-color',
+							  meta: {
+								creating: false,
+								labelId: e.detail.id,
+								label: $labelStore?.[e.detail.id] ?? {}
+							  }
+							});
+						  }}
+													on:add={() => {
 							drawerStore.open({
-								id: 'label',
-								width: 'w-full lg:w-[60%] h-full',
-								position: 'right',
-								rounded: 'rounded-none',
-								border: 'border-l border-color',
-								meta: { 
-									creating: true, 
-									labelId: uuidv4(), 
-									label: {
-										label: "",
-										driver: "Any"
-									},
-								}
-							})}
-						}
-					/>
+							  id: 'label',
+							  width: 'w-full lg:w-[60%] h-full',
+							  position: 'right',
+							  rounded: 'rounded-none',
+							  border: 'border-l border-color',
+							  meta: {
+								creating: true,
+								labelId: uuidv4(),
+								label: { label: "", driver: "Any" }
+							  }
+							});
+						  }}
+					>
+						<!-- customize only the “groups” list column -->
+						<svelte:fragment slot="cell" let:row let:colKey let:value>
+							{#if colKey === 'groups'}
+								<div class="flex flex-wrap gap-1 p-1">
+									{#each /** cast to array **/ value as groupId}
+										<Chip
+												text={groups[groupId]?.name ?? groupId}
+												leftIcon={faPeopleGroup}
+										/>
+									{/each}
+								</div>
+							{:else}
+								{@html value}
+							{/if}
+						</svelte:fragment>
+					</FunctionalTable2>
 
-					<FunctionalTable
+
+					<FunctionalTable2
 							title="Registries"
-							columns={{name: "Name", endpoint: "Endpoint", scope: "Scope"}}
+							columns={{ name: "Name", endpoint: "Endpoint", scope: "Scope" }}
 							data={$registryStore}
-							on:edit={(event) => {
-								drawerStore.open({
-									id: 'registry',
-									width: 'w-full lg:w-[60%] h-full',
-									position: 'right',
-									rounded: 'rounded-none',
-									border: 'border-l border-color',
-									meta: {
-										creating: false,
-										registryId: event.detail.id,
-										registry: $registryStore?.[event.detail.id] ?? {},
-									}
-								})
-							}
-						}
-							on:add={() => {
-								drawerStore.open({
-									id: 'registry',
-									width: 'w-full lg:w-[60%] h-full',
-									position: 'right',
-									rounded: 'rounded-none',
-									border: 'border-l border-color',
-									meta: {
-										creating: true,
-										registryId: uuidv4(),
-										registry: {
-											name: "",
-											endpoint: "",
-											scope: "USER",
-											groups: []
-										},
-									}
-								})
-							}
-						}
-					/>
+							on:edit={(e) => {
+							drawerStore.open({
+							  id: 'registry',
+							  width: 'w-full lg:w-[60%] h-full',
+							  position: 'right',
+							  rounded: 'rounded-none',
+							  border: 'border-l border-color',
+							  meta: {
+								creating: false,
+								registryId: e.detail.id,
+								registry: $registryStore?.[e.detail.id] ?? {}
+							  }
+							});
+						  }}
+													on:add={() => {
+							drawerStore.open({
+							  id: 'registry',
+							  width: 'w-full lg:w-[60%] h-full',
+							  position: 'right',
+							  rounded: 'rounded-none',
+							  border: 'border-l border-color',
+							  meta: {
+								creating: true,
+								registryId: uuidv4(),
+								registry: {
+								  name: "",
+								  endpoint: "",
+								  scope: "USER",
+								  groups: []
+								}
+							  }
+							});
+						  }}
+					>
+					</FunctionalTable2>
+<!--					<FunctionalTable-->
+<!--							title="Registries"-->
+<!--							columns={{name: "Name", endpoint: "Endpoint", scope: "Scope"}}-->
+<!--							data={$registryStore}-->
+<!--							on:edit={(event) => {-->
+<!--								drawerStore.open({-->
+<!--									id: 'registry',-->
+<!--									width: 'w-full lg:w-[60%] h-full',-->
+<!--									position: 'right',-->
+<!--									rounded: 'rounded-none',-->
+<!--									border: 'border-l border-color',-->
+<!--									meta: {-->
+<!--										creating: false,-->
+<!--										registryId: event.detail.id,-->
+<!--										registry: $registryStore?.[event.detail.id] ?? {},-->
+<!--									}-->
+<!--								})-->
+<!--							}-->
+<!--						}-->
+<!--							on:add={() => {-->
+<!--								drawerStore.open({-->
+<!--									id: 'registry',-->
+<!--									width: 'w-full lg:w-[60%] h-full',-->
+<!--									position: 'right',-->
+<!--									rounded: 'rounded-none',-->
+<!--									border: 'border-l border-color',-->
+<!--									meta: {-->
+<!--										creating: true,-->
+<!--										registryId: uuidv4(),-->
+<!--										registry: {-->
+<!--											name: "",-->
+<!--											endpoint: "",-->
+<!--											scope: "USER",-->
+<!--											groups: []-->
+<!--										},-->
+<!--									}-->
+<!--								})-->
+<!--							}-->
+<!--						}-->
+<!--					/>-->
 
 					<div class="section-wrapper p-4 space-y-4">
 						<h3 class="h3">Global Setting</h3>

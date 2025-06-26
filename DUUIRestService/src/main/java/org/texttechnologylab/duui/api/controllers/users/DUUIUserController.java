@@ -2,7 +2,9 @@ package org.texttechnologylab.duui.api.controllers.users;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -481,7 +483,7 @@ public class DUUIUserController {
 
     public static String getFilteredRegistryEndpoints(Request request, Response response) {
         String id = request.params(":id");
-        String role = request.headers("x-user-role").isEmpty()
+        String role = !request.headers("x-user-role").isEmpty()
             ? request.headers("x-user-role")
             : "USER";
 
@@ -660,94 +662,62 @@ public class DUUIUserController {
      * @return a List of registry Documents (each has an "id" field + its own fields)
      */
     public static Document getAccessibleRegistries(String role, String userId) {
-        List<Bson> pipeline = new ArrayList<>();
 
-        // 1) MATCH the two container docs: one has "registries", one has "groups"
-        pipeline.add(Aggregates.match(
-                Filters.or(
-                        Filters.exists("registries", true),
-                        Filters.exists("groups", true)
-                )
-        ));
+        MongoCollection<Document> globalsCollection = DUUIMongoDBStorage.Globals();
 
-        // 2) GROUP them into a single doc with fields { registries: <map>, groups: <map> }
-        pipeline.add(new Document("$group", new Document("_id", null)
-                .append("registries", new Document("$max", "$registries"))
-                .append("groups",    new Document("$max", "$groups"))
-        ));
+        log.trace("Filter registries by user ({}) role: {}", userId, role);
 
-        // 3) PROJECT each map → an array of { k: <uuid>, v: <sub-doc> }
-        pipeline.add(new Document("$project", new Document()
-                .append("registriesArr", new Document("$objectToArray", "$registries"))
-                .append("groupsArr",    new Document("$objectToArray", "$groups"))
-        ));
+        Document registriesDoc = globalsCollection.find(Filters.exists("registries")).first();
+        Document groupsDoc = globalsCollection.find(Filters.exists("groups")).first();
 
-        // 4) PROJECT a new field "filteredRegistries" using $cond on role:
-        //    If role == "ADMIN", keep every element of registriesArr.
-        //    Else (role == "USER"), $filter registriesArr by:
-        //      – v.scope == "USER"
-        //      – OR (v.scope == "GROUP" AND ⇒ there exists at least one element gr in groupsArr
-        //                 such that gr.k ∈ reg.v.groups AND userId ∈ gr.v.members)
-        //
-        //   We do this with a nested $filter inside the $and check for the scope == "GROUP" case.
-        pipeline.add(new Document("$project", new Document("filteredRegistries",
-                new Document("$cond", List.of(
-                        new Document("$eq", List.of(role, "ADMIN")),
-                        "$registriesArr",
-                        new Document("$filter", new Document()
-                                .append("input", "$registriesArr")
-                                .append("as", "reg")
-                                .append("cond", new Document("$or", List.of(
-                                        // Keep if scope == "USER"
-                                        new Document("$eq", List.of("$$reg.v.scope", "USER")),
+        if (registriesDoc == null) return new Document();
 
-                                        // OR scope == "GROUP" AND nested membership-check is non-empty
-                                        new Document("$and", List.of(
-                                                new Document("$eq", List.of("$$reg.v.scope", "GROUP")),
+        Document registries = registriesDoc.get("registries", Document.class);
 
-                                                // Now check: does any element of groupsArr satisfy
-                                                //   (gr.k ∈ $$reg.v.groups)  AND  (userId ∈ gr.v.members) ?
-                                                // We do another $filter over groupsArr for that, then check $size > 0.
-                                                new Document("$gt", List.of(
-                                                        new Document("$size", new Document("$filter", new Document()
-                                                                .append("input", "$groupsArr")
-                                                                .append("as", "gr")
-                                                                .append("cond", new Document("$and", List.of(
-                                                                        // gr.k ∈ $$reg.v.groups
-                                                                        new Document("$in", List.of("$$gr.k", "$$reg.v.groups")),
-                                                                        // userId ∈ gr.v.members
-                                                                        new Document("$in", List.of(userId, "$$gr.v.members"))
-                                                                )))
-                                                        )),
-                                                        0
-                                                ))
-                                        ))
-                                )))
-                        )
-                ))
-        )));
+        log.trace("Total number of registries: {} ", registries.size());
 
-        // 5) Finally, PROJECT only the "filteredRegistries" array (drop _id, registriesArr, groupsArr)
-        pipeline.add(new Document("$project", new Document("_id", 0).append("filteredRegistries", 1)));
-
-        // Run the aggregation. It should return exactly one document (or empty if nothing matched).
-        List<Document> aggResult = DUUIMongoDBStorage.Globals().aggregate(pipeline).into(new ArrayList<>());
-
-        if (aggResult.isEmpty()) {
-            return new Document();
+        // If ADMIN, return all registries without filtering
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            log.debug("User is ADMIN | returning {} registries", registries.size());
+            return registries;
         }
 
-        // 6) Unwrap the array of { k: <registryId>, v: <registryObject> } into a List<Document>
-        List<Document> rawList = aggResult.get(0).getList("filteredRegistries", Document.class, List.of());
-        Document finalResult = new Document();
+        // If USER, filter registries where user is a member of the registry's groups
+        if ("USER".equalsIgnoreCase(role)) {
+            if (groupsDoc == null) return new Document();
 
-        for (Document kv : rawList) {
-            String registryId = kv.getString("k");
-            Document registryFields = kv.get("v", Document.class);
-            finalResult.put(registryId, registryFields);
+            Document groups = groupsDoc.get("groups", Document.class);
+
+            // Create a set of group IDs where the user is a member
+            Set<String> userGroupIds = groups.entrySet().stream()
+                    .filter(group -> {
+                        List<String> members = ((Document)group.getValue()).getList("members", String.class, new ArrayList<>());
+                        return members.contains(userId);
+                    })
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
+
+            log.trace("User is part of {} groups", userGroupIds.size());
+
+            Document result = registries.entrySet().stream()
+                    .filter(registry -> {
+                        if (!"GROUP".equalsIgnoreCase(((Document)registry.getValue()).getString("scope"))) {
+                            return true; // Include non-GROUP scoped registries
+                        }
+                        List<String> registryGroups = ((Document)registry.getValue()).getList("groups", String.class, new ArrayList<>());
+                        return registryGroups.stream().anyMatch(userGroupIds::contains);
+                    })
+                    .collect(Document::new,
+                            (doc, entry) -> doc.append((String)entry.getKey(), (Document)entry.getValue()),
+                            (doc1, doc2) -> { });
+
+            log.debug("User is USER | returning {} registries", result.size());
+
+            return result;
         }
 
-        return finalResult;
+        log.debug("Incompatible role provided: {} \n returning 0 registries", role);
+        return new Document();
     }
 
     public static List<String> filterLabelsByDriver(String driver, String memberId, String role) {

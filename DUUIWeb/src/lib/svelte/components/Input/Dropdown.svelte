@@ -9,6 +9,8 @@
 	import { faCheck, faChevronDown, faL, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 	import { ListBox, ListBoxItem, popup, type PopupSettings } from '@skeletonlabs/skeleton'
 	import Fa from 'svelte-fa'
+	import { v4 as uuidv4 } from 'uuid'
+	import {onMount} from "svelte";
 
 	export let label: string = ''
 	export let name: string = label
@@ -31,11 +33,17 @@
 	export let textAlign: string = 'text-start'
 	export let minWidth: string = 'md:min-w-[220px]'
 
+	let dropdownId = '';
+
+	onMount(() => {
+		dropdownId = uuidv4();
+	});
+
 	const dropdown: PopupSettings = {
 		event: 'click',
 		target: name,
 		placement: placement,
-		closeQuery: '.listbox-item',
+		closeQuery: `.listbox-item:not(#${dropdownId} .listbox-item)`,
 		middleware: {
 			offset: offset
 		}
@@ -45,6 +53,8 @@
 	let optionsMap: Map<string | number, string | number>
 	if (options instanceof Map) {
 		optionsMap = options
+
+
 	} else if (Array.isArray(options)) {
 		optionsMap = new Map(
 			options.map(item => [item, item] as [string | number, string | number])
@@ -61,6 +71,12 @@
 		value  = Object.keys(optionsMap)[0]
 	}
 
+	// $: {
+	// 	alert("INIT: \n" + JSON.stringify(Object.fromEntries(optionsMap)))
+	// }
+	$: {
+		console.log(optionsMap.size)
+	}
 	$: rawLabel = (optionsMap.get(value) ?? value) as string;
 	$: displayLabel = rawLabel
 		? (capitalize ? toTitleCase(rawLabel) : rawLabel)
@@ -79,7 +95,7 @@
 	</button>
 </div>
 
-<div data-popup={name} class="fixed overflow-y-auto h64 mt-1 z-10">
+<div data-popup={name} id={dropdownId} class="fixed overflow-y-auto h64 mt-1 z-10">
 	<div class="popup-solid p-2 {minWidth} overflow-scroll max-h-96">
 		<ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
 			{#each Array.from(optionsMap.entries()) as [key, displayValue]}
