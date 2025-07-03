@@ -69,17 +69,23 @@ export async function PUT({ request, fetch, locals, url}) {
 
 	const data = await request.json()
 	const registrySearchQuery = data.registrySearchQuery
+	const flagName = data.flagName || "true"
+	const flagResultingTypes = data.flagResultingTypes || "true"
+	const flagRequiredTypes = data.flagRequiredTypes || "true"
+	const flagSearchTags = data.flagSearchTags || "true"
+	const flagLanguage = data.flagLanguage || "true"
+	const flagShortDescription = data.flagShortDescription || "true"
 
 
 	const response = await fetch(
-		`${registryEndpint}/api/images/generalSearch/
+		`${registryEndpint}api/images/generalSearch/
 			${registrySearchQuery}
-			?name=true
-			&resultingTypes=true
-			&requiredTypes=true
-			&searchTags=true,
-			&language=true,
-			&shortDescription=true`,
+			?name=${flagName}
+			&resultingTypes=${flagResultingTypes}
+			&requiredTypes=${flagRequiredTypes}
+			&searchTags=${flagSearchTags}
+			&language=${flagLanguage}
+			&shortDescription=${flagShortDescription}`,
 		{
 			method: 'GET'
 		}

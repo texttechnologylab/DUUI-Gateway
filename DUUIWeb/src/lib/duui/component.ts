@@ -40,7 +40,7 @@ export type DUUIComponentMetaData = {
 	description: string;
 	short_description: string;
 	references: string[];
-	language: Language | null;
+	language: Language[] | null;
 	required_types: string[];
 	resulting_types: string[];
 };

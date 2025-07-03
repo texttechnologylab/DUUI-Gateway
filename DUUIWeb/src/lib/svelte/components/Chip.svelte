@@ -4,9 +4,12 @@
 
     export let text = "";
     export let leftIcon: IconDefinition | undefined = undefined;
+    export let color: "primary" | "secondary" | "tertiary" | "error" = "primary";
+
+    let classes = `variant-soft-${color} rounded-full py-0.5 px-2  flex items-center`
 </script>
 
-<div class="tag flex items-center">
+<div class={classes}>
 
   {#if leftIcon}
     <span>
@@ -23,7 +26,7 @@
   </span>
 
   {#if $$slots["icon-right"]}
-    <span class="ml-2 pt-0.5">
+    <span class="ml-2 pt-1">
       <slot name="icon-right" />
     </span>
   {/if}

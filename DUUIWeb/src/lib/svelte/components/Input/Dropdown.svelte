@@ -43,7 +43,7 @@
 		event: 'click',
 		target: name,
 		placement: placement,
-		closeQuery: `.listbox-item:not(#${dropdownId} .listbox-item)`,
+		closeQuery: `.listbox-item`,
 		middleware: {
 			offset: offset
 		}
@@ -67,15 +67,16 @@
 		throw new Error("options must be an array or a Map")
 	}
 
-	if (initFirst && !value && Object.keys(optionsMap)[0]) {
-		value  = Object.keys(optionsMap)[0]
-	}
 
 	// $: {
 	// 	alert("INIT: \n" + JSON.stringify(Object.fromEntries(optionsMap)))
 	// }
 	$: {
-		console.log(optionsMap.size)
+		// console.log(`Size: ${optionsMap.size} | initFirst: ${initFirst} | values: ${JSON.stringify(Object.fromEntries(optionsMap))}`);
+
+		if (initFirst && !value && optionsMap.size > 0) {
+			value  = optionsMap.keys().toArray().shift() ?? value;
+		}
 	}
 	$: rawLabel = (optionsMap.get(value) ?? value) as string;
 	$: displayLabel = rawLabel
