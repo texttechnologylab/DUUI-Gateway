@@ -161,9 +161,9 @@
         filteredRegistryEndpoints = await fetchUserRegistryEndpoints();
         await fetchRegistry();
 
-        if (dropdownElement) {
-            popupWidth = `${dropdownElement.offsetWidth}px`;
-        }
+        // if (dropdownElement) {
+        //     popupWidth = `${dropdownElement.offsetWidth}px`;
+        // }
     })
 
     function handleWheel(event: WheelEvent) {
