@@ -75,6 +75,13 @@ public class Methods {
             }
         });
 
+        path("/alive", () -> {
+            get("", (request, response) -> {
+                response.type("text/plain");
+                return "OK";
+            });
+        });
+
 
         path("/settings", () -> {
             before("/*", (request, response) -> {

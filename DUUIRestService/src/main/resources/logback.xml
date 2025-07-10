@@ -25,6 +25,8 @@
 <!--        </encoder>-->
 <!--    </appender>-->
 
+    <logger name="org.texttechnologylab.duui.api.controllers.users" level="TRACE"/>
+
     <!-- 3) Root logger: send everything ≥ INFO to console & file -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />

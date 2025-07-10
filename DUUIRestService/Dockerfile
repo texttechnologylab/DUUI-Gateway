@@ -1,6 +1,6 @@
 # Verwenden Sie das offizielle OpenJDK 17 Image als Basis
 # FROM maven:3.8.5-openjdk-17
-FROM maven:3.9.4-eclipse-temurin-17
+FROM maven:3.9.4-eclipse-temurin-21
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app

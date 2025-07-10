@@ -1,6 +1,29 @@
 import { API_URL } from '$env/static/private'
 import type { Handle, RequestEvent } from '@sveltejs/kit'
 
+
+async function testBackendConnection() {
+	try {
+		console.log('Trying to reach: ', API_URL)
+		const res = await fetch(`${API_URL}/alive`, {
+			method: 'GET'
+		});
+		if (res.ok) {
+			console.log('Backend reachable: ', API_URL)
+		} else {
+			console.error('Backend responds with: ', res.status)
+		}
+	} catch (error: any) {
+		if (error instanceof Error) {
+			console.error('Connecting to backend failed: ', error.toString(), error.stack);
+		} else {
+			console.error('Connecting to backend failed: ', error);
+		}
+	}
+}
+
+testBackendConnection()
+
 /**
  * Fetch a user from the databse to verify the user is authorized.
  *

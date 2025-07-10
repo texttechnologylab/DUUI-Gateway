@@ -1302,7 +1302,7 @@
 										{/each}
 									</div>
 								{:else}
-									{@html value}
+									<p class="p-4 break-words text-center">{value ?? ''}</p>
 								{/if}
 							</svelte:fragment>
 						</FunctionalTable2>
@@ -1402,7 +1402,8 @@
 									{/each}
 								</div>
 							{:else}
-								{@html value}
+								<p class="p-4 break-words text-center">{value ?? ''}</p>
+
 							{/if}
 						</svelte:fragment>
 					</FunctionalTable2>

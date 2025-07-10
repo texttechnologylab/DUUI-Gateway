@@ -1,8 +1,9 @@
 FROM node:18-alpine AS builder
 
 ARG API_URL
-ENV API_URL=http://duui-gateway-backend:2605
 ARG DBX_URL
+
+ENV API_URL=${API_URL}
 ENV DBX_URL=${DBX_URL}
 
 RUN mkdir /app
@@ -13,12 +14,16 @@ RUN cd /app && npm install && npm run build
 
 FROM node:18-alpine
 
+# Installiere Python sowie notwendige Build-Tools
+RUN apk add --no-cache python3 make g++
+
 RUN mkdir /app
 COPY --from=builder /app/build /app/build
 COPY --from=builder /app/package.json /app/
 
 RUN cd /app && \
-    npm install --omit=dev
+    npm install --omit=dev --ignore-scripts && \
+    npm rebuild bcrypt --build-from-source
 
 WORKDIR /app
 
