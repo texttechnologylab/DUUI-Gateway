@@ -1,5 +1,10 @@
 # DUUI-Gateway
 
+![GitHub License](https://img.shields.io/github/license/Texttechnologylab/DUUI-Gateway)
+
+[![Discord-Server](http://img.shields.io/badge/Join-Discord_Server-fc0098.svg)](https://discord.gg/DxsgfbK7Jh)
+
+
 ## Introduction
 
 Automatic analysis of large text corpora is a complex task. This complexity

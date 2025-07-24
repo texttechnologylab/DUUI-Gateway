@@ -21,7 +21,7 @@ Make sure you have installed:
 
 - Docker and Docker Compose
 - Node.js and npm (for frontend development)
-- Java 17
+- Java 21
 
 ---
 

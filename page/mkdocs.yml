@@ -13,6 +13,7 @@ repo_name: texttechnologylab/DUUI-Gateway
 # Page tree
 nav:
   - Home: index.md
+  - DUUI-Gatway: about.md
   - Publications: publications.md
   - JavaDoc: javadocs.md   #javadoc/index.html
   - Features: features.md
