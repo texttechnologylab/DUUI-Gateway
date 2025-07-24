@@ -260,6 +260,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../about.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  DUUI-Gatway
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../publications/" class="md-tabs__link">
         
   
@@ -389,6 +408,28 @@
   
   <span class="md-ellipsis">
     Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DUUI-Gatway
     
   </span>
   
@@ -597,6 +638,90 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component" class="md-nav__link">
+    <span class="md-ellipsis">
+      Component
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Process
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-and-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Input and Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input and Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#text" class="md-nav__link">
+    <span class="md-ellipsis">
+      Text
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloud
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Settings
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -752,6 +877,90 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component" class="md-nav__link">
+    <span class="md-ellipsis">
+      Component
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Process
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-and-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Input and Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input and Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#text" class="md-nav__link">
+    <span class="md-ellipsis">
+      Text
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloud
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Settings
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -783,6 +992,74 @@
 <h4 id="dropbox">Dropbox</h4>
 <h4 id="nextcloud">Nextcloud</h4>
 <h4 id="googledrive">GoogleDrive</h4>
+<h2 id="pipeline">Pipeline</h2>
+<p>A pipeline is a collection of components or Analysis Engines that can be executed. During an analysis process, the components in the pipeline are executed one after
+another annotating documents. Pipelines do not interact with the input data directly but build the structure for an NLP workflow.</p>
+<p>Creating a pipeline with this web-interface can be done in the Builder. It is a three-step form that guides you through building a pipeline either from scratch or
+using a template as the starting point.</p>
+<blockquote>
+<p>Choosing a template as a starting point copies all predefined settings into a fresh
+pipeline.</p>
+</blockquote>
+<p>In the second step pipeline specific properties like name, description, tags and settings can be edited.
+Only a name is required to proceed but adding a short description is recommended to serve as documentation
+and help others when sharing a pipeline. Tags can help document and find pipelines
+in the Dashboard.</p>
+<h2 id="component">Component</h2>
+<p>Components are the part of DUUI that actually do the processing and therefore offer
+the most settings. When creating a pipeline you can choose from a set of predefined
+components or create your own. Once added to the pipeline, a component can be edited
+by clicking the <a class="glightbox" href="./images/fa-edit.svg" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img src="./images/fa-edit.svg" width="14"></a> icon. This will open a drawer on
+the right, that allows for modification of a component.</p>
+<p>Settings include:</p>
+<p><strong>Name</strong></p>
+<p><strong>Driver</strong> &mdash; The Driver is responsible for the instantiation
+of a component during a process.</p>
+<p><strong>Target</strong> &mdash; The component's target depends on the selected
+driver. For Docker, Kubernetes and Swarm Drivers, the target is the full image name.
+For UIMA it is the class path to the Annotator represented by this component and for
+a Remote Driver the URL has to be specified.</p>
+<p><strong>Tags</strong></p>
+<p><strong>Description</strong></p>
+<p><strong>Options</strong></p>
+<p><strong>Parameters</strong></p>
+<p>Options are specific to the selected driver. Most of the time the default options
+are sufficient and modifications are only for special uses cases. Parameters are
+useful if the component requires settings that are not controlled by DUUI.</p>
+<blockquote>
+<p>When editing a specific pipeline, clicking the <a class="glightbox" href="./images/fa-clone.svg" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img src="./images/fa-clone.svg" width="14"></a> icon
+clones the component's settings and prefills the creation form.</p>
+</blockquote>
+<h2 id="process">Process</h2>
+<p>A process manages the flow of data and pipeline execution. Starting a process is
+possible on a pipeline page. On the process creation screen you are asked to select
+an input, output and optionally settings that influence the process behavior.</p>
+<h3 id="input-and-output">Input and Output</h3>
+<p>Any process must be provided with an input source to be started. Each requires
+different properties to be set. The available input sources are:</p>
+<h4 id="text">Text</h4>
+<p>For simple and quick analysis you can choose to process plain text. The text
+to be analyzed can be entered in a text area.</p>
+<h4 id="file">File</h4>
+<p>Selecting file as the input source allows for the upload of one or multiple
+files.</p>
+<h4 id="cloud">Cloud</h4>
+<p>There are currently four cloud storage providers available to use: Dropbox and
+Min.io (s3), Google Drive, and NextCloud. More will be added in the future. To use your cloud storage
+provider of choice, a connection must be established on your Account page.</p>
+<blockquote>
+<p>With the exception of text, all input sources require a file extension to be
+selected.</p>
+</blockquote>
+<h3 id="settings">Settings</h3>
+<p>Settings can be changed for both the input and output. Their main purpose is to
+filter the files that are processed. This can be done by setting a minimum file
+size or ignoring files that may be at the output location.</p>
+<p>Process related settings include the option to use multiple workers for parallel
+processing or ignoring errors that occur by skipping to next docment instead of
+failing the entire pipeline.</p>
+<p>Note that the amount of workers or threads that can be used is limited by the
+system!</p>
 
 
 
@@ -805,7 +1082,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 7, 2025 12:45:49 UTC">March 7, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2025 16:42:41 UTC">July 24, 2025</span>
   </span>
 
     
