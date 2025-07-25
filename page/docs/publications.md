@@ -1,6 +1,6 @@
 ## Publications
 
-Here we list all publications related to DUUI-Gateway, which you can also refer to when citing DUUI-Gateway or DUUI itself, in your work:
+Here we list all publications related to DUUIGateway, which you can also refer to when citing DUUIGateway or DUUI itself, in your work:
 
 ``` bibtex
 @inproceedings{Leonhardt:et:al:2023,

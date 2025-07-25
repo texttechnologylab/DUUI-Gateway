@@ -1,15 +1,15 @@
 # Features
 
-**DUUI-Gateway** includes a range of features which facilitate its effective and easy use of DUUI in various contexts and application areas.
+**DUUIGateway** includes a range of features which facilitate its effective and easy use of DUUI in various contexts and application areas.
 
 ## User management
 
-**DUUI-Gateway** has a relatively straightforward user management system in which a distinction is maintained between the roles of **user** and **admin**. At the same time, groups can be created and users can be assigned to them.
+**DUUIGateway** has a relatively straightforward user management system in which a distinction is maintained between the roles of **user** and **admin**. At the same time, groups can be created and users can be assigned to them.
 
-* Role **user**: Users can use all functions of DUUI-Gateway to construct pipelines, create connectors and execute processes. The available resources in the cluster, as well as all other system parameters, are configured by the **admins**.
+* Role **user**: Users can use all functions of DUUIGateway to construct pipelines, create connectors and execute processes. The available resources in the cluster, as well as all other system parameters, are configured by the **admins**.
 * Role **admin**: Administrators also have the ability to make global settings, manage groups as well as assign users to groups.
 
-## Web + REST interface
+## Web and REST interface
 
 ![Interface](images/DUUI-Entry.png)
 
@@ -34,28 +34,28 @@ Both interfaces allow pipelines to be created, managed, [DUUI components](https:
 ## Dynamic pipeline construction
 
 <figure>
-  <img src="images/Pipeline.png" alt="Pipeline" style="width:100%">
+  <img src="./images/Pipeline.png" alt="Pipeline" style="width:100%">
   <figcaption>In order to process texts, various pipelines can be created and assembled using DUUI components.
 </figcaption>
 </figure>
 
 
 <figure>
-  <img src="images/Pipelines.png" alt="Pipelines" style="width:100%">
+  <img src="./images/Pipelines.png" alt="Pipelines" style="width:100%">
   <figcaption>Pipelines can also be saved as templates for future use.
 </figcaption>
 </figure>
 
 
 <figure>
-  <img src="images/Create_Process.png" alt="Pipelines" style="width:100%">
+  <img src="./images/Create_Process.png" alt="Pipelines" style="width:100%">
   <figcaption>Once a pipeline has been created, these can be executed as processes, where the source and destination of the files which are to be processed can be selected from a set of existing connectors.
 </figcaption>
 </figure>
 
 
 <figure>
-  <img src="images/nextcloud_gerparcor.png" alt="nextcloud" style="width:100%">
+  <img src="./images/nextcloud_gerparcor.png" alt="nextcloud" style="width:100%">
   <figcaption>
     This involves selecting a folder in a Nextcloud instance added by the user via the browser and selecting further parameters for the selection.
     </figcaption>
@@ -67,17 +67,17 @@ Both interfaces allow pipelines to be created, managed, [DUUI components](https:
 After or during the execution of a pipeline, the process progress and its status can be visualized and queried. Processed documents can be selected and examined.
 
 <figure>
-  <img src="images/Result.png" alt="Result" style="width:100%">
+  <img src="./images/Result.png" alt="Result" style="width:100%">
   <figcaption>The progress of the individual processed documents is displayed and the results are also visualized by selecting a document.</figcaption>
 </figure>
 
 <figure>
-  <img src="images/document_view.png" alt="Result" style="width:100%">
+  <img src="./images/document_view.png" alt="Result" style="width:100%">
   <figcaption>The results of the annotation are visualized at document level with highlighting based on the selected annotation class.</figcaption>
 </figure>
 
 <figure>
-  <img src="images/ResultStatistic.png" alt="Result" style="width:100%">
+  <img src="./images/ResultStatistic.png" alt="Result" style="width:100%">
   <figcaption>At the same time, statistical information on all annotations in the respective document is also visualized graphically. </figcaption>
 </figure>
 
@@ -86,31 +86,29 @@ After or during the execution of a pipeline, the process progress and its status
 Due to the user-related processing of DUUI processes, processes can be monitored live and the owners of the processes are also informed of the result of the processing via e-mail via DUUI Gateway.
 
 <figure>
-  <img src="images/Notification.png" alt="Notification" style="width:100%">
+  <img src="./images/Notification.png" alt="Notification" style="width:100%">
   <figcaption>A Result email after processing a pipeline defined in DUUI Gateway. </figcaption>
 </figure>
 
 
 ## Connectors
-DUUI-Gateway is capable of connecting to various cloud-based systems listed below, which can be individually configured and connected by the user in order to read in corpora for processing or subsequently serialize them again.
+DUUIGateway is capable of connecting to various cloud-based systems listed below, which can be individually configured and connected by the user in order to read in corpora for processing or subsequently serialize them again.
 
 * Google Drive
 * Nextcloud
 * Dropbox
 * Amazon Simple Storage Service (Amazon S3)
-  * _minio_ for personal use
+  * _[minio](https://github.com/minio/minio)_ for personal use
 
 <figure>
-  <img src="images/Nextcloud_Signup.png" alt="Result" style="width:100%">
+  <img src="./images/Nextcloud_Signup.png" alt="Result" style="width:100%">
   <figcaption>Exemplary connection to a Nextcloud instance</figcaption>
 </figure>
 
-
-Besides the web interface, DUUI-Gateway also includes an API that allows usage based on user authentication.
-
 ___
 
-All of these features can be used by anyone. DUUI-Gateway is freely available and can be easily instantiated via Docker. Instructions can be found under [Setup](setup.md).
+# Summary
+All of these features can be used by anyone. DUUIGateway is freely available and can be easily instantiated via Docker. Instructions can be found under [Setup](setup.md).
 
 If you use DUUI Gateway, refer to the specified [citation](publications.md).
 
