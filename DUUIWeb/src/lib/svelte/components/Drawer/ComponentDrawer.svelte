@@ -409,6 +409,10 @@
 							component.target = registryEntry.registry_url
 								? `${registryEntry.registry_url}${registryEntry.name}:${entryMetadata.tag}`
 								: "";
+							
+							if (component.target.startsWith('https://')) {
+								component.target = component.target.replace(/^https?:\/\//, '');
+							}
 
 							component.description = entryMetadata.description
 						}
