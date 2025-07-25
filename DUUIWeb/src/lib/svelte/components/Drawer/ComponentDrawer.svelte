@@ -401,6 +401,10 @@
 							const registryEntry = event.detail.entry
 							const entryMetadata = event.detail.metaData
 
+							if (!registryEntry.name) {
+								return
+							}
+
 							component.name = registryEntry.name
 							component.target = registryEntry.registry_url
 								? `${registryEntry.registry_url}${registryEntry.name}:${entryMetadata.tag}`

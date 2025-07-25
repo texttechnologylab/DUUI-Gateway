@@ -300,7 +300,7 @@ import {
 
 	const getFolderStructure = async (provider: IOProvider, providerId: string, isReset: boolean) => {
 		
-		if (!hasFolderPicker(provider, true)) {
+		if (!hasFolderPicker(provider, true) || !providerId) {
 			return undefined;
 		}
 		
@@ -384,6 +384,31 @@ import {
 	let isInputError  = false;
 	let isOutputError = false;
 	let isFileUploadError = false;
+
+
+	$: if (!fileUploadTree &&  !isFileUploadError && fileStorage.provider_id && hasConnections(fileStorage.provider.toLowerCase())) {
+		setFileUploadTree(
+			fileStorage.provider,
+			fileStorage.provider_id,
+			false
+		)
+	}
+
+	$: if (!inputTree && !isInputError && $processSettingsStore.input.provider_id && hasConnections($processSettingsStore.input.provider.toLowerCase())) {
+		setInputTree(
+			$processSettingsStore.input.provider,
+			$processSettingsStore.input.provider_id,
+			false
+		)
+	}
+
+	$: if (!outputTree &&  !isOutputError && $processSettingsStore.output.provider_id && hasConnections($processSettingsStore.output.provider.toLowerCase())) {
+		setOutputTree(
+			$processSettingsStore.output.provider,
+			$processSettingsStore.output.provider_id,
+			false
+		)
+	}
 
 	$: isInputError  =
 		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.input.provider as IO) &&
@@ -521,24 +546,31 @@ import {
 										label="Source"
 										options={IO_INPUT}
 										bind:value={$processSettingsStore.input.provider}
+										on:change={() => {
+											$processSettingsStore.input.provider_id = ''
+											$processSettingsStore.input.path = ''
+											inputTree = undefined
+										}}
 									/>
 								</div>
 								{#if !isInputError && !equals($processSettingsStore.input.provider, IO.Text)}
 									{#if !isStatelessProvider($processSettingsStore.input.provider) && hasConnections($processSettingsStore.input.provider.toLowerCase())}
-										<Dropdown
-											label="Connection Alias"
-											name="input-alias"
-											options={inputAliases}
-											initFirst={true}
-											bind:value={$processSettingsStore.input.provider_id}
-											on:change={() => {
-												setInputTree(
-													$processSettingsStore.input.provider,
-													$processSettingsStore.input.provider_id,
-													false
-												)
-											}}
-										/>
+										{#key $processSettingsStore.input.provider}
+											<Dropdown
+												label="Connection Alias"
+												name="input-alias"
+												options={inputAliases}
+												initFirst={true}
+												bind:value={$processSettingsStore.input.provider_id}
+												on:change={() => {
+													setInputTree(
+														$processSettingsStore.input.provider,
+														$processSettingsStore.input.provider_id,
+														false
+													)
+												}}
+											/>
+										{/key}
 									{/if}
 									<Dropdown
 										label="File extension"
@@ -791,24 +823,31 @@ import {
 										label="Target"
 										options={IO_OUTPUT}
 										bind:value={$processSettingsStore.output.provider}
+										on:change={() => {
+											$processSettingsStore.output.provider_id = ''
+											$processSettingsStore.output.path = ''
+											outputTree = undefined
+										}}
 									/>
 								</div>
 								{#if !isOutputError && !isStatelessProvider($processSettingsStore.output.provider)}
 									{#if hasConnections($processSettingsStore.output.provider.toLowerCase())}
-										<Dropdown
-											label="Connection Alias"
-											name="output-alias"
-											options={outputAliases}
-											initFirst={true}
-											bind:value={$processSettingsStore.output.provider_id}
-											on:change={() =>
-												setOutputTree(
-													$processSettingsStore.output.provider,
-													$processSettingsStore.output.provider_id,
-													false
-												)
-											}
-										/>
+										{#key $processSettingsStore.output.provider_id}
+											<Dropdown
+												label="Connection Alias"
+												name="output-alias"
+												options={outputAliases}
+												initFirst={true}
+												bind:value={$processSettingsStore.output.provider_id}
+												on:change={() =>
+													setOutputTree(
+														$processSettingsStore.output.provider,
+														$processSettingsStore.output.provider_id,
+														false
+													)
+												}
+											/>
+										{/key}
 									{/if}
 									<Dropdown
 										label="File extension"

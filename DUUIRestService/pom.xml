@@ -40,9 +40,11 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <duui.version>duui-gateway-main-merge-SNAPSHOT</duui.version>
+        <duui.version>275fd0123fcd9206741e00034e7e8723a4632d5e</duui.version>
         <uima.version>3.5.0</uima.version>
+        <typesystem.version>3.0.8</typesystem.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
+        <dkpro.core.version>2.4.0</dkpro.core.version>
     </properties>
 
     <repositories>
@@ -182,10 +184,78 @@
     <!--            </plugin>-->
     <!--        </plugins>-->
     <!--    </build>-->
+    
+    <dependencyManagement>
+        <dependencies> 
+            <dependency>
+                <groupId>org.dkpro.core</groupId>
+                <artifactId>dkpro-core-asl</artifactId>
+                <version>${dkpro.core.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-bom</artifactId>
+                <version>1.11.1000</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
+        
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-tokit-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-tokit-asl</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-api-segmentation-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-segmentation-asl</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-opennlp-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-opennlp-asl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-api-io-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-io-asl</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-io-xmi-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-io-xmi-asl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-io-text-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-io-text-asl</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.dkpro.core/dkpro-core-api-resources-asl -->
+        <dependency>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-resources-asl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.texttechnologylab</groupId>
+            <artifactId>UIMATypeSystem</artifactId>
+            <version>${typesystem.version}</version>
+        </dependency>
 
         <!-- SLF4J API -->
         <dependency>
