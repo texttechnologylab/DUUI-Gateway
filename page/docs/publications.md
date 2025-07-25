@@ -1,6 +1,6 @@
 ## Publications
 
-#### Unlocking the Heterogeneous Landscape of Big Data NLP with DUUI
+Here we list all publications related to DUUIGateway, which you can also refer to when citing DUUIGateway or DUUI itself, in your work:
 
 ``` bibtex
 @inproceedings{Leonhardt:et:al:2023,
@@ -19,8 +19,21 @@
     publisher = "Association for Computational Linguistics",
     url = "https://aclanthology.org/2023.findings-emnlp.29",
     doi = "10.18653/v1/2023.findings-emnlp.29",
-    pages = "385--399",
-    abstract = "Automatic analysis of large corpora is a complex task, especially in terms of time efficiency. This complexity is increased by the fact that flexible, extensible text analysis requires the continuous integration of ever new tools. Since there are no adequate frameworks for these purposes in the field of NLP, and especially in the context of UIMA, that are not outdated or unusable for security reasons, we present a new approach to address the latter task: Docker Unified UIMA Interface (DUUI), a scalable, flexible, lightweight, and feature-rich framework for automatic distributed analysis of text corpora that leverages Big Data experience and virtualization with Docker. We evaluate DUUI{'}s communication approach against a state-of-the-art approach and demonstrate its outstanding behavior in terms of time efficiency, enabling the analysis of big text data.",
+    pages = "385--399"
 }
+
+@article{Abrami:et:al:2025:a,
+  title     = {Docker Unified UIMA Interface: New perspectives for NLP on big data},
+  journal   = {SoftwareX},
+  volume    = {29},
+  pages     = {102033},
+  year      = {2025},
+  issn      = {2352-7110},
+  doi       = {https://doi.org/10.1016/j.softx.2024.102033},
+  url       = {https://www.sciencedirect.com/science/article/pii/S2352711024004047},
+  author    = {Giuseppe Abrami and Markos Genios and Filip Fitzermann and Daniel Baumartz and Alexander Mehler}
+}
+
 ```
-[[LINK](https://aclanthology.org/2023.findings-emnlp.29)] [[PDF](https://aclanthology.org/2023.findings-emnlp.29.pdf)] 
+[![Paper](http://img.shields.io/badge/paper-FindingsEMNLP--2023-fb44ce.svg)](https://aclanthology.org/2023.findings-emnlp.29)
+[![Paper-Kubernetes](http://img.shields.io/badge/paper-SoftwareX--2025-fb44ce.svg)](https://www.sciencedirect.com/science/article/pii/S2352711024004047)

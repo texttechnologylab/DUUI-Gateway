@@ -1,12 +1,12 @@
-# DUUI-Gateway Setup Guide
+# DUUIGateway Setup Guide
 
-This document describes how to set up and configure DUUI-Gateway, including Docker-based deployment and necessary configuration.
+This document describes how to set up and configure DUUIGateway, including Docker-based deployment and necessary configuration.
 
 ---
 
 ## Overview
 
-DUUI-Gateway consists of two main components:
+DUUIGateway consists of two main components:
 
 - **Backend**: REST API for NLP processing
 - **Frontend**: Web interface built with SvelteKit
@@ -156,13 +156,13 @@ This setup provides auto-reload functionality, ideal for iterative frontend deve
 
 ## Security and Access Control
 
-DUUI-Gateway adheres to industry-standard security practices for handling API keys, secrets, and authentication. However, the application is actively developed, and additional security measures are continuously being implemented. Developers and deployers should remain cautious, keep security best practices in mind, and regularly update the system to mitigate any emerging security concerns.
+DUUIGateway adheres to industry-standard security practices for handling API keys, secrets, and authentication. However, the application is actively developed, and additional security measures are continuously being implemented. Developers and deployers should remain cautious, keep security best practices in mind, and regularly update the system to mitigate any emerging security concerns.
 
 ---
 
 ## Further Documentation
 
-Refer to the [DUUI-Gateway Documentation](https://texttechnologylab.github.io/DUUI-Gateway/) for more detailed instructions, API references, and developer guidelines.
+Refer to the [DUUIGateway Documentation](https://texttechnologylab.github.io/DUUI-Gateway/) for more detailed instructions, API references, and developer guidelines.
 
 ---
 

@@ -1,8 +1,8 @@
 # Project information
-site_name: DUUI-Gateway - Documentation
+site_name: DUUIGateway
 site_url: https://texttechnologylab.github.io/DUUI-Gateway/
 site_description: >-
-  Documentation for DUUI-Gateway
+  GitHub-Page for DUUIGateway
 
 
 # Repository
@@ -13,7 +13,6 @@ repo_name: texttechnologylab/DUUI-Gateway
 # Page tree
 nav:
   - Home: index.md
-  - DUUI-Gatway: about.md
   - Publications: publications.md
   - JavaDoc: javadocs.md   #javadoc/index.html
   - Features: features.md
@@ -95,7 +94,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-
+  - pymdownx.blocks.caption
   - attr_list
   - md_in_html
 
