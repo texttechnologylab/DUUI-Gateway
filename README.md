@@ -18,19 +18,20 @@ The **Docker Unified UIMA Interface – Gateway** (**DUUIGateway** for short) is
 
 Automatic analysis of large text corpora is a complex task. This complexity particularly concerns the question of time efficiency. Furthermore, efficient, flexible, and extensible textanalysis requires the continuous integration of every new text analysis tools. Since there are currently, in the area of NLP and especially in the application context of UIMA, only very few to no adequate frameworks for these purposes, which are not simultaneously outdated or can no longer be used for security reasons, this work will present a new approach to fill this gap.
 
-DUUIGateway is a tool that completely encapsulates DUUI and allows its use in a functional web interface as well as by integrating an API.
+*DUUIGateway* is a tool that completely encapsulates DUUI and allows its use in a functional web interface as well as by integrating an API.
 
 
 ## Team
 
-- Cederic Borkowski [:fontawesome-brands-github:](https://github.com/CedricBorko)
-- Prof. Dr. Alexander Mehler (Leader TTLab) [:fontawesome-brands-github:](https://github.com/amehler) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Alexander-Mehler-2)
-- Giuseppe Abrami [:fontawesome-brands-github:](https://github.com/abrami) [:fontawesome-brands-researchgate:](https://www.researchgate.net/profile/Giuseppe-Abrami)
-- Dawit Terefe [:fontawesome-brands-github:](https://github.com/dterefe)
+- Cederic Borkowski [<img src="./page/docs/images/github.svg" height="20px">](https://github.com/CedricBorko)
+- Prof. Dr. Alexander Mehler  [<img src="./page/docs/images/github.svg" height="20px">](https://github.com/amehler) [<img src="./page/docs/images/rg.svg" height="20px">](https://www.researchgate.net/profile/Alexander-Mehler-2)
+- Giuseppe Abrami [<img src="./page/docs/images/github.svg" height="20px">](https://github.com/abrami) [<img src="./page/docs/images/rg.svg" height="20px">](https://www.researchgate.net/profile/Giuseppe-Abrami)
+- Dawit Terefe [<img src="./page/docs/images/github.svg" height="20px">](https://github.com/dterefe)
 
 
 ## Usage & Support
 
-To use DUUIGateway, you only need Docker or podman to run a Compose setup. After successful setup, extensive documentation is available in DUUIGateway (cf. [Documentation](https://duui.texttechnologylab.org/documentation)).
+To use DUUIGateway, you only need Docker or podman to run a Compose setup. After successful setup, extensive documentation is available in DUUIGateway (cf. [Documentation](https://texttechnologylab.github.io/DUUI-Gateway)).
 
 For support, please contact our [team](#team) or use our dedicated [![Discord-Server](http://img.shields.io/badge/Discord-Server-fc0098.svg)](https://discord.gg/DxsgfbK7Jh)
+
