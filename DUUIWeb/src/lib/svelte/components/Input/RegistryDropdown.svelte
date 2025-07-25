@@ -15,7 +15,7 @@
     import { onMount, createEventDispatcher } from 'svelte';
     import type {DUUIComponentMetaData, DUUIRegistryEntry} from "$lib/duui/component";
     import Tip from "$lib/svelte/components/Tip.svelte";
-    import {infoToast} from "$lib/duui/utils/ui";
+    import {errorToast, infoToast} from "$lib/duui/utils/ui";
     import Popup from "$lib/svelte/components/Popup.svelte";
     import Link from "$lib/svelte/components/Link.svelte";
     import Chip from "$lib/svelte/components/Chip.svelte"; // wherever you put the types
@@ -153,6 +153,9 @@
 
         if (response.ok) {
             entries = await response.json()
+        } else {
+            toastStore.trigger(errorToast(`ERROR ${response.status}: ${response.statusText} \n Failed to fetch registry entries. Registry is not reachable.`))
+            entries = [];
         }
     }
 
@@ -352,10 +355,10 @@
                 <Tip tipTheme="error">
                         You have no registries available. Access can be granted by an administrator.
                 </Tip>
-            <!--{:else if !selectedRegistryEndpoint }-->
-            <!--    <Tip tipTheme="tertiary">-->
-            <!--        Please select a registry endpoint to view entries.-->
-            <!--    </Tip>-->
+            {:else if !entries.length }
+                <Tip tipTheme="tertiary">
+                   No entries found in the selected registry.
+                </Tip>
             {:else}
                 <div class="overflow-visible">
 

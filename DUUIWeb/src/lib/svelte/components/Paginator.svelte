@@ -55,10 +55,11 @@
 	<Dropdown
 		on:change={() => dispatcher('change', { settings: settings })}
 		bind:value={settings.limit}
+		capitalize={false}
 		options={settings.sizes}
 		border="bordered-soft"
 		style={"shadow-md grow bg-surface-50-900-token self-stretch"}
-	/>
+		/>
 	<div
 		class="input-no-highlight bordered-soft !bg-surface-50-900-token !py-0 flex justify-center !rounded-md shadow-md overflow-hidden"
 	>
