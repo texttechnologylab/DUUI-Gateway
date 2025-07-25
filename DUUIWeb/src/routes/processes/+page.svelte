@@ -80,22 +80,25 @@ import {
 	
 	onMount(async () => {
 
+
 		$userSession = user
 
 		const getLFS = async () => {
-			const response = await fetch('/api/settings/filtered-folder-structure', {
-				method: 'GET'
-			})
+			try {
+				const response = await fetch('/api/settings/filtered-folder-structure', {
+					method: 'GET'
+				})
 
-			if (response.ok) {
-				return (await response.json()) as TreeViewNode
-			} else {
-				toastStore.trigger(errorToast(response.statusText))
-				return {} as TreeViewNode
+				if (response.ok) {
+					lfs =  (await response.json()) as TreeViewNode
+				}
+		
+			} catch (err) {
+				toastStore.trigger(errorToast('Failed to fetch local file system structure: '))
 			}
 		}
 
-		lfs = await getLFS();
+		getLFS().catch(() => {/* ignore error */})
 
 		fileStorage = {
 			storeFiles: false,
@@ -103,6 +106,7 @@ import {
 			provider_id: '',
 			path: '/upload'
 		}
+
 		inputAliases = hasConnections($processSettingsStore.input.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.input.provider.toLowerCase()]) : new Map()
 		outputAliases = hasConnections($processSettingsStore.output.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.output.provider.toLowerCase()]) : new Map()
 		fileUploadAliases = hasConnections(fileStorage.provider) ? getCloudProviderAliases($userSession?.connections[fileStorage.provider.toLowerCase()]) : new Map()
@@ -117,6 +121,7 @@ import {
 			$processSettingsStore = blankSettings()
 			goto(`/processes?pipeline_id=${params.get('pipeline_id')}`)
 		}
+
 
 		$processSettingsStore.pipeline_id =
 				params.get('pipeline_id') || $processSettingsStore.pipeline_id
@@ -290,7 +295,7 @@ import {
 				await goto(`/pipelines/${$processSettingsStore.pipeline_id}`)
 			}
 		} else {
-			toastStore.trigger(errorToast(JSON.stringify(response.body)))
+			toastStore.trigger(errorToast((await response.text())))
 			starting = false
 		}
 
@@ -686,7 +691,7 @@ import {
 									{/if}
 								{/if}
 							{:else if equals($processSettingsStore.input.provider, IO.LocalDrive) }
-								{#if Object.keys(lfs).length > 0}
+								{#if lfs && Object.keys(lfs).length > 0}
 									<FolderStructure
 											tree={lfs}
 											label="Folder Picker"
