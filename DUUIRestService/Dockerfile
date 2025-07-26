@@ -1,6 +1,12 @@
-# Verwenden Sie das offizielle OpenJDK 17 Image als Basis
-# FROM maven:3.8.5-openjdk-17
-FROM maven:3.9.6-eclipse-temurin-21
+# FROM maven:3.9.6-eclipse-temurin-21
+FROM eclipse-temurin:21-jdk-jammy
+
+RUN apt-get update && \
+    apt-get install -y maven && \
+    apt-get clean
+
+# Optional: Version check
+RUN java -version && mvn -version
 
 # Setzen Sie das Arbeitsverzeichnis im Container
 WORKDIR /app

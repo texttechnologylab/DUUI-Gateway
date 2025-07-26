@@ -40,7 +40,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <duui.version>275fd0123fcd9206741e00034e7e8723a4632d5e</duui.version>
+        <duui.version>efaf4412ee</duui.version>
         <uima.version>3.5.0</uima.version>
         <typesystem.version>3.0.8</typesystem.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
@@ -335,9 +335,12 @@
             <version>${uima.version}</version>
         </dependency>
         <dependency>
+            <!-- <groupId>org.texttechnologylab</groupId> -->
             <groupId>com.github.dterefe</groupId>
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
+            <!-- <version>1.5.0</version> -->
             <version>${duui.version}</version>
+            
             <exclusions>
                 <exclusion>
                     <groupId>org.mongodb</groupId>

@@ -49,8 +49,11 @@ import static com.mongodb.client.model.Aggregates.*;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.Accumulators.*;
+
 import static org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage.formatDocument;
+
 import static spark.Spark.port;
+import static spark.Spark.threadPool;
 
 /*
  * To build follow these steps for now:
@@ -105,6 +108,11 @@ public class Main {
         DUUIMongoDBStorage.init(config);
         DUUIMetricsManager.init();
 
+        threadPool(
+        /* maxThreads */    100,
+        /* minThreads */     10,
+        /* idleTimeoutMs */ 30000
+        );
 
         try {
             port(config.getPort());

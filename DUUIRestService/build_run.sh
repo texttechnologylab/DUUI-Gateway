@@ -1,5 +1,5 @@
 export PORT=8085
-export LOCAL_DRIVE_ROOT=/home/stud_homes/s0424382/
+export LOCAL_DRIVE_ROOT=DUUIRestService/files/upload
 export HOST=localhost
 export MONGO_HOST=localhost
 export MONGO_DB=duui
@@ -13,9 +13,9 @@ export GOOGLE_CLIENT_ID=
 export GOOGLE_CLIENT_SECRET=
 export GOOGLE_REDIRECT_URI=http://localhost:5173/account/google
 
-mvn clean compile
-mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"
-#mvn clean package
-#java -jar target/DUUIRestService.jar
+# mvn clean compile
+# mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"
+mvn clean package
+java -jar target/DUUIRestService.jar
 
 #mvn compile exec:java

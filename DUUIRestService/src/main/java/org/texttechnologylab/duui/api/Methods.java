@@ -28,7 +28,8 @@ import static spark.Spark.put;
  */
 public class Methods {
 
-    private static Logger log = LoggerFactory.getLogger(Methods.class);
+    private static final Logger log = LoggerFactory.getLogger(Methods.class);
+
 
     /**
      * Initializes all endpoints including filters and options.

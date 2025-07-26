@@ -25,11 +25,20 @@
 <!--        </encoder>-->
 <!--    </appender>-->
 
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- wie viele Log‐Events im Puffer, bevor verworfen wird -->
+        <queueSize>5000</queueSize>
+        <!-- ab welcher Füllung ältere Events verworfen werden sollen (0–100) -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- verweist auf den realen Console‐Appender -->
+        <appender-ref ref="CONSOLE" />
+    </appender>
+
     <logger name="org.texttechnologylab.duui.api.controllers.users" level="TRACE"/>
 
     <!-- 3) Root logger: send everything ≥ INFO to console & file -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC_CONSOLE" />
 <!--        <appender-ref ref="FILE" />-->
     </root>
 
