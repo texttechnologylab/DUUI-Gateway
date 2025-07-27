@@ -8,7 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
@@ -22,10 +27,13 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDrivesDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
@@ -37,21 +45,21 @@ import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHand
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 
 import com.dropbox.core.DbxException;
+import static com.mongodb.client.model.Accumulators.push;
+import static com.mongodb.client.model.Aggregates.group;
+import static com.mongodb.client.model.Aggregates.match;
+import static com.mongodb.client.model.Aggregates.project;
+import static com.mongodb.client.model.Aggregates.unwind;
 import com.mongodb.client.model.Filters;
+import static com.mongodb.client.model.Filters.in;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import static com.mongodb.client.model.Projections.computed;
+import static com.mongodb.client.model.Projections.fields;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
 
 import spark.Request;
 import spark.Response;
-
-import static com.mongodb.client.model.Aggregates.*;
-import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.*;
-import static com.mongodb.client.model.Accumulators.*;
-
-import static org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage.formatDocument;
-
 import static spark.Spark.port;
 import static spark.Spark.threadPool;
 
@@ -196,7 +204,7 @@ public class Main {
         if (storeFiles) {
             String path = request.queryParamOrDefault("path", "");
             String provider = request.queryParamOrDefault("provider", "");
-            String providerId = request.queryParamOrDefault("provider_id", "");
+            String providerId = request.queryParamOrDefault("providerId", "");
 
             IDUUIDocumentHandler handler = DUUIProcessController.getHandler(provider, providerId, DUUIRequestHelper.getUserId(request));
             if (handler != null) {
@@ -204,6 +212,9 @@ public class Main {
                 List<DUUIDocument> paths = localHandler.listDocuments(root.toString(), "", true);
                 List<DUUIDocument> documents = localHandler.readDocuments(paths.stream().map(DUUIDocument::getPath).toList());
                 handler.writeDocuments(documents, path);
+            } else {
+                response.status(401);
+                return "Failed to store files: No handler found for provider " + provider + " and providerId " + providerId;
             }
         }
 

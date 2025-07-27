@@ -62,9 +62,9 @@ import {
 	
 	let fileStorage = {
 			storeFiles: false,
-			provider: IO.Dropbox,
+			provider: IO.LocalDrive,
 			provider_id: '',
-			path: '/upload'
+			path: ''
 		}
 
 	let lfs: TreeViewNode
@@ -102,9 +102,9 @@ import {
 
 		fileStorage = {
 			storeFiles: false,
-			provider: IO.Dropbox,
+			provider: IO.LocalDrive,
 			provider_id: '',
-			path: '/upload'
+			path: ''
 		}
 
 		inputAliases = hasConnections($processSettingsStore.input.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.input.provider.toLowerCase()]) : new Map()
@@ -219,7 +219,7 @@ import {
 		}
 
 		const fileUpload = await fetch(
-			`/api/files/upload?store=${fileStorage.storeFiles}&provider=${fileStorage.provider}&path=${fileStorage.path}&provider_id=${fileStorage.provider_id}`,
+			`/api/files/upload?store=${fileStorage.storeFiles}&provider=${fileStorage.provider}&path=${fileStorage.path}&providerId=${fileStorage.provider_id}`,
 			{
 				method: 'POST',
 				body: formData
@@ -305,7 +305,7 @@ import {
 
 	const getFolderStructure = async (provider: IOProvider, providerId: string, isReset: boolean) => {
 		
-		if (!hasFolderPicker(provider, true) || !providerId) {
+		if (!hasFolderPicker(provider, true) || !providerId || !$userSession?.connections[provider.toLowerCase()][providerId]) {
 			return undefined;
 		}
 		
@@ -417,17 +417,22 @@ import {
 
 	$: isInputError  =
 		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.input.provider as IO) &&
-		!hasConnections($processSettingsStore.input.provider);
+		!hasConnections($processSettingsStore.input.provider.toLowerCase());
 
 	$: isOutputError =
 		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.output.provider as IO) &&
-		!hasConnections($processSettingsStore.output.provider);
+		!hasConnections($processSettingsStore.output.provider.toLowerCase());
 
 	$: isFileUploadError = 
 		equals($processSettingsStore.input.provider, IO.File) &&
 		fileStorage.storeFiles &&
-		!hasConnections(fileStorage.provider);
+		(!equals(fileStorage.provider, IO.LocalDrive) && !hasConnections(fileStorage.provider.toLowerCase())) &&
+		(equals(fileStorage.provider, IO.LocalDrive) && Object.keys(lfs || {}).length <= 0);
 
+	$: isFileUploadRequirementsMet = (
+		(!equals(fileStorage.provider, IO.LocalDrive) &&  !isEmpty(fileStorage.provider_id)) ||
+		(equals(fileStorage.provider, IO.LocalDrive) && Object.keys(lfs || {}).length > 0)
+	);
 
 </script>
 
@@ -629,11 +634,10 @@ import {
 									>
 										<Dropdown
 											label="Provider"
-											options={[IO.Dropbox, IO.Minio, IO.NextCloud, IO.Google]}
+											options={[IO.LocalDrive, IO.Dropbox, IO.Minio, IO.NextCloud, IO.Google]}
 											bind:value={fileStorage.provider}
-											on:change = {() => { if (equals(fileStorage.provider, IO.Minio)) fileStorage.provider_id = "" }}
+											on:change = {() => { fileStorage.provider_id = ""; fileUploadTree = undefined; }}
 										/>
-
 										{#if !isFileUploadError && hasConnections(fileStorage.provider.toLowerCase())}
 											<Dropdown
 												label="Connection Alias"
@@ -651,13 +655,21 @@ import {
 											/>
 										{/if}
 									</div>
-									{#if !isFileUploadError && !isEmpty(fileStorage.provider_id)}
+									{#if !isFileUploadError && isFileUploadRequirementsMet}
 										{#if equals(fileStorage.provider, IO.Minio)}
 											<TextInput
 												label="Path (bucket/path/to/folder)"
 												name="fileStoragePath"
 												bind:value={fileStorage.path}
 												error={uploadBucketIsValid}
+											/>
+										{:else if equals(fileStorage.provider, IO.LocalDrive)}
+											<FolderStructure
+													tree={lfs}
+													label="Folder Picker"
+													name="fileLFSUploadPaths"
+													isMultiple={false}
+													bind:value={fileStorage.path}
 											/>
 										{:else if fileUploadTree}
 											<div class="flex w-full">
@@ -666,7 +678,7 @@ import {
 														tree={fileUploadTree}
 														label="Folder Picker"
 														name="fileUploadPaths"
-														isMultiple={true}
+														isMultiple={false}
 														bind:value={fileStorage.path}
 													/>
 												</div>

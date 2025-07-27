@@ -1,5 +1,5 @@
 export PORT=8085
-export LOCAL_DRIVE_ROOT=DUUIRestService/files/upload
+export LOCAL_DRIVE_ROOT=./files
 export HOST=localhost
 export MONGO_HOST=localhost
 export MONGO_DB=duui

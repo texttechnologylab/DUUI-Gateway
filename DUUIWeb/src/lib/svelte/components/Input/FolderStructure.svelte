@@ -115,7 +115,7 @@
                     .filter((x) => parentNodes[x] === x || isInIndeterminates(parentNodes[x]))
 
                 value = filtered.join(",")
-                v = filtered.map((x) => getNode(myTreeViewNodes, x).content).join(", ")
+                v = filtered.map((x) => getNode(myTreeViewNodes, x)).filter(x => x !== null).map(x => x.content).join(", ")
             }
 
         }
@@ -134,7 +134,7 @@
                     prevNode = nodes[0]
                 }
                 value = nodes.join(",")
-                v = nodes.map((x) => getNode(myTreeViewNodes, x).content).join(", ")
+                v = nodes.map((x) => getNode(myTreeViewNodes, x)).filter(x => x !== null).map(x => x.content).join(", ")
 
             }
         }

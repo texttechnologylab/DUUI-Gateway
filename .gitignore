@@ -27,4 +27,4 @@ replay_pid*
 .vscode/
 mongodb_data/*
 package-lock.json
-DUUIRestService/files/upload/*
+DUUIRestService/files/*
