@@ -320,16 +320,23 @@ public class Main {
     }
 
     public static String getFilteredFolderStructure(Request request, Response response) {
+        log.debug("Called getFilteredFolderStructure");
         String rootPath = config.getLocalDriveRoot();
+        log.debug("rootPath: {}", rootPath);
+
         String userId = DUUIRequestHelper.getUserId(request);
+        log.debug("userId: {}", userId);
 
         boolean isAdmin = DUUIRequestHelper.isAdmin(request);
+        log.debug("isAdmin: {}", isAdmin);
 
         List<Path> whitelist = List.of();
 
         if (isAdmin) {
+            log.debug("User is admin, full rootPath whitelisted");
             whitelist = List.of(Path.of(rootPath));
         } else {
+            log.debug("User is not admin, building whitelist pipeline for user {}", userId);
             List<Bson> pipeline = List.of(
                     project(fields(
                             computed("groupsArr", new Document("$objectToArray", "$groups"))
@@ -346,90 +353,114 @@ public class Main {
                             )
                     ))
             );
+            log.debug("MongoDB pipeline: {}", pipeline);
 
             Document result = DUUIMongoDBStorage.Globals().aggregate(pipeline).first();
-            if (result != null) {
-                result = new Document("combinedWhitelist", List.of());
+            log.debug("Mongo aggregation result: {}", result);
 
+            if (result != null) {
                 whitelist = result.getList("combinedWhitelist", String.class)
-                    .stream().map(Path::of).toList();
+                        .stream().map(Path::of).toList();
+                log.debug("Whitelist set from Mongo aggregation: {}", whitelist);
+            } else {
+                log.warn("Mongo aggregation result is null, using empty whitelist");
             }
         }
 
-        try {
+        if (whitelist.isEmpty()) {
+            log.debug("Whitelist is empty, returning empty folder structure");
+            return new Document().toJson();
+        }
 
-//            Document lfs = getLFS(rootPath, false);
-//            Map<String, Object> lfsMap = new HashMap<>();
-//            lfs.putAll(lfsMap);
-//            IDUUIFolderPickerApi.DUUIFolder folder = IDUUIFolderPickerApi.DUUIFolder.fromJson(lfsMap);;
+        try {
+            log.debug("Instantiating DUUILocalDrivesDocumentHandler with rootPath: {}", rootPath);
             DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
+            log.debug("Fetching folder structure...");
             IDUUIFolderPickerApi.DUUIFolder folder = handler.getFolderStructure();
+            log.debug("Filtering folder structure with whitelist: {}", whitelist);
             folder = handler.filterTree(folder, whitelist);
             Document fs = new Document(folder.toJson());
+            log.debug("Final folder structure document created.");
             return fs.toJson();
         } catch (Exception e) {
+            log.error("Failed to get folder structure", e);
             response.status(500);
             return "Failed to get folder structure: " + e.getMessage();
         }
     }
 
     public static String getLocalFolderStructure(Request request, Response response) {
-
+        log.debug("Called getLocalFolderStructure");
         String rootPath = config.getLocalDriveRoot();
-        boolean reset = request.params(":reset").equals("reset");
+        log.debug("rootPath: {}", rootPath);
+        boolean reset = "reset".equals(request.params(":reset"));
+        log.debug("reset param: {}", reset);
 
         try {
             Document fs = getLFS(rootPath, reset);
+            log.debug("Fetched local folder structure");
             return fs.toJson();
         } catch (Exception e) {
+            log.error("Failed to get local folder structure", e);
             response.status(500);
             return "Failed to get folder structure: " + e.getMessage();
         }
-
     }
 
     private static Document getLFS(String rootPath, boolean reset) {
-
+        log.debug("Called getLFS with rootPath={} reset={}", rootPath, reset);
         Document fs = null;
 
         if (reset) {
+            log.debug("Reset flag is true. Unsetting settings.local_folder_structure in MongoDB.");
             DUUIMongoDBStorage.Globals()
                     .findOneAndUpdate(
                             Filters.exists("settings"),
                             Updates.unset("settings.local_folder_structure")
                     );
         } else {
+            log.debug("Reset flag is false. Trying to fetch cached folder structure from MongoDB.");
             Document result = DUUIMongoDBStorage.Globals().find(Filters.exists("settings")).first();
+            log.debug("Mongo fetch result: {}", result);
             if (result != null) {
                 Document doc = result.getEmbedded(List.of("settings", "local_folder_structure"), Document.class);
+                log.debug("Fetched embedded local_folder_structure: {}", doc);
                 if (doc != null) {
                     String cachedRootPath = doc.getString("id");
-                    if (cachedRootPath.contains( config.getLocalDriveRoot())) {
+                    log.debug("Cached rootPath: {}", cachedRootPath);
+                    if (cachedRootPath.contains(config.getLocalDriveRoot())) {
+                        log.debug("Cached rootPath matches config, using cached folder structure.");
                         fs = doc;
+                    } else {
+                        log.debug("Cached rootPath does not match config, will refresh folder structure.");
                     }
                 }
             }
         }
 
         if (fs == null) {
+            log.debug("fs is null, building new folder structure with DUUILocalDrivesDocumentHandler.");
             IDUUIFolderPickerApi.DUUIFolder folder;
             try {
                 DUUILocalDrivesDocumentHandler handler = new DUUILocalDrivesDocumentHandler(rootPath);
                 folder = handler.getFolderStructure();
-
                 fs = new Document(folder.toJson());
+                log.debug("Storing new folder structure in MongoDB.");
                 DUUIMongoDBStorage.Globals()
                         .findOneAndUpdate(
                                 Filters.exists("settings"),
                                 Updates.set("settings.local_folder_structure", fs)
                         );
             } catch (Exception e) {
+                log.error("Exception while getting new folder structure", e);
                 throw new RuntimeException(e.getMessage());
             }
         }
 
+        log.debug("Returning folder structure document from getLFS.");
         return fs;
     }
+
 
     public static String updateSettings(Request request, Response response) {
         
