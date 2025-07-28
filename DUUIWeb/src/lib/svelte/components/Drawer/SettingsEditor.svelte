@@ -59,7 +59,7 @@
 	<div class="p-4 flex justify-between items-center sticky top-0 z-10 bg-surface-100-800-token border-b border-color">
 		<div class="flex-center-4">
 			<Fa icon={faPeopleGroup} size="lg" />
-			<h3 class="h3">Label Editor</h3>
+			<h3 class="h3">Settings Editor</h3>
 		</div>
 
 		<div class="hidden md:flex space-x-2">

@@ -109,7 +109,7 @@
 		drawerStore.close()
 	}
 
-	let whiteListString: string = group.whitelist.join(",")
+	let whiteListString: string = group?.whitelist.join(",") || ""
 	let lfs: TreeViewNode
 
 	onMount(async () => {
@@ -133,7 +133,7 @@
 	})
 
 	if (group.whitelist) {
-		whiteListString = group.whitelist.join(",")
+		whiteListString = group?.whitelist.join(",")
 	}
 
 	$: {
