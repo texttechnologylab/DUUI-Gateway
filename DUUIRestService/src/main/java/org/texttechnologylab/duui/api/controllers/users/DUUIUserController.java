@@ -1079,6 +1079,7 @@ public class DUUIUserController {
         }
         else if (provider.equalsIgnoreCase(Provider.NEXTCLOUD)) {
             try {
+
                 DUUINextcloudDocumentHandler handler =  new DUUINextcloudDocumentHandler(
                     connectionDetails.getString("uri"),
                     connectionDetails.getString("username"),

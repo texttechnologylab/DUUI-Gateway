@@ -67,6 +67,8 @@ public class DUUIRequestHelper {
         String role = (String) getUserProps(request, Set.of("role"))
             .getOrDefault("role", null);
 
+        if (isNullOrEmpty(role)) return false;
+
         return role.equals(Role.ADMIN);
     }
 

@@ -3,6 +3,8 @@
 
 /// <reference types="@sveltejs/kit" />
 
+import {LabelDrivers} from "$lib/duui/component";
+
 declare namespace App {
 	interface Locals {
 		user: User
@@ -86,7 +88,7 @@ type DUUILabels = {
 
 type DUUILabel = {
 	label: string
-	driver: DUUIDriverFilter
+	driver: LabelDrivers
 	scope: string
 	groups: string[]
 }

@@ -3,13 +3,13 @@
 	A component to edit DUUIComponents that appears on the right side on the screen (Sidebar Drawer).
 -->
 <script lang="ts">
-	import {
-		DUUIDrivers,
-		type DUUIComponent,
-		componentToJson,
-		type DUUIRegistryEntryList,
-		type DUUIRegistryEntry, type DUUIComponentMetaData
-	} from '$lib/duui/component'
+    import {
+        DUUIDrivers,
+        type DUUIComponent,
+        componentToJson,
+        type DUUIRegistryEntryList,
+        type DUUIRegistryEntry, type DUUIComponentMetaData, RegistryDrivers
+    } from '$lib/duui/component'
 	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import {
 		currentPipelineStore,
@@ -41,7 +41,7 @@
 	import Tip from '../Tip.svelte'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
 	import RegistryDropdown from "$lib/svelte/components/Input/RegistryDropdown.svelte";
-	const { cloneDeep } = pkg
+	const { cloneDeep, isEmpty } = pkg
 
 	const drawerStore = getDrawerStore()
 	let component: DUUIComponent = $drawerStore.meta.component
@@ -393,17 +393,22 @@
 
 			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} on:change={fetchDriverLabels} />
 
-			{#if component.driver === "DUUIDockerDriver"}
+			{#if RegistryDrivers.includes(component.driver)}
 
 				<RegistryDropdown
 					on:change={
 						(event) => {
+
+                            if (!event.detail || !event.detail.entry) return;
+
 							const registryEntry = event.detail.entry
 							const entryMetadata = event.detail.metaData
 
 							if (!registryEntry.name) {
 								return
 							}
+
+							if (isEmpty(registryEntry.name)) return;
 
 							component.name = registryEntry.name
 							component.target = registryEntry.registry_url

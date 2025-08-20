@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
@@ -28,6 +30,8 @@ import spark.Response;
  */
 public class DUUIComponentRequestHandler {
 
+    static Logger log = LoggerFactory.getLogger(DUUIComponentRequestHandler.class);
+
     /**
      * A set of all available drivers.
      */
@@ -36,7 +40,8 @@ public class DUUIComponentRequestHandler {
         "DUUISwarmDriver",
         "DUUIRemoteDriver",
         "DUUIUIMADriver",
-        "DUUIKubernetesDriver"
+        "DUUIKubernetesDriver",
+        "DUUIPodmanDriver"
     );
 
 
@@ -54,26 +59,43 @@ public class DUUIComponentRequestHandler {
         Document data = Document.parse(request.body());
 
         String name = data.getString("name");
-        if (DUUIRequestHelper.isNullOrEmpty(name)) return DUUIRequestHelper.missingField(response, "name");
+        if (DUUIRequestHelper.isNullOrEmpty(name)) {
+            log.warn("Missing field: name");
+            return DUUIRequestHelper.missingField(response, "name");
+        }
 
-        if (DUUIRequestHelper.isNullOrEmpty(data.getString("target")))
+        if (DUUIRequestHelper.isNullOrEmpty(data.getString("target"))) {
+            log.warn("Missing field: target");
             return DUUIRequestHelper.missingField(response, "target");
+        }
+
         String driver = data.getString("driver");
-        if (DUUIRequestHelper.isNullOrEmpty(driver))
+        if (DUUIRequestHelper.isNullOrEmpty(driver)) {
+            log.warn("Missing field: driver");
             return DUUIRequestHelper.missingField(response, "driver");
-        if (!DRIVERS.contains(driver))
+        }
+
+        if (!DRIVERS.contains(driver)) {
+            log.warn("Invalid driver: {}", driver);
             return DUUIRequestHelper.badRequest(response, "Driver must be one of " + String.join(", ", DRIVERS));
+        }
 
         boolean isTemplate = request.queryParamOrDefault("template", "false").equals("true");
 
-        if (DUUIRequestHelper.isNullOrEmpty(String.valueOf(data.getInteger("index"))) && !isTemplate)
+        if (DUUIRequestHelper.isNullOrEmpty(String.valueOf(data.getInteger("index"))) && !isTemplate) {
+            log.warn("Missing field: index");
             return DUUIRequestHelper.missingField(response, "index");
+        }
 
         Document options = data.get("options", Document.class);
         Document parameters = data.get("parameters", Document.class);
-        if (DUUIRequestHelper.isNullOrEmpty(parameters)) parameters = new Document();
 
+        if (DUUIRequestHelper.isNullOrEmpty(parameters)) {
+            log.debug("Parameters are null or empty, initializing with an empty Document");
+            parameters = new Document();
+        }
 
+        log.debug("Creating component Document");
         Document component = DUUIComponentController
             .insertOne(new Document()
                 .append("name", name)
@@ -88,6 +110,7 @@ public class DUUIComponentRequestHandler {
                 .append("user_id", isTemplate ? null : userId)
                 .append("index", data.getInteger("index")));
 
+        log.info("Component successfully created: {}", component);
         response.status(200);
         return component.toJson();
     }

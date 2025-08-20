@@ -9,6 +9,7 @@ export const DUUIDockerDriver = 'DUUIDockerDriver'
 export const DUUISwarmDriver = 'DUUISwarmDriver'
 export const DUUIUIMADriver = 'DUUIUIMADriver'
 export const DUUIKubernetesDriver = 'DUUIKubernetesDriver'
+export const DUUIPodmanDriver = 'DUUIPodmanDriver'
 
 export type DUUIDriver =
 	| 'DUUIRemoteDriver'
@@ -16,6 +17,7 @@ export type DUUIDriver =
 	| 'DUUISwarmDriver'
 	| 'DUUIUIMADriver'
 	| 'DUUIKubernetesDriver'
+	| 'DUUIPodmanDriver'
 
 export type DUUIDriverFilter = DUUIDriver | 'Any'
 export const DUUIDriverFilters = [
@@ -24,7 +26,21 @@ export const DUUIDriverFilters = [
 	'DUUIDockerDriver',
 	'DUUISwarmDriver',
 	'DUUIUIMADriver',
-	'DUUIKubernetesDriver'
+	'DUUIKubernetesDriver',
+	'DUUIPodmanDriver'
+]
+
+export const RegistryDrivers = [
+    DUUIDockerDriver,
+    DUUISwarmDriver,
+    DUUIPodmanDriver
+]
+
+export const LabelDrivers = [
+    DUUIDockerDriver,
+    DUUISwarmDriver,
+    DUUIKubernetesDriver,
+    DUUIPodmanDriver
 ]
 
 // optional language info in each meta entry
@@ -62,7 +78,8 @@ export const DUUIDrivers: string[] = [
 	DUUIDockerDriver,
 	DUUISwarmDriver,
 	DUUIUIMADriver,
-	DUUIKubernetesDriver
+	DUUIKubernetesDriver,
+    DUUIPodmanDriver
 ]
 
 export type componentOptions =

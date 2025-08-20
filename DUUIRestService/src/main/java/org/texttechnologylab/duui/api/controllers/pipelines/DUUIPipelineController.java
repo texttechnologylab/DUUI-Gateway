@@ -22,13 +22,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIDockerDriver;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIKubernetesDriver;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIPipelineComponent;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIRemoteDriver;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUISwarmDriver;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.DUUIUIMADriver;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.IDUUIDriverInterface;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.driver.*;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.lua.DUUILuaContext;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
@@ -500,6 +494,7 @@ public class DUUIPipelineController {
             case "DUUIRemoteDriver" -> new DUUIRemoteDriver();
             case "DUUIUIMADriver" -> new DUUIUIMADriver();
             case "DUUIKubernetesDriver" -> new DUUIKubernetesDriver();
+            case "DUUIPodmanDriver" -> new DUUIPodmanDriver();
             default -> null;
         };
     }
@@ -551,6 +546,12 @@ public class DUUIPipelineController {
                 .Component(target)
                 .withScale(scale)
                 .withLabels(useGPU==true ? "gpu=all" : "disktype=all")
+                .build();
+            case "DUUIPodmanDriver" -> new DUUIPodmanDriver
+                .Component(target)
+                .withImageFetching(dockerImageFetching)
+                .withGPU(useGPU)
+                .withScale(scale)
                 .build();
             default -> throw new IllegalStateException("Unexpected value: " + driver);
         };
