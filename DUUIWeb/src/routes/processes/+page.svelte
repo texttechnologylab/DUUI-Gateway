@@ -880,7 +880,7 @@ import {
 											tree={lfs}
 											label="Folder Picker"
 											name="outputPaths"
-											isMultiple={true}
+											isMultiple={false}
 											bind:value={$processSettingsStore.output.path}
 									/>
 								{:else}
