@@ -107,98 +107,108 @@ import {
 			path: ''
 		}
 
-		inputAliases = hasConnections($processSettingsStore.input.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.input.provider.toLowerCase()]) : new Map()
-		outputAliases = hasConnections($processSettingsStore.output.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.output.provider.toLowerCase()]) : new Map()
-		fileUploadAliases = hasConnections(fileStorage.provider) ? getCloudProviderAliases($userSession?.connections[fileStorage.provider.toLowerCase()]) : new Map()
+        try {
+            inputAliases = hasConnections($processSettingsStore.input.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.input.provider.toLowerCase()]) : new Map()
+            outputAliases = hasConnections($processSettingsStore.output.provider) ? getCloudProviderAliases($userSession?.connections[$processSettingsStore.output.provider.toLowerCase()]) : new Map()
+            fileUploadAliases = hasConnections(fileStorage.provider) ? getCloudProviderAliases($userSession?.connections[fileStorage.provider.toLowerCase()]) : new Map()
 
-		fileStorage.provider_id = fileUploadAliases.size > 0 ? Array.from(fileUploadAliases.keys())[0] : ""
-
-		const params = $page.url.searchParams
-
-		const reset = (params.get('reset') || 'false') === 'true'
-
-		if (reset) {
-			$processSettingsStore = blankSettings()
-			goto(`/processes?pipeline_id=${params.get('pipeline_id')}`)
-		}
+            fileStorage.provider_id = fileUploadAliases.size > 0 ? Array.from(fileUploadAliases.keys())[0] : ""
+        } catch (err) {
+            toastStore.trigger(errorToast('Error initializing aliases:' + err))
+        }
 
 
-		$processSettingsStore.pipeline_id =
-				params.get('pipeline_id') || $processSettingsStore.pipeline_id
+        try {
 
-		$processSettingsStore.settings.language =
-				params.get('language') || $processSettingsStore.settings.language
+            const params = $page.url.searchParams
 
-		$processSettingsStore.settings.notify =
-				params.get('notify') === 'true' || $processSettingsStore.settings.notify
+            const reset = (params.get('reset') || 'false') === 'true'
 
-		$processSettingsStore.settings.check_target =
-				params.get('check_target') === 'true' || $processSettingsStore.settings.check_target
+            if (reset) {
+                $processSettingsStore = blankSettings()
+                goto(`/processes?pipeline_id=${params.get('pipeline_id')}`)
+            }
 
-		$processSettingsStore.settings.recursive =
-				params.get('recursive') === 'true' || $processSettingsStore.settings.recursive
+            $processSettingsStore.pipeline_id =
+                    params.get('pipeline_id') || $processSettingsStore.pipeline_id
 
-		$processSettingsStore.settings.overwrite =
-				params.get('overwrite') === 'true' || $processSettingsStore.settings.overwrite
+            $processSettingsStore.settings.language =
+                    params.get('language') || $processSettingsStore.settings.language
 
-		$processSettingsStore.settings.sort_by_size =
-				params.get('sort_by_size') === 'true' || $processSettingsStore.settings.sort_by_size
+            $processSettingsStore.settings.notify =
+                    params.get('notify') === 'true' || $processSettingsStore.settings.notify
 
-		$processSettingsStore.settings.ignore_errors =
-				params.get('ignore_errors') === 'true' || $processSettingsStore.settings.ignore_errors
+            $processSettingsStore.settings.check_target =
+                    params.get('check_target') === 'true' || $processSettingsStore.settings.check_target
 
-		$processSettingsStore.settings.minimum_size = +(
-				params.get('minimum_size') || $processSettingsStore.settings.minimum_size
-		)
-		$processSettingsStore.settings.worker_count = +(
-				params.get('worker_count') || $processSettingsStore.settings.worker_count
-		)
+            $processSettingsStore.settings.recursive =
+                    params.get('recursive') === 'true' || $processSettingsStore.settings.recursive
 
-		$processSettingsStore.input.provider =
-				(params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
+            $processSettingsStore.settings.overwrite =
+                    params.get('overwrite') === 'true' || $processSettingsStore.settings.overwrite
 
-		$processSettingsStore.input.provider_id ||=
-				params.get('input_provider_id') || Array.from(inputAliases.keys())[0] || "";
+            $processSettingsStore.settings.sort_by_size =
+                    params.get('sort_by_size') === 'true' || $processSettingsStore.settings.sort_by_size
 
-		$processSettingsStore.input.path = params.get('input_path') || $processSettingsStore.input.path
-		$processSettingsStore.input.content =
-				params.get('input_content') || $processSettingsStore.input.content
-		$processSettingsStore.input.file_extension =
-				(params.get('input_file_extension') as FileExtension) ||
-				$processSettingsStore.input.file_extension
+            $processSettingsStore.settings.ignore_errors =
+                    params.get('ignore_errors') === 'true' || $processSettingsStore.settings.ignore_errors
 
-		$processSettingsStore.output.provider =
-				(params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
+            $processSettingsStore.settings.minimum_size = +(
+                    params.get('minimum_size') || $processSettingsStore.settings.minimum_size
+            )
+            $processSettingsStore.settings.worker_count = +(
+                    params.get('worker_count') || $processSettingsStore.settings.worker_count
+            )
 
-		$processSettingsStore.output.provider_id ||=
-				params.get('output_provider_id') || Array.from(outputAliases.keys())[0] || "";
-		$processSettingsStore.output.path =
-				params.get('output_path') || $processSettingsStore.output.path
-		$processSettingsStore.output.content =
-				params.get('output_content') || $processSettingsStore.output.content
-		$processSettingsStore.output.file_extension =
-				(params.get('output_file_extension') as OutputFileExtension) ||
-				$processSettingsStore.output.file_extension
+            $processSettingsStore.input.provider =
+                    (params.get('input_provider') as IOProvider) || $processSettingsStore.input.provider
 
-		if (hasFolderPicker($processSettingsStore.input.provider, true)) {
-			setInputTree($processSettingsStore.input.provider, $processSettingsStore.input.provider_id, false)
-		}
+            $processSettingsStore.input.provider_id ||=
+                    params.get('input_provider_id') || Array.from(inputAliases.keys())[0] || "";
 
-		if (hasFolderPicker($processSettingsStore.output.provider, true)) {
-			setOutputTree($processSettingsStore.output.provider, $processSettingsStore.output.provider_id, false)
-		}
+            $processSettingsStore.input.path = params.get('input_path') || $processSettingsStore.input.path
+            $processSettingsStore.input.content =
+                    params.get('input_content') || $processSettingsStore.input.content
+            $processSettingsStore.input.file_extension =
+                    (params.get('input_file_extension') as FileExtension) ||
+                    $processSettingsStore.input.file_extension
 
-		if (hasFolderPicker(fileStorage.provider, true)) {
-			setFileUploadTree(fileStorage.provider, fileStorage.provider_id, false)
-		}
+            $processSettingsStore.output.provider =
+                    (params.get('output_provider') as IOProvider) || $processSettingsStore.output.provider
 
-		if ($processSettingsStore.input.provider === IO.File) {
-			$processSettingsStore.input.path = ''
-		}
+            $processSettingsStore.output.provider_id ||=
+                    params.get('output_provider_id') || Array.from(outputAliases.keys())[0] || "";
+            $processSettingsStore.output.path =
+                    params.get('output_path') || $processSettingsStore.output.path
+            $processSettingsStore.output.content =
+                    params.get('output_content') || $processSettingsStore.output.content
+            $processSettingsStore.output.file_extension =
+                    (params.get('output_file_extension') as OutputFileExtension) ||
+                    $processSettingsStore.output.file_extension
 
-		if ($processSettingsStore.input.provider !== IO.Text) {
-			$processSettingsStore.input.content = ''
-		}
+
+            if (hasFolderPicker($processSettingsStore.input.provider, true)) {
+                setInputTree($processSettingsStore.input.provider, $processSettingsStore.input.provider_id, false)
+            }
+
+            if (hasFolderPicker($processSettingsStore.output.provider, true)) {
+                setOutputTree($processSettingsStore.output.provider, $processSettingsStore.output.provider_id, false)
+            }
+
+            if (hasFolderPicker(fileStorage.provider, true)) {
+                setFileUploadTree(fileStorage.provider, fileStorage.provider_id, false)
+            }
+
+            if ($processSettingsStore.input.provider === IO.File) {
+                $processSettingsStore.input.path = ''
+            }
+
+            if ($processSettingsStore.input.provider !== IO.Text) {
+                $processSettingsStore.input.content = ''
+            }
+        } catch (err) {
+            toastStore.trigger(errorToast('Error initializing process settings: ' + err))
+        }
 	})
 
 	let onCancelURL =
@@ -875,7 +885,7 @@ import {
 								{/if}	
 							</div>
 							{#if equals($processSettingsStore.output.provider, IO.LocalDrive) }
-								{#if Object.keys(lfs).length > 0}
+								{#if lfs && Object.keys(lfs).length > 0}
 									<FolderStructure
 											tree={lfs}
 											label="Folder Picker"
