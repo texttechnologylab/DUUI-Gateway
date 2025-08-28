@@ -27,6 +27,8 @@ RUN mvn package
 
 COPY ./config.ini  ./config.ini
 
+ENV JAVA_TOOL_OPTIONS="--add-opens=java.base/java.util=ALL-UNNAMED"
+
 # Setzen des Einstiegspunkts, um die Main-Datei auszuführen
-ENTRYPOINT ["java", "-jar", "target/DUUIRestService.jar"]
+ENTRYPOINT ["java", "-jar", "target/DUUIRestService-1.0-all.jar"]
 # CMD mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"
