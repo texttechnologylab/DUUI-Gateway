@@ -271,6 +271,10 @@ public class DUUIMongoDBStorage {
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("components");
     }
 
+    public static MongoCollection<DataModel.MongoActivation> Activations() {
+        return getClient().getDatabase(config.getMongoDatabase()).getCollection("activations", DataModel.MongoActivation.class);
+    }
+
     public static void initSettings() {
         
         System.out.println("Init Settings");

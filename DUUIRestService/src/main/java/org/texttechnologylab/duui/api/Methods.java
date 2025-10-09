@@ -10,6 +10,8 @@ import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHand
 import org.texttechnologylab.duui.api.routes.pipelines.DUUIPipelineRequestHandler;
 import org.texttechnologylab.duui.api.routes.processes.DUUIProcessRequestHandler;
 
+import java.time.Duration;
+
 import static spark.Spark.after;
 import static spark.Spark.before;
 import static spark.Spark.delete;
@@ -147,6 +149,29 @@ public class Methods {
                 put("/dropbox", DUUIUserController::finishDropboxOAuthFromCode);
                 get("/google", DUUIUserController::getGoogleSettings);
                 put("/google", DUUIUserController::finishGoogleOAuthFromCode);
+            });
+
+            path("/activation", () -> {
+                post("/send", (req, res) -> {
+                    String userId = req.queryParams("userId");
+                    String email  = req.queryParams("email");
+
+                    String code = DUUIUserController.issueActivationCode(userId, Duration.ofMinutes(10));
+
+                    DUUIUserController.sendMail(email, "Your activation code", "Code: " + code + "\nExpires in 10 minutes.");
+                    return "ok";
+                });
+
+                post("/verify", (req, res) -> {
+                    String userId = req.queryParams("userId");
+                    String code   = req.queryParams("code");
+
+                    boolean ok = DUUIUserController.verifyActivationCode(userId, code);
+                    if (!ok) halt(400, "invalid or expired");
+                    // mark user activated in your users collection here
+                    return "activated";
+                });
+
             });
         });
 

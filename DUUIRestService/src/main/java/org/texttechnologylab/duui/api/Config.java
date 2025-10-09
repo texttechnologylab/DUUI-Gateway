@@ -71,6 +71,26 @@ public class Config {
         return getValue("MONGO_PASSWORD", null);
     }
 
+    public String getSmtpHost() {
+        return getValue("SMTP_HOST", null);
+    }
+
+    public int getSmtpPort() {
+        return Integer.parseInt(getValue("SMTP_PORT", "587"));
+    }
+
+    public String getSmtpUser() {
+        return getValue("SMTP_USERNAME", null);
+    }
+
+    public String getSmtpPassword() {
+        return getValue("SMTP_PASSWORD", null);
+    }
+
+    public String getSmtpFromEmail() {
+        return getValue("MAIL_FROM_EMAIL", null);
+    }
+
     public String getDropboxKey() {
         
         String value; 

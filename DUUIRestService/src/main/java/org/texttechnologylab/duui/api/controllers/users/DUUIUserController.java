@@ -1,6 +1,10 @@
 package org.texttechnologylab.duui.api.controllers.users;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,9 +41,13 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
+import org.texttechnologylab.duui.api.storage.DataModel;
 import spark.Request;
 import spark.Response;
 
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 
 /**
@@ -1369,5 +1377,87 @@ public class DUUIUserController {
             .append("url", Main.config.getDropboxRedirectUrl())
             .toJson();
     }
+
+    private static final SecureRandom RNG = new SecureRandom();
+
+    static String sixDigit() {
+        return String.format("%06d", RNG.nextInt(1_000_000));
+    }
+
+    static String hashCode(String code) throws Exception {
+        var md = MessageDigest.getInstance("SHA-256");
+        return Base64.getEncoder().encodeToString(md.digest(code.getBytes()));
+    }
+
+    public static String issueActivationCode(String userId, Duration ttl) throws Exception {
+        MongoCollection<DataModel.MongoActivation> col = DUUIMongoDBStorage.Activations();
+        String code = sixDigit();
+        String codeHash = hashCode(code);
+        Instant now = Instant.now();
+        Instant exp = now.plus(ttl);
+
+        // upsert: replace any previous unused code for this user/purpose
+        var filter = Filters.and(Filters.eq("userId", userId),
+                Filters.eq("purpose", "activation"),
+                Filters.eq("used", false));
+        var rec = new DataModel.MongoActivation(null, userId, "activation", codeHash, exp, now, false);
+        var options = new FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER);
+        col.findOneAndReplace(filter, rec, options);
+
+        return code; // send this in the email
+    }
+
+    public static boolean verifyActivationCode(String userId, String code) throws Exception {
+        MongoCollection<DataModel.MongoActivation> col = DUUIMongoDBStorage.Activations();
+        String codeHash = hashCode(code);
+        Instant now = Instant.now();
+
+        var filter = Filters.and(
+                Filters.eq("userId", userId),
+                Filters.eq("purpose", "activation"),
+                Filters.eq("codeHash", codeHash),
+                Filters.eq("used", false),
+                Filters.gte("expiresAt", now)
+        );
+
+        var update = Updates.combine(
+                Updates.set("used", true)
+        );
+
+        var res = col.findOneAndUpdate(filter, update, new FindOneAndUpdateOptions()
+                .returnDocument(ReturnDocument.AFTER));
+
+        return res != null; // true => success; false => invalid/expired/already used
+    }
+
+    public static void sendMail(String to, String subject, String body) throws MessagingException {
+        String host = Main.config.getSmtpHost();
+        String port = Main.config.getSmtpPort();
+        String user = Main.config.getSmtpUser();
+        String pass = Main.config.getSmtpPassword();
+        String from = Main.config.getSmtpFromEmail();
+
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(user, pass);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(from));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+        message.setSubject(subject);
+        message.setText(body);
+
+        Transport.send(message);
+    }
+
+
 
 }
