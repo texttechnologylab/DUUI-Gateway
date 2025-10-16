@@ -14,7 +14,7 @@
 	const popupWidth = autoPopupWidth ? "w-auto min-w-max" : ""
 </script>
 
-<div class="group relative {classes}">
+<div class="group relative {classes}"  style="display: inline;">
 	<slot name="trigger" />
 	{#if position === 'bottom'}
 		<div

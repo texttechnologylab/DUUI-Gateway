@@ -13,7 +13,7 @@
 	import {
 		faChevronDown,
 		faClose,
-		faDownload,
+		faDownload, faInfo,
 		faRefresh
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
@@ -26,6 +26,8 @@
 	import Number from '../Input/Number.svelte'
 	import Search from '../Input/Search.svelte'
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
+	import Popup from '$lib/svelte/components/Popup.svelte'
+	import Link from '$lib/svelte/components/Link.svelte'
 
 	const drawerStore = getDrawerStore()
 
@@ -81,11 +83,13 @@
 		begin: number
 		end: number
 		annotationType: string
+		details: string
 	}
 
 	type ProcessedAnnotation = {
 		text: string
 		annotationType?: string
+		details: string
 	}
 
 	let selectedAnnotation: string = ""
@@ -133,19 +137,20 @@
 
 		Object.values(annotations)
 				.filter((annotation) => annotation.annotationType === selectedType)
-				.forEach(({ begin, end, annotationType }) => {
+				.forEach(({ begin, end, annotationType, details }) => {
 					if (currentIndex < begin) {
-						parts.push({ text: text.slice(currentIndex, begin) });
+						parts.push({ text: text.slice(currentIndex, begin), details });
 					}
 					parts.push({
 						text: text.slice(begin, end),
-						annotationType
+						annotationType,
+						details
 					});
 					currentIndex = end;
 				});
 
 		if (currentIndex < text.length) {
-			parts.push({ text: text.slice(currentIndex) });
+			parts.push({ text: text.slice(currentIndex), details: "" });
 		}
 
 		processingText = false
@@ -413,12 +418,25 @@
 						options={annotationNames}
 				/>
 				<hr class="border-t border-gray-300 my-4 rounded-md">
-				<div class="p-8 py-4 border-b border-color flex justify-between items-center gap-8">
-					<div class="flex flex-col items-start justify-center gap-2">
+				<div class="p-8 py-4 border-b border-color flex gap-8">
+					<div class="flex flex-col items-start  gap-2">
 						<div class="h-64 overflow-y-auto">
 							{#each processedAnnotations as part}
 								{#if part.annotationType}
-									<span class=" variant-soft-primary px-1 rounded"> {part.text}</span>
+										<span class=" variant-soft-primary px-1 rounded">
+												<Popup autoPopupWidth={true} arrow={false} position="left">
+														<svelte:fragment slot="trigger">
+																{part.text}
+														</svelte:fragment>
+														<svelte:fragment slot="popup" >
+																<div class="bg-primary-50-900-token bg-transparent absolute p-3 rounded-md w-48 overflow-y-auto h-36">
+																		<small class="max-w-prose text-primary-700 whitespace-pre-wrap">
+																				{part.details}
+																		</small>
+																</div>
+														</svelte:fragment>
+												</Popup>
+										</span>
 								{:else}
 									<span>{part.text}</span>
 								{/if}

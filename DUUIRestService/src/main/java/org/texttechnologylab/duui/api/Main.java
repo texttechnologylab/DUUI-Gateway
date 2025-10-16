@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
@@ -265,6 +266,18 @@ public class Main {
                 .peek(annotation -> annotationNames.add(annotation.getType().getName()))
                 .map(annotation -> new Document()
                     .append("annotationType", annotation.getType().getName())
+                    .append("details", annotation.getType().getFeatures()
+                            .stream()
+                            .filter(feat -> !feat.getShortName().equals("sofa")
+                                    && !feat.getShortName().equals("begin")
+                                    && !feat.getShortName().equals("end")
+                                    && annotation.getFeatureValueAsString(feat) != null
+                                    && !annotation.getFeatureValueAsString(feat).isEmpty())
+                            .map(feat ->
+                                    feat.getShortName() + ": " + annotation.getFeatureValueAsString(feat) + "\n"
+                            )
+                            .collect(Collectors.joining())
+                    )
                     .append("begin", annotation.getBegin())
                     .append("end", annotation.getEnd())
                 ).toList();
