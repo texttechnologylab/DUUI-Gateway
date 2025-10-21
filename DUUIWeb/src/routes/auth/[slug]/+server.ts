@@ -113,6 +113,106 @@ const register = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 			'This email address is already registered. If you forgot your password, you can reset it.'
 	})
 }
+const verifyEmail = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+	const data = await event.request.json()
+
+	const email = data.email
+
+	const response = await fetch(`${API_URL}/users/verification/email/${email}`, {
+		method: 'GET'
+	})
+
+	if (response.ok) {
+		const userId: string = await response.text()
+
+		if (userId.length > 0) {
+			return json({ user: userId })
+		} else {
+			json({ error: "Email is not associated with a user." }, { status: 404 })
+		}
+
+	}
+
+	return json({ error: "Email is not associated with a user." }, { status: 404 })
+
+	}
+
+const sendRecoveryCode = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+
+	const data = await event.request.json()
+	const email = data.email
+	const userId = data.userId
+
+	const response = await fetch(`${API_URL}/users/verification/recovery/send?email=${email}&userId=${userId}`, {
+		method: 'POST',
+		body: JSON.stringify({
+		})
+	})
+
+	if (!response.ok) {
+		return json({ error: 'Could not send recovery code. Please try again later.' }, { status: 400 })
+	}
+
+	return json({ message: 'Recovery code sent.' })
+}
+
+const verifyRecoveryCode = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+
+	const data = await event.request.json()
+	const userId = data.userId
+	const code = data.code
+
+	const response = await fetch(`${API_URL}/users/verification/recovery/verify?code=${code}&userId=${userId}`, {
+		method: 'POST',
+		body: JSON.stringify({})
+	})
+
+	if (!response.ok) {
+		return json({ error: 'Invalid recovery code.' }, { status: 400 })
+	}
+
+	return json({ message: 'Recovery code verified.' })
+}
+
+const sendActivationCode = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+
+	const data = await event.request.json()
+	const email = data.email
+	const userId = data.userId
+
+	const response = await fetch(`${API_URL}/users/verification/activation/send?email=${email}&userId=${userId}`, {
+		method: 'POST',
+		body: JSON.stringify({
+		})
+	})
+
+	if (!response.ok) {
+		return json({ error: 'Could not send activation code. Please try again later.' }, { status: 400 })
+	}
+
+	return json({ message: 'Activation code sent.' })
+}
+
+const verifyActivationCode = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
+
+	const data = await event.request.json()
+	const userId = data.userId
+	const code = data.code
+
+	const response = await fetch(`${API_URL}/users/verification/activation/verify?code=${code}&userId=${userId}`, {
+		method: 'POST',
+		body: JSON.stringify({
+		})
+	})
+
+	if (!response.ok) {
+		return json({ error: 'Invalid activation code.' }, { status: 400 })
+	}
+
+	return json({ message: 'Activation code verified.' })
+}
+
+
 
 const change = async (event: RequestEvent<RouteParams, '/auth/[slug]'>) => {
 	const data = await event.request.json()
@@ -167,6 +267,16 @@ export const POST: RequestHandler = async (event) => {
 			case 'register':
 				authenticationResult = await register(event)
 				break
+			case 'verifyEmail':
+				return verifyEmail(event)
+			case 'sendRecoveryCode':
+				return sendRecoveryCode(event)
+			case 'verifyRecoveryCode':
+				return verifyRecoveryCode(event)
+			case 'sendActivationCode':
+				return sendActivationCode(event)
+			case 'verifyActivationCode':
+				return verifyActivationCode(event)
 			case 'recover':
 				return json('Success')
 			case 'change':

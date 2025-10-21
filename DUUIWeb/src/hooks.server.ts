@@ -1,6 +1,10 @@
 import { API_URL } from '$env/static/private'
 import type { Handle, RequestEvent } from '@sveltejs/kit'
+import { env } from '$env/dynamic/public';
 
+
+const requireVerification =
+	(env.PUBLIC_VERIFICATION_REQUIRED ?? 'false').toLowerCase() !== 'false';
 
 async function testBackendConnection() {
 	try {
@@ -47,12 +51,22 @@ const fetchUser = async (
 	}
 }
 
+const ALLOW_UNVERIFIED = [
+	'/account/login',
+	'/account/logout',
+	'/account/verify',
+	'/account/register',
+	'/auth',          // endpoint that checks the code
+	'/api/users',
+	'/assets', '/favicon.ico'
+];
+
 /**
  * This function is called every time a request is made to any part of the web interface.
  * The request is verified through this function before being passed to the appropriate page / endpoint.
  */
 export const handle: Handle = async ({ event, resolve }) => {
-	const { cookies } = event;
+	const { cookies, url } = event;
 	const session = cookies.get('session') || event.url.searchParams.get('state') || '';
 
 	if (session) {
@@ -63,6 +77,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// The user is not authorized.
 	if (!event.locals.user) cookies.delete('session', { path: '/' });
+	// The user is not verified.
+	else if (requireVerification && !event.locals.user.activated) {
+		// allow only a small allowlist until verified
+		const path = url.pathname;
+		const allowed = ALLOW_UNVERIFIED.some((p) => path === p || path.startsWith(p + '/'));
+		if (!allowed) {
+			// keep session cookie; just detour to verification UI
+			const next = encodeURIComponent(url.pathname + url.search);
+			return new Response(null, {
+				status: 303,
+				headers: { location: `/account/verify` }
+			});
+		}
+	}
 
 	// Resolve the response
 	const response = await resolve(event);

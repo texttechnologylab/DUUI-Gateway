@@ -72,12 +72,10 @@ public class Config {
     }
 
     public String getSmtpHost() {
-        return getValue("SMTP_HOST", null);
+        return getValue("SMTP_HOST", "localhost");
     }
 
-    public int getSmtpPort() {
-        return Integer.parseInt(getValue("SMTP_PORT", "587"));
-    }
+    public String getSmtpPort() { return getValue("SMTP_PORT", "587"); }
 
     public String getSmtpUser() {
         return getValue("SMTP_USERNAME", null);
@@ -89,6 +87,10 @@ public class Config {
 
     public String getSmtpFromEmail() {
         return getValue("MAIL_FROM_EMAIL", null);
+    }
+
+    public boolean getUseSmptpDebug() {
+        return Boolean.parseBoolean(getValue("USE_SMTP_DEBUG", "true"));
     }
 
     public String getDropboxKey() {

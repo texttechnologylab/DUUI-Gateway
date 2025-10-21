@@ -42,7 +42,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <duui.version>efaf4412ee</duui.version>
         <uima.version>3.5.0</uima.version>
-        <typesystem.version>3.0.8</typesystem.version>
+        <typesystem.version>3.0.12</typesystem.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
         <dkpro.core.version>2.4.0</dkpro.core.version>
     </properties>
@@ -51,6 +51,8 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
     </repositories>
 

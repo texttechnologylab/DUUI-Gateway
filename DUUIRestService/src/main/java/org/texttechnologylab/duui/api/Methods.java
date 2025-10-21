@@ -1,5 +1,7 @@
 package org.texttechnologylab.duui.api;
 
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
@@ -9,6 +11,8 @@ import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHandler;
 import org.texttechnologylab.duui.api.routes.pipelines.DUUIPipelineRequestHandler;
 import org.texttechnologylab.duui.api.routes.processes.DUUIProcessRequestHandler;
+import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+import org.texttechnologylab.duui.api.utils.DUUIMailClient;
 
 import java.time.Duration;
 
@@ -151,25 +155,74 @@ public class Methods {
                 put("/google", DUUIUserController::finishGoogleOAuthFromCode);
             });
 
-            path("/activation", () -> {
-                post("/send", (req, res) -> {
-                    String userId = req.queryParams("userId");
-                    String email  = req.queryParams("email");
+            path("/verification", () -> {
+                get("/email/:email", (req, res) -> {
+                    String email = req.params("email");
+                    MongoCollection<Document> usersCollection = DUUIMongoDBStorage.Users();
 
-                    String code = DUUIUserController.issueActivationCode(userId, Duration.ofMinutes(10));
+                    Document userDoc = usersCollection.find(new Document("email", email)).limit(1).first();
+                    if (userDoc == null) {
+                        res.status(401);
+                        return null;
+                    }
 
-                    DUUIUserController.sendMail(email, "Your activation code", "Code: " + code + "\nExpires in 10 minutes.");
-                    return "ok";
+                    org.bson.types.ObjectId id = userDoc.getObjectId("_id");
+                    if (id == null) {
+                        res.status(404);
+                        return null;
+                    }
+
+                    return id.toHexString();
                 });
 
-                post("/verify", (req, res) -> {
-                    String userId = req.queryParams("userId");
-                    String code   = req.queryParams("code");
+                path("/activation", () -> {
+                    post("/send", (req, res) -> {
+                        String userId = req.queryParams("userId");
+                        String email = req.queryParams("email");
 
-                    boolean ok = DUUIUserController.verifyActivationCode(userId, code);
-                    if (!ok) halt(400, "invalid or expired");
-                    // mark user activated in your users collection here
-                    return "activated";
+                        String code = DUUIUserController.issueActivationCode(userId, Duration.ofMinutes(10));
+
+                        DUUIMailClient.sendMail(email, "Your activation code", "Code: " + code + "\nExpires in 10 minutes.");
+
+                        res.status(200);
+                        return "ok";
+                    });
+
+                    post("/verify", (req, res) -> {
+                        String userId = req.queryParams("userId");
+                        String code = req.queryParams("code");
+
+                        boolean ok = DUUIUserController.verifyActivationCode(userId, code);
+                        if (!ok) halt(400, "invalid or expired");
+
+                        res.status(200);
+                        return "activated";
+                    });
+                });
+
+                path("/recovery", () -> {
+                    post("/send", (req, res) -> {
+                        String userId = req.queryParams("userId");
+                        String email = req.queryParams("email");
+
+                        String code = DUUIUserController.issueRecoveryCode(userId, Duration.ofMinutes(10));
+
+                        DUUIMailClient.sendMail(email, "Your password reset code", "Code: " + code + "\nExpires in 10 minutes.");
+
+                        res.status(200);
+                        return "ok";
+                    });
+
+                    post("/verify", (req, res) -> {
+                        String userId = req.queryParams("userId");
+                        String code = req.queryParams("code");
+
+                        boolean ok = DUUIUserController.verifyRecoveryCode(userId, code);
+                        if (!ok) halt(400, "invalid or expired");
+
+                        res.status(200);
+                        return "reset";
+                    });
                 });
 
             });

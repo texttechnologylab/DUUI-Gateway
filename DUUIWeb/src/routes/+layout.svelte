@@ -62,6 +62,7 @@
 	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
 	import SettingsEditor from '$lib/svelte/components/Drawer/SettingsEditor.svelte'
 	import RegistryEditor from "$lib/svelte/components/Drawer/RegistryEditor.svelte";
+	import CodeModal from '$lib/svelte/components/Modal/CodeModal.svelte'
 
 	export let data
 	let { user, theme } = data
@@ -136,7 +137,8 @@
 		confirmModal: { ref: ConfirmModal },
 		helpModal: { ref: HelpModal },
 		templateModal: { ref: TemplateModal },
-		citeModal: {ref: CiteModal}
+		citeModal: {ref: CiteModal},
+		codeModal: {ref: CodeModal}
 	}
 	const modalStore = getModalStore()
 </script>

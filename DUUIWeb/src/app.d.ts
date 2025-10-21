@@ -27,6 +27,7 @@ interface UserProperties {
 	role: 'None' | 'User' | 'Admin' | 'Trial' | 'System'
 	session: string
 	expires?: string
+	activated: boolean
 	preferences: {
 		tutorial: boolean
 		step: number

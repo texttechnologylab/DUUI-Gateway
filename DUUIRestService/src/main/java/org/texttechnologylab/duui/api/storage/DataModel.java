@@ -175,6 +175,7 @@ public class DataModel {
             Role role,
             Integer workers,
             String session,
+            Boolean activated,
             String password_reset_token,
             Long reset_token_expiration,
             Map<String, MongoPreference> preferences,

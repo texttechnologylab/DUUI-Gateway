@@ -12,20 +12,18 @@ export DBX_REDIRECT_URL=http://localhost:5173/account/dropbox
 export GOOGLE_CLIENT_ID=
 export GOOGLE_CLIENT_SECRET=
 export GOOGLE_REDIRECT_URI=http://localhost:5173/account/google
+export SMPTP_HOST=localhost
+export SMTP_PORT=1025
+export SMTP_USER=
+export SMTP_PASSWORD=
+export MAIL_FROM_EMAIL=help@duui.de
+export USE_SMTP_DEBUG=true
+
 export JAVA_TOOL_OPTIONS="--add-opens=java.base/java.util=ALL-UNNAMED"
 
+# To run a local SMTP server for testing email sending, you can use MailHog:
+#  docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
 
-# mvn clean compile
-# mvn exec:java -Dexec.mainClass="org.texttechnologylab.duui.api.Main"
-mvn clean -Dstyle.color=never -Djansi.strip=true package
-#java -jar target/DUUIRestService-1.0-all.jar
-
-#mvn -q -DskipTests package
-#
-## Confirm no signatures inside the fat jar
-#jar tf target/*-all.jar | egrep 'META-INF/.*\.(SF|DSA|RSA|EC)' || echo "no signatures"
-#
-## (optional) confirm uimaFIT indices exist
-#jar tf target/*-all.jar | grep 'META-INF/org.apache.uima.fit/'
-#
-java -jar target/DUUIRestService-1.0-all.jar
+mvn clean compile
+mvn  -Dstyle.color=never -Djansi.strip=true package
+java -Djava.net.preferIPv4Stack=true -jar target/DUUIRestService-1.0-all.jar

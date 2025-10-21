@@ -22,7 +22,6 @@ import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 
-import static com.amazonaws.regions.ServiceAbbreviations.Config;
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
 
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
@@ -44,10 +43,6 @@ import com.mongodb.client.result.UpdateResult;
 import org.texttechnologylab.duui.api.storage.DataModel;
 import spark.Request;
 import spark.Response;
-
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 
 /**
@@ -1420,6 +1415,114 @@ public class DUUIUserController {
                 Filters.gte("expiresAt", now)
         );
 
+        log.info("verifyActivationCode: start | userId={} now={}", userId, now);
+        log.debug("verifyActivationCode: filter={}", filter.toString());
+
+        var update = Updates.combine(
+                Updates.set("used", true)
+        );
+
+        var options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
+
+        var res = col.findOneAndUpdate(filter, update, options);
+
+        if (res != null) {
+            log.info("verifyActivationCode: activation record matched and marked used for userId={}", userId);
+            log.debug("verifyActivationCode: activation record after update={}", res.toString());
+
+            try {
+                // Korrigierter Filter: match by _id as ObjectId
+                Bson userFilter = Filters.eq("_id", new ObjectId(userId));
+                var userDoc = DUUIMongoDBStorage
+                        .Users()
+                        .findOneAndUpdate(userFilter, Updates.set("activated", true), new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+
+                if (userDoc != null) {
+                    log.info("verifyActivationCode: user document updated, activated=true for userId={}", userId);
+                    log.info("verifyActivationCode: updated user document={}", userDoc.toJson());
+                } else {
+                    // Fallback: inspect UpdateResult to get matched/modified counts
+                    UpdateResult ur = DUUIMongoDBStorage.Users().updateOne(userFilter, Updates.set("activated", true));
+                    log.warn("verifyActivationCode: findOneAndUpdate returned null for userId={}, fallback updateOne result: matched={}, modified={}, acknowledged={}",
+                            userId, ur.getMatchedCount(), ur.getModifiedCount(), ur.wasAcknowledged());
+                }
+            } catch (IllegalArgumentException iae) {
+                log.error("verifyActivationCode: invalid userId format: {}", userId, iae);
+            } catch (Exception e) {
+                log.error("verifyActivationCode: failed to set activated=true for userId={}", userId, e);
+            }
+        } else {
+            log.info("verifyActivationCode: no activation record found (invalid/expired/already used) for userId={}", userId);
+        }
+
+        return res != null; // true => success; false => invalid/expired/already used
+    }
+
+
+//    public static boolean verifyActivationCode(String userId, String code) throws Exception {
+//        MongoCollection<DataModel.MongoActivation> col = DUUIMongoDBStorage.Activations();
+//        String codeHash = hashCode(code);
+//        Instant now = Instant.now();
+//
+//        var filter = Filters.and(
+//                Filters.eq("userId", userId),
+//                Filters.eq("purpose", "activation"),
+//                Filters.eq("codeHash", codeHash),
+//                Filters.eq("used", false),
+//                Filters.gte("expiresAt", now)
+//        );
+//
+//        var update = Updates.combine(
+//                Updates.set("used", true)
+//        );
+//
+//        var res = col.findOneAndUpdate(filter, update, new FindOneAndUpdateOptions()
+//                .returnDocument(ReturnDocument.AFTER));
+//
+//        if (res != null) {
+//            DUUIMongoDBStorage
+//                .Users()
+//                .findOneAndUpdate(
+//                    Filters.eq(userId),
+//                    Updates.set("activated", true)
+//                );
+//        }
+//
+//
+//        return res != null; // true => success; false => invalid/expired/already used
+//    }
+
+    public static String issueRecoveryCode(String userId, Duration ttl) throws Exception {
+        MongoCollection<DataModel.MongoActivation> col = DUUIMongoDBStorage.Activations();
+        String code = sixDigit();
+        String codeHash = hashCode(code);
+        Instant now = Instant.now();
+        Instant exp = now.plus(ttl);
+
+        // upsert: replace any previous unused code for this user/purpose
+        var filter = Filters.and(Filters.eq("userId", userId),
+                Filters.eq("purpose", "recovery"),
+                Filters.eq("used", false));
+        var rec = new DataModel.MongoActivation(null, userId, "recovery", codeHash, exp, now, false);
+        var options = new FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER);
+        col.findOneAndReplace(filter, rec, options);
+
+        return code; // send this in the email
+    }
+
+    public static boolean verifyRecoveryCode(String userId, String code) throws Exception {
+        MongoCollection<DataModel.MongoActivation> col = DUUIMongoDBStorage.Activations();
+        String codeHash = hashCode(code);
+        Instant now = Instant.now();
+
+        var filter = Filters.and(
+                Filters.eq("userId", userId),
+                Filters.eq("purpose", "recovery"),
+                Filters.eq("codeHash", codeHash),
+                Filters.eq("used", false),
+                Filters.gte("expiresAt", now)
+        );
+
         var update = Updates.combine(
                 Updates.set("used", true)
         );
@@ -1428,34 +1531,6 @@ public class DUUIUserController {
                 .returnDocument(ReturnDocument.AFTER));
 
         return res != null; // true => success; false => invalid/expired/already used
-    }
-
-    public static void sendMail(String to, String subject, String body) throws MessagingException {
-        String host = Main.config.getSmtpHost();
-        String port = Main.config.getSmtpPort();
-        String user = Main.config.getSmtpUser();
-        String pass = Main.config.getSmtpPassword();
-        String from = Main.config.getSmtpFromEmail();
-
-        Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", host);
-        props.put("mail.smtp.port", port);
-
-        Session session = Session.getInstance(props, new Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(user, pass);
-            }
-        });
-
-        Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(from));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-        message.setSubject(subject);
-        message.setText(body);
-
-        Transport.send(message);
     }
 
 

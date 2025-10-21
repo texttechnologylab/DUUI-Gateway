@@ -26,3 +26,23 @@ export const showConfirmationModal = async (
 
 	return await response
 }
+
+export const showCodeModal = async (
+	settings: ModalSettings['meta'],
+		modalStore: ModalStore
+) => {
+		const response = new Promise<string | boolean>((resolve) => {
+			const modal: ModalSettings = {
+				type: 'component',
+				component: 'codeModal',
+				meta: { ...settings },
+				response: (result: string | boolean) => {
+					resolve(result)
+				}
+			}
+
+			modalStore.trigger(modal)
+		})
+
+		return await response
+	}

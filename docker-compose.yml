@@ -25,12 +25,18 @@ services:
       - GOOGLE_CLIENT_ID=
       - GOOGLE_CLIENT_SECRET=
       - GOOGLE_REDIRECT_URI=http://duui-gateway-frontend:5173/account/google
+      - SMTP_HOST=duui-gateway-smtp
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - MAIL_FROM_EMAIL=help@duui.de
     ports:
       - "8085:2605"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - mongodb
+      - smptp-server
     networks:
       - app-network
 
@@ -42,6 +48,7 @@ services:
       args:
         API_URL: http://duui-gateway-backend:2605
         DBX_URL: https://www.dropbox.com/home/Apps/DUUI
+        PUBLIC_VERIFICATION_REQUIRED: 'true'
     container_name: duui-gateway-frontend
     ports:
       - "5173:5173"
@@ -52,10 +59,18 @@ services:
       - API_URL=http://duui-gateway-backend:2605
       - PORT=5173
       - DBX_URL='https://www.dropbox.com/home/Apps/DUUI'
+      - PUBLIC_VERIFICATION_REQUIRED=true
     networks:
       - app-network
 
-
+  smptp-server:
+    image: mailhog/mailhog
+    container_name: duui-gateway-smtp
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
   mongodb:
     image: mongo:4.4.29
     restart: always

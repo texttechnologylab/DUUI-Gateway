@@ -363,6 +363,11 @@ public class DUUIMongoDBStorage {
         return getClient().getDatabase(config.getMongoDatabase()).getCollection("users");
     }
 
+    public static MongoCollection<DataModel.MongoUser> TypedUsers() {
+        DUUIStorageMetrics.incrementUsersCounter();
+        return getClient().getDatabase(config.getMongoDatabase()).getCollection("users", DataModel.MongoUser.class);
+    }
+
     /**
      * Utility functions for fast access to collections in the database.
      *
