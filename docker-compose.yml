@@ -30,6 +30,7 @@ services:
       - SMTP_USER=
       - SMTP_PASSWORD=
       - MAIL_FROM_EMAIL=help@duui.de
+      - USE_SMTP_DEBUG=true
     ports:
       - "8085:2605"
     extra_hosts:
@@ -54,6 +55,7 @@ services:
       - "5173:5173"
     depends_on:
       - duui-backend
+      - smptp-server
     environment:
       - ORIGIN=http://duui-gateway-frontend:5173
       - API_URL=http://duui-gateway-backend:2605
