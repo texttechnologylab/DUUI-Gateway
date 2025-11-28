@@ -21,23 +21,22 @@
     import Chip from "$lib/svelte/components/Chip.svelte"; // wherever you put the types
 
 
+    const fallbackMeta: DUUIComponentMetaData = {
+        tag: 'latest',
+        search_tags: [],
+        documentation: '',
+        description: '',
+        short_description: '',
+        references: [],
+        language: [],
+        required_types: [],
+        resulting_types: []
+    };
+
     const empty: DUUIRegistryEntry = {
         _id: "",
         name: "",
-        meta_data: [{
-            tag: "",
-            search_tags: [],
-            documentation: "",
-            description: "",
-            short_description: "",
-            references: [],
-            language: [{
-                name: "",
-                code: ""
-            }],
-            required_types: [],
-            resulting_types: []
-        }],
+        meta_data: [fallbackMeta],
         registry_id: "",
         registry_name: "",
         registry_url: "",
@@ -76,9 +75,12 @@
 
     const reset = () => {
         selectedEntry = empty;
-        selectedTag = "";
-        selectedMetaData = empty.meta_data[0];
+        selectedTag = fallbackMeta.tag;
+        selectedMetaData = fallbackMeta;
     }
+
+    const getMetaList = (entry: DUUIRegistryEntry) =>
+        entry?.meta_data?.length ? entry.meta_data : [fallbackMeta];
 
     const change = () => {
 
@@ -195,6 +197,7 @@
     // whenever selection changes, reset tag and notify parent
 
     let displayEntries: boolean = false;
+    let lastEntryId = '';
 
     $: if (selectedRegistryEndpoint) {
         (async () => {
@@ -209,14 +212,15 @@
 
     $: displayFilterFlags = displayFilterFlags
 
-    $: if (selectedEntry) {
-        // default to first meta-data tag if none selected
-        if (!selectedTag && selectedEntry.meta_data.length) {
-            selectedMetaData = selectedEntry.meta_data[0];
-            selectedTag = selectedEntry.meta_data[0].tag;
+    $: {
+        const currentId = selectedEntry?._id ?? '';
+        if (currentId !== lastEntryId) {
+            const metaList = getMetaList(selectedEntry);
+            selectedMetaData = metaList[0];
+            selectedTag = metaList[0]?.tag ?? fallbackMeta.tag;
+            lastEntryId = currentId;
+            change();
         }
-
-        change()
     }
 </script>
 
@@ -244,9 +248,10 @@
             <Dropdown
                     label="Meta‐Tag"
                     bind:value={selectedTag}
-                    options={selectedEntry.meta_data.map(m => m.tag)}
+                    options={getMetaList(selectedEntry).map(m => m.tag)}
                     on:change={() => {
-                    selectedMetaData = selectedEntry.meta_data.find(m => m.tag === selectedTag) ?? empty.meta_data[0];
+                    const metaList = getMetaList(selectedEntry);
+                    selectedMetaData = metaList.find(m => m.tag === selectedTag) ?? fallbackMeta;
                     change();
                 }}
             />
@@ -438,7 +443,4 @@
         </div>
     </div>
 {/if}
-
-
-
 

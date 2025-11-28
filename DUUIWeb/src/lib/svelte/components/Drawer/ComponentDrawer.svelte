@@ -28,7 +28,7 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
 	import pkg from 'lodash'
-	import {createEventDispatcher, onMount} from 'svelte'
+    import {createEventDispatcher, onMount} from 'svelte'
 	import Fa from 'svelte-fa'
 	import { v4 as uuidv4 } from 'uuid'
 	import DriverIcon from '../DriverIcon.svelte'
@@ -41,7 +41,19 @@
 	import Tip from '../Tip.svelte'
 	import JsonDropdownInput from "$lib/svelte/components/Input/JsonDropdownInput.svelte";
 	import RegistryDropdown from "$lib/svelte/components/Input/RegistryDropdown.svelte";
-	const { cloneDeep, isEmpty } = pkg
+    const { cloneDeep, isEmpty } = pkg
+
+    const defaultRegistryMeta: DUUIComponentMetaData = {
+        tag: 'latest',
+        search_tags: [],
+        documentation: '',
+        description: '',
+        short_description: '',
+        references: [],
+        language: [],
+        required_types: [],
+        resulting_types: []
+    }
 
 	const drawerStore = getDrawerStore()
 	let component: DUUIComponent = $drawerStore.meta.component
@@ -399,33 +411,31 @@
 					on:change={
 						(event) => {
 
-                            if (!event.detail || !event.detail.entry) return;
+						if (!event.detail || !event.detail.entry) return;
 
-							const registryEntry = event.detail.entry
-							const entryMetadata = event.detail.metaData
+						const registryEntry = event.detail.entry
+						const entryMetadata = event.detail.metaData ?? defaultRegistryMeta
+						const metadataTag = entryMetadata.tag && entryMetadata.tag.trim().length ? entryMetadata.tag : defaultRegistryMeta.tag
 
-							if (!registryEntry.name) {
-								return
-							}
+						if (!registryEntry.name) {
+							return
+						}
 
-							if (isEmpty(registryEntry.name)) return;
+						if (isEmpty(registryEntry.name)) return;
 
-							// Build a suggested target from the registry entry.
-							// If the registry URL is missing, fall back to name:tag.
-							let suggestedTarget = registryEntry.registry_url
-								? `${registryEntry.registry_url}${registryEntry.name}:${entryMetadata.tag}`
-								: `${registryEntry.name}:${entryMetadata.tag}`;
+						// Build a suggested target from the registry entry.
+						// If the registry URL is missing, fall back to name:tag.
+						let suggestedTarget = registryEntry.registry_url
+							? `${registryEntry.registry_url}${registryEntry.name}:${metadataTag}`
+							: `${registryEntry.name}:${metadataTag}`;
 
-							if (suggestedTarget.startsWith('https://')) {
-								suggestedTarget = suggestedTarget.replace(/^https?:\/\//, '');
-							}
+						if (suggestedTarget.startsWith('https://')) {
+							suggestedTarget = suggestedTarget.replace(/^https?:\/\//, '');
+						}
 
-							// Only overwrite the existing target if it is empty.
-							if (!component.target) {
-								component.name = registryEntry.name
-								component.target = suggestedTarget;
-								component.description = entryMetadata.description
-							}
+						component.name = registryEntry.name
+						component.target = suggestedTarget;
+						component.description = entryMetadata.description
 
 						}
 					}
