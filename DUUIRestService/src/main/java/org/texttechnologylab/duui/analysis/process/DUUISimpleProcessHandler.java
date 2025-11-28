@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -21,8 +22,8 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.bson.Document;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDropboxDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDrivesDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.io.reader.DUUIDocumentReader;
@@ -31,6 +32,7 @@ import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import org.texttechnologylab.duui.analysis.document.Provider;
+import org.texttechnologylab.duui.api.Main;
 import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
 import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
 import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
@@ -105,6 +107,11 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
      * The document reader for the collection.
      */
     private DUUIDocumentReader collectionReader;
+
+    /**
+     * Flag indicating whether to delete the input directory after processing.
+     */
+    private boolean deleteInputDirectory = false;
 
     /**
      * The number of threads currently in use.
@@ -230,6 +237,8 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
 
         if (input.isText()) {
+            deleteInputDirectory = true;
+
             String rawName = Optional.ofNullable(pipeline.getString("name")).orElse("pipeline");
             String safeName = rawName
                 .replaceAll("[^a-zA-Z0-9._-]", "_")
@@ -246,19 +255,37 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
                 System.currentTimeMillis()
             );
 
-            DUUIProcessController.setDocumentPaths(getProcessID(), Set.of(tempFileName));
-            DUUIDocumentController.updateMany(getProcessID(), Set.of(
-                    new DUUIDocument(
-                        tempFileName,
-                        tempFileName,
-                        input
-                            .getContent()
-                            .getBytes(StandardCharsets.UTF_8)
-                    )
-                )
+            if (!output.getProvider().equals(Provider.LOCAL_DRIVE)) {
+                inputHandler = new DUUILocalDrivesDocumentHandler(Main.config.getLocalDriveRoot());
+            } else {
+                inputHandler = outputHandler;
+            }
+
+            // Create a temporary file to hold the text content
+            String uuid = UUID.randomUUID().toString();
+            Path root = Paths.get(Main.config.getLocalDriveRoot(), uuid);
+            try {
+                java.nio.file.Files.createDirectories(root);
+                Path tempFile = root.resolve(tempFileName);
+                java.nio.file.Files.write(
+                    tempFile,
+                    input.getContent().getBytes(StandardCharsets.UTF_8),
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+                );
+            } catch (IOException e) {
+                onException(new Exception("Error creating directory: " + e.getMessage(), e));
+                return;
+            }
+
+            input = new DUUIDocumentProvider(
+                Provider.LOCAL_DRIVE,
+                input.getProviderId(),
+                root.toString(),
+                null,
+                input.getFileExtension()
             );
 
-            return;
         }
 
         try {
@@ -304,7 +331,8 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
     /**
      * Processes the text input.
-     */
+    */
+    @Deprecated
     @Override
     public void processText() {
         try {
@@ -469,6 +497,8 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
     public void exit() {
         DUUIProcessMetrics.decrementActiveProcesses();
 
+        deleteTemporaryInputDirectory();
+
         if (input.getProvider().equals(Provider.FILE)) {
             try {
                 if (DUUIProcessController.deleteTempOutputDirectory(
@@ -514,6 +544,19 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         
         threadCount = 0;
         interrupt();
+    }
+    
+    /**
+     * Deletes the temporary input directory if the flag is set.
+     */
+    private void deleteTemporaryInputDirectory() {
+        if (deleteInputDirectory) {
+            try {
+                org.apache.commons.io.FileUtils.deleteDirectory(Path.of(input.getPath()).toFile());
+            } catch (IOException e) {
+                System.err.println("Error deleting temporary input directory: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -609,8 +652,8 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
         DUUIProcessController.setStatus(getProcessID(), DUUIStatus.ACTIVE);
 
-        if (input.isText()) processText();
-        else process();
+        // Start processing
+        process();
 
         DUUIProcessController.setInstantiationDuration(getProcessID(), composer.getInstantiationDuration());
 
