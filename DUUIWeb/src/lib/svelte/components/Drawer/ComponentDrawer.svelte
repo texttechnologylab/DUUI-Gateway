@@ -260,6 +260,220 @@
 		drawerStore.close()
 	}
 
+	type DockerCheckStatus = 'idle' | 'pending' | 'valid' | 'invalid' | 'timeout'
+	type DockerCheckState = {
+		status: DockerCheckStatus
+		message: string
+	}
+
+	type DockerCheckResult = {
+		ok: boolean
+		timedOut?: boolean
+	}
+
+	const requiresDockerRegistry = (driver: string): boolean => RegistryDrivers.includes(driver)
+
+	let dockerCheck: DockerCheckState = { status: 'idle', message: '' }
+	let dockerCheckAbort: AbortController | null = null
+	let dockerCheckDebounce: ReturnType<typeof setTimeout> | null = null
+
+	class TimeoutError extends Error {
+		constructor(message = 'Request timed out') {
+			super(message)
+			this.name = 'TimeoutError'
+		}
+	}
+
+	const resetDockerCheck = () => {
+		if (dockerCheckAbort) {
+			dockerCheckAbort.abort()
+			dockerCheckAbort = null
+		}
+		if (dockerCheckDebounce) {
+			clearTimeout(dockerCheckDebounce)
+			dockerCheckDebounce = null
+		}
+		dockerCheck = { status: 'idle', message: '' }
+	}
+
+	const cancelDockerCheck = () => {
+		resetDockerCheck()
+	}
+
+	const fetchWithTimeout = async (
+		url: string,
+		init: RequestInit = {},
+		timeoutMs: number | null = 5000,
+		externalSignal?: AbortSignal
+	): Promise<Response> => {
+		const controller = new AbortController()
+		const { signal } = controller
+		let timedOut = false
+
+		let timeoutId: ReturnType<typeof setTimeout> | null = null
+		if (timeoutMs !== null && Number.isFinite(timeoutMs) && timeoutMs > 0) {
+			timeoutId = setTimeout(() => {
+				timedOut = true
+				controller.abort()
+			}, timeoutMs)
+		}
+
+		const cleanup = () => {
+			if (timeoutId) clearTimeout(timeoutId)
+			if (externalSignal && abortHandler) {
+				externalSignal.removeEventListener('abort', abortHandler)
+			}
+		}
+
+		let abortHandler: (() => void) | null = null
+		if (externalSignal) {
+			if (externalSignal.aborted) {
+				controller.abort()
+			} else {
+				abortHandler = () => controller.abort()
+				externalSignal.addEventListener('abort', abortHandler)
+			}
+		}
+
+		try {
+			return await fetch(url, { ...init, signal })
+		} catch (error) {
+			if (timedOut) {
+				throw new TimeoutError()
+			}
+			throw error
+		} finally {
+			cleanup()
+		}
+	}
+
+	const checkDockerImageAvailability = async (
+		imageUri: string,
+		signal?: AbortSignal,
+		timeoutMs: number | null = 5000
+	): Promise<DockerCheckResult> => {
+		if (!imageUri?.trim()) return { ok: false }
+
+		const normalized = imageUri.trim().replace(/^https?:\/\//, '')
+		const protocol = imageUri.startsWith('http://') ? 'http' : 'https'
+
+		const lastAt = normalized.lastIndexOf('@')
+		const lastColon = normalized.lastIndexOf(':')
+		const separatorIndex = lastAt > -1 ? lastAt : lastColon
+
+		if (separatorIndex === -1) {
+			return { ok: false }
+		}
+
+		const hostAndRepo = normalized.slice(0, separatorIndex)
+		const reference = normalized.slice(separatorIndex + 1)
+
+		if (!hostAndRepo || !reference) {
+			return { ok: false }
+		}
+
+		const [host, ...repoParts] = hostAndRepo.split('/')
+		if (!host || repoParts.length === 0) {
+			return { ok: false }
+		}
+
+		const repository = repoParts.join('/')
+		const manifestUrl = `${protocol}://${host}/v2/${repository}/manifests/${reference}`
+
+		try {
+			const response = await fetchWithTimeout(
+				manifestUrl,
+				{
+					method: 'GET',
+					headers: {
+						Accept: 'application/vnd.docker.distribution.manifest.v2+json'
+					}
+				},
+				timeoutMs,
+				signal
+			)
+
+			return { ok: response.ok }
+		} catch (error) {
+			if ((error as Error).name === 'TimeoutError') {
+				return { ok: false, timedOut: true }
+			}
+			if ((error as DOMException).name === 'AbortError') {
+				throw error
+			}
+			throw error
+		}
+	}
+
+	const runDockerCheck = (target: string, timeoutMs: number | null = 5000, debounce = false) => {
+		if (!target?.trim()) {
+			resetDockerCheck()
+			return
+		}
+
+		if (dockerCheckDebounce) {
+			clearTimeout(dockerCheckDebounce)
+			dockerCheckDebounce = null
+		}
+
+		const executeCheck = () => {
+			dockerCheck = { status: 'pending', message: '' }
+			if (dockerCheckAbort) {
+				dockerCheckAbort.abort()
+			}
+
+			const controller = new AbortController()
+			const { signal } = controller
+			dockerCheckAbort = controller
+
+			checkDockerImageAvailability(target, signal, timeoutMs)
+				.then((result) => {
+					if (signal.aborted) return
+					if (result.timedOut) {
+						dockerCheck = {
+							status: 'timeout',
+							message: 'Image check timed out. Retry without timeout if you trust the registry.'
+						}
+					} else if (result.ok) {
+						dockerCheck = { status: 'valid', message: '' }
+					} else {
+						dockerCheck = {
+							status: 'invalid',
+							message: 'Docker image not reachable. Please ensure the image is available.'
+						}
+					}
+				})
+				.catch((error) => {
+					if ((error as DOMException).name === 'AbortError') {
+						return
+					}
+					dockerCheck = {
+						status: 'invalid',
+						message: 'Failed to verify Docker image. Please check the URL and network.'
+					}
+				})
+				.finally(() => {
+					if (dockerCheckAbort === controller) {
+						dockerCheckAbort = null
+					}
+				})
+		}
+
+		if (debounce) {
+			dockerCheckDebounce = setTimeout(executeCheck, 500)
+		} else {
+			executeCheck()
+		}
+	}
+
+	$: {
+		if (!requiresDockerRegistry(component.driver) || !component.target?.trim()) {
+			resetDockerCheck()
+		} else {
+			runDockerCheck(component.target, 5000, true)
+		}
+	}
+
 	const exportComponent = () => {
 		const blob = new Blob([JSON.stringify(componentToJson(component))], {
 			type: 'application/json'
@@ -284,7 +498,13 @@
 
 	{#if example}
 		<button
-			disabled={!component.driver || !component.name || !component.target}
+			disabled={
+				!component.driver ||
+				!component.name ||
+				!component.target ||
+				(requiresDockerRegistry(component.driver) &&
+					['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+			}
 			class="button-mobile"
 			on:click={onCreate}
 		>
@@ -297,7 +517,13 @@
 		</button>
 	{:else if creating}
 		<button
-			disabled={!component.driver || !component.name || !component.target}
+			disabled={
+				!component.driver ||
+				!component.name ||
+				!component.target ||
+				(requiresDockerRegistry(component.driver) &&
+					['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+			}
 			class="button-mobile"
 			on:click={() => (inEditor ? onEdited() : onCreate())}
 		>
@@ -312,7 +538,13 @@
 		<button
 			class="button-mobile"
 			on:click={() => (inEditor ? onEdited() : onUpdate())}
-			disabled={!component.driver || !component.name || !component.target}
+			disabled={
+				!component.driver ||
+				!component.name ||
+				!component.target ||
+				(requiresDockerRegistry(component.driver) &&
+					['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+			}
 		>
 			<Fa icon={faFileCircleCheck} />
 			Save
@@ -348,7 +580,13 @@
 			{/if}
 			{#if example}
 				<button
-					disabled={!component.driver || !component.name || !component.target}
+					disabled={
+						!component.driver ||
+						!component.name ||
+						!component.target ||
+						(requiresDockerRegistry(component.driver) &&
+							['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+					}
 					class="button-neutral"
 					on:click={onCreate}
 				>
@@ -361,7 +599,13 @@
 				</button>
 			{:else if creating}
 				<button
-					disabled={!component.driver || !component.name || !component.target}
+					disabled={
+						!component.driver ||
+						!component.name ||
+						!component.target ||
+						(requiresDockerRegistry(component.driver) &&
+							['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+					}
 					class="button-neutral ml-auto"
 					on:click={() => (inEditor ? onEdited() : onCreate())}
 				>
@@ -380,7 +624,13 @@
 				<button
 					class="button-neutral"
 					on:click={() => (inEditor ? onEdited() : onUpdate())}
-					disabled={!component.driver || !component.name || !component.target}
+					disabled={
+						!component.driver ||
+						!component.name ||
+						!component.target ||
+						(requiresDockerRegistry(component.driver) &&
+							['pending', 'invalid', 'timeout'].includes(dockerCheck.status))
+					}
 				>
 					<Fa icon={faFileCircleCheck} />
 					Save
@@ -444,6 +694,45 @@
 			{/if}
 
 			<div class="space-y-4 group">
+				{#if requiresDockerRegistry(component.driver)}
+					{#if dockerCheck.status === 'invalid'}
+						<Tip tipTheme="error">
+							{dockerCheck.message}
+						</Tip>
+					{:else if dockerCheck.status === 'timeout'}
+						<Tip tipTheme="tertiary">
+							<div class="flex flex-wrap items-center justify-between gap-2">
+								<span>{dockerCheck.message}</span>
+								<div class="flex flex-wrap gap-2">
+									<button
+										type="button"
+										class="button-warning"
+										on:click={() => runDockerCheck(component.target, null)}
+									>
+										Retry (no timeout)
+									</button>
+									<button
+										type="button"
+										class="button-neutral"
+										on:click={cancelDockerCheck}
+									>
+										Cancel
+									</button>
+								</div>
+							</div>
+						</Tip>
+					{:else if dockerCheck.status === 'pending'}
+						<Tip tipTheme="primary">
+							<div class="flex flex-wrap items-center justify-between gap-2">
+								<span>Checking image availability…</span>
+								<button type="button" class="button-neutral" on:click={cancelDockerCheck}>
+									Cancel
+								</button>
+							</div>
+						</Tip>
+					{/if}
+				{/if}
+
 				<TextInput
 					style="md:col-span-2"
 					label="Target"
