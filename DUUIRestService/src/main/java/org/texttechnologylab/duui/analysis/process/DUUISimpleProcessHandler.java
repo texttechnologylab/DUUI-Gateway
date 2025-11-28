@@ -1,27 +1,5 @@
 package org.texttechnologylab.duui.analysis.process;
 
-import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.*;
-import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
-import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
-import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
-import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
-import org.texttechnologylab.duui.api.metrics.providers.DUUIProcessMetrics;
-import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
-import org.texttechnologylab.duui.analysis.document.Provider;
-import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
-import com.dropbox.core.DbxException;
-import com.dropbox.core.v2.files.WriteMode;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
-import org.bson.Document;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.io.reader.DUUIDocumentReader;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.lua.DUUILuaContext;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,13 +8,40 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.jcas.JCas;
+import org.bson.Document;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.DUUIComposer;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDropboxDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFolderPickerApi;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.io.reader.DUUIDocumentReader;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.lua.DUUILuaContext;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
+import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
+import org.texttechnologylab.duui.analysis.document.Provider;
+import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
+import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
+import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineController;
+import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
+import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
+import org.texttechnologylab.duui.api.metrics.providers.DUUIProcessMetrics;
+
+import com.dropbox.core.DbxException;
+import com.dropbox.core.v2.files.WriteMode;
+
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 /**
  * The default ProcessHandler implementing the {@link IDUUIProcessHandler} interface.
@@ -225,11 +230,27 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
 
         if (input.isText()) {
-            DUUIProcessController.setDocumentPaths(getProcessID(), Set.of("Text"));
+            String rawName = Optional.ofNullable(pipeline.getString("name")).orElse("pipeline");
+            String safeName = rawName
+                .replaceAll("[^a-zA-Z0-9._-]", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_+|_+$", "");
+
+            if (safeName.isEmpty()) {
+                safeName = "pipeline";
+            }
+
+            String tempFileName = String.format(
+                "%s_%s.txt",
+                safeName,
+                System.currentTimeMillis()
+            );
+
+            DUUIProcessController.setDocumentPaths(getProcessID(), Set.of(tempFileName));
             DUUIDocumentController.updateMany(getProcessID(), Set.of(
                     new DUUIDocument(
-                        "Text",
-                        "Text",
+                        tempFileName,
+                        tempFileName,
                         input
                             .getContent()
                             .getBytes(StandardCharsets.UTF_8)
