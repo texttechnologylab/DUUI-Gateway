@@ -23,7 +23,7 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 EXPOSE 2605
 
 # # Compile Java project and create the JAR-file
-RUN mvn package -DskipTests -o
+RUN mvn package -DskipTests
 
 COPY ./config.ini  ./config.ini
 
