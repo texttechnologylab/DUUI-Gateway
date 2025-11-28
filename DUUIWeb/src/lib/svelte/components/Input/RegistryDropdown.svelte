@@ -389,7 +389,7 @@
                                     <span>
 
                                         {#if !entry.meta_data[0]?.documentation}
-                                            {entry.name}
+                                           <span class="truncate">{entry.name}</span>
                                         {:else}
 
                                             <Popup autoPopupWidth={true} arrow={false} position="bottom">

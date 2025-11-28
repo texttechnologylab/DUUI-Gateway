@@ -384,7 +384,7 @@
 										text-xs lg:text-sm text-start"
 									on:click={() => showDocumentModal(document)}
 								>
-									<p>{document.name}</p>
+									<p class="truncate" title={document.name}>{document.name}</p>
 									<div class="md:flex items-center justify-start md:gap-4 text-start">
 										<p>
 											{Math.round((Math.min(document.progress, maxProgress) / maxProgress) * 100)} %
