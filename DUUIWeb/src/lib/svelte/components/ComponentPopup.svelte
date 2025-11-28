@@ -29,25 +29,61 @@
 	const importComponent = async () => {
 		if (!files) return
 		const file: File = files[0]
-		async function parseJsonFile(file) {
+
+		async function parseJsonFile(file: File): Promise<any> {
 			return new Promise((resolve, reject) => {
 				const fileReader = new FileReader()
-				fileReader.onload = (event) => resolve(JSON.parse(event.target.result))
+				fileReader.onload = (event) => {
+					try {
+						const text = (event.target?.result || '') as string
+						resolve(JSON.parse(text))
+					} catch (err) {
+						reject(err)
+					}
+				}
 				fileReader.onerror = (error) => reject(error)
 				fileReader.readAsText(file)
 			})
 		}
+
 		const result = await parseJsonFile(file)
 		if (!result) return
 
-		let component = blankComponent($currentPipelineStore.oid, index)
+		// Support both plain component JSON and pipeline JSON (with a components array).
+		const source: any =
+			result && Array.isArray(result.components) && result.components.length > 0
+				? result.components[0]
+				: result
+
+		const base = blankComponent($currentPipelineStore.oid, index)
+
+		const mergedOptions = {
+			...base.options,
+			...(source.options || {}),
+			registry_auth: {
+				...base.options.registry_auth,
+				...(source.options?.registry_auth || {})
+			}
+		}
+
+		const component: DUUIComponent = {
+			...base,
+			...source,
+			// Ensure required fields always exist and keep sensible defaults
+			name: source.name ?? base.name,
+			driver: source.driver ?? base.driver,
+			target: source.target ?? base.target,
+			options: mergedOptions,
+			parameters: source.parameters ?? base.parameters,
+			id: uuidv4()
+		}
 
 		drawerStore.open({
 			id: 'component',
 			...componentDrawerSettings,
 			meta: {
-				component: { ...component, ...result, id: uuidv4() },
-				inEditor: inEditor,
+				component,
+				inEditor,
 				creating: true
 			}
 		})

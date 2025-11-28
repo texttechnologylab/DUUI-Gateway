@@ -410,16 +410,23 @@
 
 							if (isEmpty(registryEntry.name)) return;
 
-							component.name = registryEntry.name
-							component.target = registryEntry.registry_url
+							// Build a suggested target from the registry entry.
+							// If the registry URL is missing, fall back to name:tag.
+							let suggestedTarget = registryEntry.registry_url
 								? `${registryEntry.registry_url}${registryEntry.name}:${entryMetadata.tag}`
-								: "";
-							
-							if (component.target.startsWith('https://')) {
-								component.target = component.target.replace(/^https?:\/\//, '');
+								: `${registryEntry.name}:${entryMetadata.tag}`;
+
+							if (suggestedTarget.startsWith('https://')) {
+								suggestedTarget = suggestedTarget.replace(/^https?:\/\//, '');
 							}
 
-							component.description = entryMetadata.description
+							// Only overwrite the existing target if it is empty.
+							if (!component.target) {
+								component.name = registryEntry.name
+								component.target = suggestedTarget;
+								component.description = entryMetadata.description
+							}
+
 						}
 					}
 				/>
