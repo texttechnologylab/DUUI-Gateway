@@ -71,7 +71,15 @@ public class Methods {
             if (!request.url().endsWith("metrics")) {
                 DUUIHTTPMetrics.incrementTotalRequests();
                 DUUIHTTPMetrics.incrementActiveRequests();
-                log.info("Incoming request: {} {}", request.requestMethod(), request.url());
+                String acceptHeader = request.headers("Accept");
+                if (acceptHeader == null || acceptHeader.isEmpty()) {
+                    acceptHeader = "*/*";
+                }
+                String originHeader = request.headers("Origin");
+                if (originHeader == null || originHeader.isEmpty()) {
+                    originHeader = request.ip();
+                }
+                log.info("{} {} – Origin: {} – Accept: {}", request.requestMethod(), request.pathInfo(), originHeader, acceptHeader);
             }
             response.header("Access-Control-Allow-Origin", "*");
         });

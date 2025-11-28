@@ -40,7 +40,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <duui.version>7a7eb64f3a13229a264931d8a86c7aaad444ae3b</duui.version>
+        <duui.version>main-SNAPSHOT</duui.version>
         <uima.version>3.5.0</uima.version>
         <typesystem.version>3.0.14</typesystem.version>
         <maven.javadoc.skip>false</maven.javadoc.skip>
@@ -107,6 +107,7 @@
                                         <!-- sometimes used by a few libs -->
                                         <exclude>META-INF/*.EC</exclude>
                                         <exclude>META-INF/*SIG*</exclude>
+                                        <exclude>module-info.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

@@ -260,7 +260,7 @@
 		drawerStore.close()
 	}
 
-	type DockerCheckStatus = 'idle' | 'pending' | 'valid' | 'invalid' | 'timeout'
+	type DockerCheckStatus = 'idle' | 'pending' | 'valid' | 'invalid' | 'timeout' | 'warning'
 	type DockerCheckState = {
 		status: DockerCheckStatus
 		message: string
@@ -269,6 +269,8 @@
 	type DockerCheckResult = {
 		ok: boolean
 		timedOut?: boolean
+		message?: string
+		warning?: boolean
 	}
 
 	const requiresDockerRegistry = (driver: string): boolean => RegistryDrivers.includes(driver)
@@ -276,13 +278,6 @@
 	let dockerCheck: DockerCheckState = { status: 'idle', message: '' }
 	let dockerCheckAbort: AbortController | null = null
 	let dockerCheckDebounce: ReturnType<typeof setTimeout> | null = null
-
-	class TimeoutError extends Error {
-		constructor(message = 'Request timed out') {
-			super(message)
-			this.name = 'TimeoutError'
-		}
-	}
 
 	const resetDockerCheck = () => {
 		if (dockerCheckAbort) {
@@ -300,53 +295,6 @@
 		resetDockerCheck()
 	}
 
-	const fetchWithTimeout = async (
-		url: string,
-		init: RequestInit = {},
-		timeoutMs: number | null = 5000,
-		externalSignal?: AbortSignal
-	): Promise<Response> => {
-		const controller = new AbortController()
-		const { signal } = controller
-		let timedOut = false
-
-		let timeoutId: ReturnType<typeof setTimeout> | null = null
-		if (timeoutMs !== null && Number.isFinite(timeoutMs) && timeoutMs > 0) {
-			timeoutId = setTimeout(() => {
-				timedOut = true
-				controller.abort()
-			}, timeoutMs)
-		}
-
-		const cleanup = () => {
-			if (timeoutId) clearTimeout(timeoutId)
-			if (externalSignal && abortHandler) {
-				externalSignal.removeEventListener('abort', abortHandler)
-			}
-		}
-
-		let abortHandler: (() => void) | null = null
-		if (externalSignal) {
-			if (externalSignal.aborted) {
-				controller.abort()
-			} else {
-				abortHandler = () => controller.abort()
-				externalSignal.addEventListener('abort', abortHandler)
-			}
-		}
-
-		try {
-			return await fetch(url, { ...init, signal })
-		} catch (error) {
-			if (timedOut) {
-				throw new TimeoutError()
-			}
-			throw error
-		} finally {
-			cleanup()
-		}
-	}
-
 	const checkDockerImageAvailability = async (
 		imageUri: string,
 		signal?: AbortSignal,
@@ -354,54 +302,38 @@
 	): Promise<DockerCheckResult> => {
 		if (!imageUri?.trim()) return { ok: false }
 
-		const normalized = imageUri.trim().replace(/^https?:\/\//, '')
-		const protocol = imageUri.startsWith('http://') ? 'http' : 'https'
-
-		const lastAt = normalized.lastIndexOf('@')
-		const lastColon = normalized.lastIndexOf(':')
-		const separatorIndex = lastAt > -1 ? lastAt : lastColon
-
-		if (separatorIndex === -1) {
-			return { ok: false }
-		}
-
-		const hostAndRepo = normalized.slice(0, separatorIndex)
-		const reference = normalized.slice(separatorIndex + 1)
-
-		if (!hostAndRepo || !reference) {
-			return { ok: false }
-		}
-
-		const [host, ...repoParts] = hostAndRepo.split('/')
-		if (!host || repoParts.length === 0) {
-			return { ok: false }
-		}
-
-		const repository = repoParts.join('/')
-		const manifestUrl = `${protocol}://${host}/v2/${repository}/manifests/${reference}`
-
 		try {
-			const response = await fetchWithTimeout(
-				manifestUrl,
-				{
-					method: 'GET',
-					headers: {
-						Accept: 'application/vnd.docker.distribution.manifest.v2+json'
-					}
+			const response = await fetch('/api/components/registry', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
 				},
-				timeoutMs,
+				body: JSON.stringify({
+					imageUri,
+					timeoutMs
+				}),
 				signal
-			)
+			})
 
-			return { ok: response.ok }
-		} catch (error) {
-			if ((error as Error).name === 'TimeoutError') {
-				return { ok: false, timedOut: true }
+			const payload = (await response.json().catch(() => null)) as DockerCheckResult | null
+			if (!payload) {
+				return {
+					ok: false,
+					message: 'Invalid response from verification service.'
+				}
 			}
+
+			return payload
+		} catch (error) {
 			if ((error as DOMException).name === 'AbortError') {
 				throw error
 			}
-			throw error
+
+			return {
+				ok: false,
+				warning: true,
+				message: 'Failed to contact verification service.'
+			}
 		}
 	}
 
@@ -436,10 +368,19 @@
 						}
 					} else if (result.ok) {
 						dockerCheck = { status: 'valid', message: '' }
+					} else if (result.warning) {
+						dockerCheck = {
+							status: 'warning',
+							message:
+								result.message ||
+								'Could not verify Docker image because the request failed unexpectedly.'
+						}
 					} else {
 						dockerCheck = {
 							status: 'invalid',
-							message: 'Docker image not reachable. Please ensure the image is available.'
+							message:
+								result.message ||
+								'Docker image not reachable. Please ensure the image is available.'
 						}
 					}
 				})
@@ -447,6 +388,15 @@
 					if ((error as DOMException).name === 'AbortError') {
 						return
 					}
+
+					if (error instanceof TypeError) {
+						dockerCheck = {
+							status: 'warning',
+							message: 'Could not contact the verification service. Please check your connection.'
+						}
+						return
+					}
+
 					dockerCheck = {
 						status: 'invalid',
 						message: 'Failed to verify Docker image. Please check the URL and network.'
@@ -698,53 +648,75 @@
 					{#if dockerCheck.status === 'invalid'}
 						<Tip tipTheme="error">
 							{dockerCheck.message}
-						</Tip>
-					{:else if dockerCheck.status === 'timeout'}
-						<Tip tipTheme="tertiary">
-							<div class="flex flex-wrap items-center justify-between gap-2">
-								<span>{dockerCheck.message}</span>
-								<div class="flex flex-wrap gap-2">
-									<button
-										type="button"
-										class="button-warning"
-										on:click={() => runDockerCheck(component.target, null)}
-									>
-										Retry (no timeout)
-									</button>
-									<button
-										type="button"
-										class="button-neutral"
-										on:click={cancelDockerCheck}
-									>
+							</Tip>
+						{:else if dockerCheck.status === 'timeout'}
+							<Tip tipTheme="tertiary">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<span>{dockerCheck.message}</span>
+									<div class="flex flex-wrap gap-2">
+										<button
+											type="button"
+											class="button-warning"
+											on:click={() => runDockerCheck(component.target, null)}
+										>
+											Retry (no timeout)
+										</button>
+										<button
+											type="button"
+											class="button-neutral"
+											on:click={cancelDockerCheck}
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							</Tip>
+						{:else if dockerCheck.status === 'pending'}
+							<Tip tipTheme="primary">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<span>Checking image availability…</span>
+									<button type="button" class="button-neutral" on:click={cancelDockerCheck}>
 										Cancel
 									</button>
 								</div>
-							</div>
-						</Tip>
-					{:else if dockerCheck.status === 'pending'}
-						<Tip tipTheme="primary">
-							<div class="flex flex-wrap items-center justify-between gap-2">
-								<span>Checking image availability…</span>
-								<button type="button" class="button-neutral" on:click={cancelDockerCheck}>
-									Cancel
-								</button>
-							</div>
-						</Tip>
+							</Tip>
+						{:else if dockerCheck.status === 'warning'}
+							<Tip tipTheme="warning">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<span>{dockerCheck.message}</span>
+									<button
+										type="button"
+										class="button-neutral"
+										on:click={() => runDockerCheck(component.target, null)}
+									>
+										Retry anyway
+									</button>
+								</div>
+							</Tip>
+						{/if}
 					{/if}
-				{/if}
 
-				<TextInput
-					style="md:col-span-2"
-					label="Target"
-					name="target"
-					bind:value={component.target}
-					error={component.target === '' ? "Target can't be empty" : ''}
-				/>
+							<TextInput
+								style="md:col-span-2"
+								label="Target"
+								name="target"
+								bind:value={component.target}
+								error={component.target === '' ? "Target can't be empty" : ''}
+							>
+								<span slot="labelContent" class="flex w-full items-center justify-between gap-3">
+									<span>Target</span>
+									{#if dockerCheck.status === 'valid'}
+										<span class="badge variant-soft-success font-bold text-xs tracking-wide">
+											IMAGE ONLINE
+										</span>
+									{/if}
+								</span>
+							</TextInput>
 
-				<div class="hidden group-focus-within:block">
-					<Tip>
-						The target can be a Docker image name (Docker, Swarm and Kubernetes Driver), a URL
-						(Remote Driver) or a Java class path (UIMADriver).
+					<div class="hidden group-focus-within:block">
+						<Tip>
+							The target can be a Docker image name (Docker, Swarm and Kubernetes Driver), a URL
+							(Remote Driver) or a Java class path (UIMADriver).
 					</Tip>
 				</div>
 			</div>

@@ -42,7 +42,9 @@
 {/if}
 
 <label class="{label ? 'label' : ''} flex flex-col {hidden ? 'hidden' : ''} {style}">
-	<span class="form-label flex-center-4">{label} </span>
+	<span class="form-label flex-center-4">
+		<slot name="labelContent">{label}</slot>
+	</span>
 
 	<input
 		{disabled}
