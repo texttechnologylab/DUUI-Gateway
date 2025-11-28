@@ -16,6 +16,8 @@ RUN cd /app && npm install && npm run build
 
 FROM node:18-alpine
 
+ENV BODY_SIZE_LIMIT=1000M
+
 # Installiere Python sowie notwendige Build-Tools
 RUN apk add --no-cache python3 make g++
 

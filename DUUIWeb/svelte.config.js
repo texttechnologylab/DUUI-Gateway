@@ -11,8 +11,7 @@ const config = {
 	
 	kit: {
 		adapter: adapter({
-			out: 'build',
-			bodySizeLimit: '50mb'
+			out: 'build'
 		  }),
 		  
 		files: { 
