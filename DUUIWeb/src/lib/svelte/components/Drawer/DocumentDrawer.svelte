@@ -49,14 +49,55 @@
 	let annotationFilter: Map<string, number> = new Map(Object.entries(_document.annotations || {}))
 	let downloading: boolean = false
 
+	function getOutputName(
+		name: string,
+		inputExtension: string,
+		outputExtension: string
+	): string {
+		if (!name) return name
+
+		const inExt = inputExtension ?? ''
+		const outExt = outputExtension ?? ''
+
+		// If it already ends with the desired extension, keep it.
+		if (outExt && name.endsWith(outExt)) return name
+
+		// If it ends with the input extension, swap just that suffix.
+		if (inExt && name.endsWith(inExt)) {
+			return name.slice(0, -inExt.length) + outExt
+		}
+
+		// Fallback: replace the last extension segment, if any.
+		if (outExt) {
+			const dotIndex = name.lastIndexOf('.')
+			if (dotIndex > 0) {
+				return name.slice(0, dotIndex) + outExt
+			}
+		}
+
+		return name
+	}
+
+	// Reactive full output path for display in the top bar
+	$: fullOutputPath = (() => {
+		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
+
+		// If we have an output path, append the (possibly rewritten) name
+		if (output.path && outputName) {
+			const extraSlash = output.path.endsWith('/') ? '' : '/'
+			return `${output.path}${extraSlash}${outputName}`
+		}
+
+		// Fallbacks: use document path or name as stored
+		return _document.path || outputName || _document.name
+	})()
+
 	const download = async () => {
 		downloading = true
-		const extraSlash = output.path.endsWith("/") ? "" : "/"
+		const extraSlash = output.path.endsWith('/') ? '' : '/'
+		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
 		const response = await fetch(
-			`/api/files/download?provider=${output.provider}}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
-				input.file_extension,
-				output.file_extension
-			)}`,
+			`/api/files/download?provider=${output.provider}}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${outputName}`,
 			{
 				method: 'GET'
 			}
@@ -67,7 +108,7 @@
 			const url = URL.createObjectURL(blob)
 			const anchor = document.createElement('a')
 			anchor.href = url
-			anchor.download = _document.name.replace(input.file_extension, output.file_extension)
+			anchor.download = outputName
 			document.body.appendChild(anchor)
 			anchor.click()
 			document.body.removeChild(anchor)
@@ -160,12 +201,9 @@
 
 	const preprocessDocument = async () => {
 		processingText = true
-
-		const extraSlash = output.path.endsWith("/") ? "" : "/"
-		const filePath = `/api/files/preprocess?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${_document.name.replace(
-				input.file_extension,
-				output.file_extension
-			)}&pipeline_id=${pipeline.oid}`
+		const extraSlash = output.path.endsWith('/') ? '' : '/'
+		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
+		const filePath = `/api/files/preprocess?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${outputName}&pipeline_id=${pipeline.oid}`
 
 		let json: {
 			text: string
@@ -297,16 +335,12 @@
 		class="w-full z-50 grid
 		font-bold text-2xl p-4 border-surface-200 dark:border-surface-500 sm:flex items-center justify-start gap-4 sticky top-0 bg-surface-100-800-token border-b border-color"
 	>
-		<div class="flex-center-4">
-			<Fa icon={getStatusIcon(_document.status)} size="lg" class="dimmed" />
-			{#if input.provider === IO.File}
-				<p class="text-sm md:text-base max-w-[10ch]">
-					{_document.name}
+			<div class="flex-center-4">
+				<Fa icon={getStatusIcon(_document.status)} size="lg" class="dimmed" />
+				<p class="text-sm md:text-base break-all">
+					{fullOutputPath}
 				</p>
-			{:else}
-				<p class="text-sm md:text-base">{_document.path}</p>
-			{/if}
-		</div>
+			</div>
 		<div class="ml-auto justify-start items-center gap-4 flex">
 			{#if output.provider !== IO.None && _document.status === Status.Completed}
 				{#if downloading}
