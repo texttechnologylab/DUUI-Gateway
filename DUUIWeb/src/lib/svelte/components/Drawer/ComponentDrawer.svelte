@@ -55,6 +55,14 @@
         resulting_types: []
     }
 
+    // Remove the `/v2` suffix that the registry API currently prepends and any extra slashes.
+    const sanitizeRegistryUrl = (value?: string) => {
+        if (!value) return ''
+        const trimmed = value.trim()
+        const withoutTrailingSlash = trimmed.replace(/\/+$/, '')
+        return withoutTrailingSlash.replace(/\/v2$/, '')
+    }
+
 	const drawerStore = getDrawerStore()
 	let component: DUUIComponent = $drawerStore.meta.component
 	const inEditor = $drawerStore.meta.inEditor
@@ -625,9 +633,10 @@
 
 						// Build a suggested target from the registry entry.
 						// If the registry URL is missing, fall back to name:tag.
-						let suggestedTarget = registryEntry.registry_url
-							? `${registryEntry.registry_url}${registryEntry.name}:${metadataTag}`
-							: `${registryEntry.name}:${metadataTag}`;
+                        const baseRegistryUrl = sanitizeRegistryUrl(registryEntry.registry_url)
+                        let suggestedTarget = baseRegistryUrl
+                            ? `${baseRegistryUrl}/${registryEntry.name}:${metadataTag}`
+                            : `${registryEntry.name}:${metadataTag}`;
 
 						if (suggestedTarget.startsWith('https://')) {
 							suggestedTarget = suggestedTarget.replace(/^https?:\/\//, '');

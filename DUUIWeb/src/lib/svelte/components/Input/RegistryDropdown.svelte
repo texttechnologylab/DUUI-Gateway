@@ -46,8 +46,10 @@
     let popupWidth = 'auto';
 
     /** Props */
+    let selectedRegistryId: string = "";
     let selectedRegistryEndpoint: string = "";
     let filteredRegistryEndpoints: Map<string, string> = new Map<string, string>();
+    let registryEndpointById: Record<string, string> = {};
 
 
     let entries: DUUIRegistryEntry[] = [];
@@ -67,6 +69,8 @@
         Language: "false",
         ShortDescription: "false"
     }
+
+    $: selectedRegistryEndpoint = registryEndpointById[selectedRegistryId] ?? '';
 
     const dispatch = createEventDispatcher();
 
@@ -129,15 +133,23 @@
 
 
         if (response.ok) {
-            const filreg: DUUIRegistries = await response.json();
+            const registries: DUUIRegistries = await response.json();
+            const optionsMap = new Map<string, string>();
+            const endpointsById: Record<string, string> = {};
 
-            return new Map<string, string>(
-                Object.entries(filreg).map(([key, value]) => [value.endpoint, value.name] as [string, string])
-            );
+            Object.entries(registries ?? {}).forEach(([registryId, registry]) => {
+                const name = registry?.name?.trim() || registryId;
+                const endpoint = registry?.endpoint?.trim() || '';
+                optionsMap.set(registryId, name);
+                endpointsById[registryId] = endpoint;
+            });
 
+            registryEndpointById = endpointsById;
 
-            // alert(JSON.stringify(Object.fromEntries(filteredRegistryEndpoints)))
+            return optionsMap;
         }
+        registryEndpointById = {};
+
         return new Map<string, string>()
     }
 
@@ -164,7 +176,12 @@
     onMount(async () => {
 
         filteredRegistryEndpoints = await fetchUserRegistryEndpoints();
-        await fetchRegistry();
+
+        if (filteredRegistryEndpoints.size === 0) {
+            selectedRegistryId = '';
+        } else if (!filteredRegistryEndpoints.has(selectedRegistryId)) {
+            selectedRegistryId = filteredRegistryEndpoints.keys().next().value ?? '';
+        }
 
         // if (dropdownElement) {
         //     popupWidth = `${dropdownElement.offsetWidth}px`;
@@ -269,14 +286,9 @@
                     <Dropdown
                             name="availableRegistries"
                             label="Registries"
-                            bind:value={selectedRegistryEndpoint}
+                            bind:value={selectedRegistryId}
                             options={filteredRegistryEndpoints}
                             initFirst={true}
-                            on:change={async () => {
-                                await fetchRegistry();
-                                reset();
-                                change();
-                            }}
                     />
                 {/key}
 
@@ -443,4 +455,3 @@
         </div>
     </div>
 {/if}
-
