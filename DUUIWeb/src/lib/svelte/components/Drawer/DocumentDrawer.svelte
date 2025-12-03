@@ -14,7 +14,10 @@
 		faChevronDown,
 		faClose,
 		faDownload, faInfo,
-		faRefresh
+		faRefresh,
+
+		faWarning
+
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
@@ -28,6 +31,8 @@
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
 	import Popup from '$lib/svelte/components/Popup.svelte'
 	import Link from '$lib/svelte/components/Link.svelte'
+import Tip from '../Tip.svelte'
+import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 
 	const drawerStore = getDrawerStore()
 
@@ -37,6 +42,7 @@
 
 	const input: DUUIDocumentProvider = process.input
 	const output: DUUIDocumentProvider = process.output
+	const hasOutputStorage = Boolean(output.provider && output.provider !== IO.None)
 
 	let URLIn: string = ''
 	let URLOut: string = ''
@@ -93,6 +99,7 @@
 	})()
 
 	const download = async () => {
+		if (!hasOutputStorage) return
 		downloading = true
 		const extraSlash = output.path.endsWith('/') ? '' : '/'
 		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
@@ -114,7 +121,8 @@
 			document.body.removeChild(anchor)
 			URL.revokeObjectURL(url)
 		} else {
-			toastStore.trigger(errorToast(await response.text()))
+			toastStore.trigger(errorToast(`Failed to download from ${output.provider}. \nEnsure that the document has been uploaded correctly.`))
+			// toastStore.trigger(errorToast(await response.text()))
 		}
 
 		downloading = false
@@ -200,6 +208,9 @@
 	}
 
 	const preprocessDocument = async () => {
+		if (!hasOutputStorage) {
+			return
+		}
 		processingText = true
 		const extraSlash = output.path.endsWith('/') ? '' : '/'
 		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
@@ -224,8 +235,6 @@
 			if (response.ok) {
 				json = await response.json()
 				addKey(filePath, JSON.stringify(json))
-			} else {
-				toastStore.trigger(errorToast(await response.text()))
 			}
 		}
 
@@ -240,7 +249,7 @@
 
 			processedAnnotations = getHighlightedText(json.text, unprocessedAnnotations, selectedAnnotation)
 		} else {
-			toastStore.trigger(errorToast('Document not found'))
+			toastStore.trigger(errorToast(`Failed to download from ${output.provider}. \nEnsure that the document has been uploaded correctly.`))
 		}
 
 		processingText = false
@@ -314,7 +323,9 @@
 
 		loadApexCharts()
 
-		preprocessDocument()
+		if (hasOutputStorage) {
+			preprocessDocument()
+		}
 	})
 
 	$: {
@@ -342,17 +353,24 @@
 				</p>
 			</div>
 		<div class="ml-auto justify-start items-center gap-4 flex">
-			{#if output.provider !== IO.None && _document.status === Status.Completed}
+			{#if _document.status === Status.Completed}
 				{#if downloading}
 					<button class="button-neutral opacity-50">
 						<Fa icon={faRefresh} spin />
 						<span>Loading</span>
 					</button>
 				{:else}
-					<button class="button-neutral" on:click={download}>
-						<Fa icon={faDownload} />
-						<span>Download</span>
-					</button>
+					<TooltipTrigger
+						tooltipVisible={!hasOutputStorage}
+						tooltipMessage="Configure an output storage to download processed documents."
+						tipTheme="tertiary"
+						tipIcon={faWarning}
+					>
+						<button class="button-neutral" on:click={download} disabled={!hasOutputStorage}>
+							<Fa icon={faDownload} />
+							<span>Download</span>
+						</button>
+					</TooltipTrigger>
 				{/if}
 				{#if processingText}
 					<button class="button-neutral opacity-50">
@@ -360,10 +378,17 @@
 						<span>Processing Document</span>
 					</button>
 				{:else}
-					<button class="button-neutral" on:click={preprocessDocument}>
-						<Fa icon={faDownload} />
-						<span>Read Document</span>
-					</button>
+					<TooltipTrigger
+						tooltipVisible={!hasOutputStorage}
+						tooltipMessage="Configure an output storage to download processed documents."
+						tipTheme="tertiary"
+						tipIcon={faWarning}
+					>
+						<button class="button-neutral" on:click={preprocessDocument} disabled={!hasOutputStorage}>
+							<Fa icon={faDownload} />
+							<span>Read Document</span>
+						</button>
+					</TooltipTrigger>
 				{/if}
 			{/if}
 			<button class="button-neutral" on:click={drawerStore.close}>
@@ -404,7 +429,7 @@
 					<p>{input.provider}</p>
 				</div>
 			{/if}
-			{#if output.provider !== IO.None && _document.status === Status.Completed}
+			{#if hasOutputStorage && _document.status === Status.Completed}
 				<a href={URLOut} target="_blank" class="flex flex-col items-start justify-center gap-2">
 					<p class="anchor font-bold">Target</p>
 					<p>{output.provider}</p>
