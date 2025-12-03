@@ -360,7 +360,8 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 						<span>Loading</span>
 					</button>
 				{:else}
-					<TooltipTrigger
+					<!-- TODO fix tooltip trigger-->
+					<!-- <TooltipTrigger
 						tooltipVisible={!hasOutputStorage}
 						tooltipMessage="Configure an output storage to download processed documents."
 						tipTheme="tertiary"
@@ -370,7 +371,11 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 							<Fa icon={faDownload} />
 							<span>Download</span>
 						</button>
-					</TooltipTrigger>
+					</TooltipTrigger> -->
+					<button class="button-neutral" on:click={download} disabled={!hasOutputStorage}>
+						<Fa icon={faDownload} />
+						<span>Download</span>
+					</button>
 				{/if}
 				{#if processingText}
 					<button class="button-neutral opacity-50">
@@ -378,7 +383,7 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 						<span>Processing Document</span>
 					</button>
 				{:else}
-					<TooltipTrigger
+					<!-- <TooltipTrigger
 						tooltipVisible={!hasOutputStorage}
 						tooltipMessage="Configure an output storage to download processed documents."
 						tipTheme="tertiary"
@@ -388,7 +393,11 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 							<Fa icon={faDownload} />
 							<span>Read Document</span>
 						</button>
-					</TooltipTrigger>
+					</TooltipTrigger> -->
+					<button class="button-neutral" on:click={preprocessDocument} disabled={!hasOutputStorage}>
+						<Fa icon={faDownload} />
+						<span>Read Document</span>
+					</button>
 				{/if}
 			{/if}
 			<button class="button-neutral" on:click={drawerStore.close}>
