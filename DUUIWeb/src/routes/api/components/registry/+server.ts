@@ -143,9 +143,15 @@ export async function PUT({ request, fetch, locals, url}) {
 	const flagShortDescription = data.flagShortDescription || "true"
 
 
-	const encodedQuery = encodeURIComponent(registrySearchQuery ?? '')
 	const response = await fetch(
-		`${registryEndpint}/api/images/generalSearch/${encodedQuery}?name=${flagName}&resultingTypes=${flagResultingTypes}&requiredTypes=${flagRequiredTypes}&searchTags=${flagSearchTags}&language=${flagLanguage}&shortDescription=${flagShortDescription}`,
+		`${registryEndpint}api/images/generalSearch/
+			${registrySearchQuery}
+			?name=${flagName}
+			&resultingTypes=${flagResultingTypes}
+			&requiredTypes=${flagRequiredTypes}
+			&searchTags=${flagSearchTags}
+			&language=${flagLanguage}
+			&shortDescription=${flagShortDescription}`,
 		{
 			method: 'GET'
 		}
@@ -181,8 +187,7 @@ export async function POST({ request, fetch, locals, url }) {
 		)
 	}
 
-	const manifestUrl = `${parsed.protocol}://${parsed.host}/${parsed.repository}/manifests/${parsed.reference}`
-	// const manifestUrl = `${parsed.protocol}://${parsed.host}/v2/${parsed.repository}/manifests/${parsed.reference}`
+	const manifestUrl = `${parsed.protocol}://${parsed.host}/v2/${parsed.repository}/manifests/${parsed.reference}`
 
 	try {
 		const response = await fetchWithTimeout(

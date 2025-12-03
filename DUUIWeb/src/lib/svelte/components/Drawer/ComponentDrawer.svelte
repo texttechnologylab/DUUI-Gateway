@@ -43,8 +43,8 @@
 	import RegistryDropdown from "$lib/svelte/components/Input/RegistryDropdown.svelte";
     const { cloneDeep, isEmpty } = pkg
 
-    const defaultRegistryMeta: DUUIComponentMetaData = {
-        tag: 'latest',
+	const defaultRegistryMeta: DUUIComponentMetaData = {
+		tag: 'latest',
         search_tags: [],
         documentation: '',
         description: '',
@@ -55,12 +55,24 @@
         resulting_types: []
     }
 
-    // Remove the `/v2` suffix that the registry API currently prepends and any extra slashes.
+    // Remove the `/v2` segment that the registry API currently prepends and collapse duplicate slashes.
     const sanitizeRegistryUrl = (value?: string) => {
         if (!value) return ''
         const trimmed = value.trim()
-        const withoutTrailingSlash = trimmed.replace(/\/+$/, '')
-        return withoutTrailingSlash.replace(/\/v2$/, '')
+
+        const schemeMatch = trimmed.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//)
+        const protocol = schemeMatch ? schemeMatch[0] : ''
+        let rest = schemeMatch ? trimmed.slice(protocol.length) : trimmed
+
+        rest = rest.replace(/\/v2(?=\/|$)/g, '/').replace(/^v2(?=\/|$)/g, '')
+        rest = rest.replace(/\/{2,}/g, '/')
+        rest = rest.replace(/\/+$/, '')
+
+        if (protocol && rest.startsWith('/')) {
+            rest = rest.slice(1)
+        }
+
+        return `${protocol}${rest}`
     }
 
 	const drawerStore = getDrawerStore()
@@ -74,6 +86,9 @@
 
 	let parameters: Map<string, string> = new Map(Object.entries(component.parameters))
 	const dispatcher = createEventDispatcher()
+
+	let lastSuggestedTarget = ''
+	let registrySelectionActive = false
 
 	let labels: string[]
 	component.options.labels = component.options.labels ? component.options.labels : []
@@ -616,6 +631,7 @@
 			{#if RegistryDrivers.includes(component.driver)}
 
 				<RegistryDropdown
+
 					on:change={
 						(event) => {
 
@@ -645,6 +661,7 @@
 						component.name = registryEntry.name
 						component.target = suggestedTarget;
 						component.description = entryMetadata.description
+						lastSuggestedTarget = suggestedTarget
 
 						}
 					}
@@ -705,22 +722,22 @@
 						{/if}
 					{/if}
 
-							<TextInput
-								style="md:col-span-2"
-								label="Target"
-								name="target"
-								bind:value={component.target}
-								error={component.target === '' ? "Target can't be empty" : ''}
-							>
-								<span slot="labelContent" class="flex w-full items-center justify-between gap-3">
-									<span>Target</span>
-									{#if dockerCheck.status === 'valid'}
-										<span class="badge variant-soft-success font-bold text-xs tracking-wide">
-											IMAGE ONLINE
-										</span>
-									{/if}
+					<TextInput
+						style="md:col-span-2"
+						label="Target"
+						name="target"
+						bind:value={component.target}
+						error={component.target === '' ? "Target can't be empty" : ''}
+					>
+						<span slot="labelContent" class="flex w-full items-center justify-between gap-3">
+							<span>Target</span>
+							{#if dockerCheck.status === 'valid'}
+								<span class="badge variant-soft-success font-bold text-xs tracking-wide">
+									IMAGE ONLINE
 								</span>
-							</TextInput>
+							{/if}
+						</span>
+					</TextInput>
 
 					<div class="hidden group-focus-within:block">
 						<Tip>

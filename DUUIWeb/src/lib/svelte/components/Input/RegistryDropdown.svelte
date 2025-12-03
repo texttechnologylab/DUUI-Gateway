@@ -45,6 +45,8 @@
     let dropdownElement: HTMLButtonElement;
     let popupWidth = 'auto';
 
+    let registryDropdownOpen = false
+
     /** Props */
     let selectedRegistryId: string = "";
     let selectedRegistryEndpoint: string = "";
@@ -224,6 +226,8 @@
         })();
 
     }
+
+    $: registryDropdownOpen = displayEntries
 
     $: displayEntries = displayEntries
 
