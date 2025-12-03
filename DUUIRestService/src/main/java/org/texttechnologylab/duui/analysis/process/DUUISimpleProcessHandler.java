@@ -263,7 +263,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
             // Create a temporary file to hold the text content
             String uuid = UUID.randomUUID().toString();
-            Path root = Paths.get(Main.config.getLocalDriveRoot(), uuid);
+            Path root = Paths.get(Main.config.getLocalDriveRoot(), "." + uuid);
             try {
                 java.nio.file.Files.createDirectories(root);
                 Path tempFile = root.resolve(tempFileName);
