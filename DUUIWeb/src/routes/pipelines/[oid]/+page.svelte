@@ -365,16 +365,14 @@
 				$currentPipelineStore.status === Status.Shutdown
 		}
 
-		switch (tabSet) {
-			case 0:
-				$page.url.searchParams.set('tab', '0')
-				break
-			case 1:
-				$page.url.searchParams.set('tab', '1')
-				break
-			case 2:
-				$page.url.searchParams.set('tab', '2')
-				break
+		const params = $page.url.searchParams
+		const hasTab = params.has('tab')
+		const current = +(params.get('tab') ?? '0')
+
+		if (!hasTab || current !== tabSet) {
+			const url = new URL($page.url)
+			url.searchParams.set('tab', String(tabSet))
+			goto(url, { replaceState: true, noScroll: true, keepFocus: true })
 		}
 	}
 </script>
