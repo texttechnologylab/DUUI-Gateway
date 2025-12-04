@@ -103,8 +103,9 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 		downloading = true
 		const extraSlash = output.path.endsWith('/') ? '' : '/'
 		const outputName = getOutputName(_document.name, input.file_extension, output.file_extension)
+		const downloadPath = `/api/files/download?provider=${output.provider}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${outputName}`
 		const response = await fetch(
-			`/api/files/download?provider=${output.provider}}&provider_id=${output.provider_id}&path=${output.path + extraSlash}${outputName}`,
+			downloadPath,
 			{
 				method: 'GET'
 			}
