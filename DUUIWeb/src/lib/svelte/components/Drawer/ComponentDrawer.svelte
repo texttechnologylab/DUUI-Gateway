@@ -629,9 +629,9 @@
 			<Dropdown label="Driver" name="driver" options={DUUIDrivers} bind:value={component.driver} on:change={fetchDriverLabels} />
 
 			{#if RegistryDrivers.includes(component.driver)}
+			<div class="flex">
 
 				<RegistryDropdown
-
 					on:change={
 						(event) => {
 
@@ -649,10 +649,10 @@
 
 						// Build a suggested target from the registry entry.
 						// If the registry URL is missing, fall back to name:tag.
-                        const baseRegistryUrl = sanitizeRegistryUrl(registryEntry.registry_url)
-                        let suggestedTarget = baseRegistryUrl
-                            ? `${baseRegistryUrl}/${registryEntry.name}:${metadataTag}`
-                            : `${registryEntry.name}:${metadataTag}`;
+						const baseRegistryUrl = sanitizeRegistryUrl(registryEntry.registry_url)
+						let suggestedTarget = baseRegistryUrl
+							? `${baseRegistryUrl}/${registryEntry.name}:${metadataTag}`
+							: `${registryEntry.name}:${metadataTag}`;
 
 						if (suggestedTarget.startsWith('https://')) {
 							suggestedTarget = suggestedTarget.replace(/^https?:\/\//, '');
@@ -666,6 +666,7 @@
 						}
 					}
 				/>
+			</div>
 
 			{/if}
 

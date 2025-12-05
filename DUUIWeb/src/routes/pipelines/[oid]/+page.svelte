@@ -8,6 +8,7 @@
 		faFileCircleCheck,
 		faFileClipboard,
 		faFileExport,
+		faFileImport,
 		faPause,
 		faPlay,
 		faRocket,
@@ -24,7 +25,7 @@
 	import { page } from '$app/stores'
 	import { type DUUIComponent } from '$lib/duui/component'
 	import { PROCESS_STATUS_NAMES, Status } from '$lib/duui/monitor'
-	import { pipelineToJson } from '$lib/duui/pipeline'
+	import { inflateComponent, pipelineToJson, type ExportedPipeline } from '$lib/duui/pipeline'
 	import type { DUUIProcess } from '$lib/duui/process'
 	import { datetimeToString, equals } from '$lib/duui/utils/text'
 	import { getDuration } from '$lib/duui/utils/time'
@@ -61,6 +62,8 @@
 	export let data: PageServerData
 	let { pipeline, processInfo, templateComponents } = data
 	let { processes, count } = processInfo
+
+	let importFileInput: HTMLInputElement
 
 	$currentPipelineStore = pipeline
 	$currentPipelineStore.components.forEach((c) => (c.id = uuidv4()))
@@ -250,6 +253,34 @@
 		URL.revokeObjectURL(url)
 	}
 
+	const importIntoCurrentPipeline = async (event: Event) => {
+		const input = event.currentTarget as HTMLInputElement
+		const file = input.files?.[0]
+
+		if (!file) return
+
+		try {
+			const text = await file.text()
+			const data = JSON.parse(text) as ExportedPipeline
+
+			$currentPipelineStore.description = data.description || $currentPipelineStore.description
+			$currentPipelineStore.settings = data.settings || {}
+			$currentPipelineStore.components = data.components.map((component, index) =>
+				inflateComponent(component, $currentPipelineStore.oid, index, $currentPipelineStore.user_id)
+			)
+
+			await updatePipeline()
+			toastStore.trigger(infoToast('Pipeline imported into current pipeline'))
+		} catch (e) {
+			console.error(e)
+			toastStore.trigger(errorToast('Invalid pipeline file'))
+		} finally {
+			if (input) {
+				input.value = ''
+			}
+		}
+	}
+
 	const updateTable = async () => {
 		statusFilter = getFilterOrGeneric(statusFilter)
 		inputFilter = getFilterOrGeneric(inputFilter)
@@ -382,10 +413,19 @@
 </svelte:head>
 
 <div class="menu-mobile-lg">
+
 	<a href="/pipelines" class="button-mobile">
 		<Fa icon={faArrowLeft} />
 		<span>Pipelines</span>
 	</a>
+
+	<input
+		bind:this={importFileInput}
+		type="file"
+		accept="application/json"
+		class="hidden"
+		on:change={importIntoCurrentPipeline}
+	/>
 
 	{#if $currentPipelineStore.user_id !== null}
 		<a
@@ -412,6 +452,10 @@
 			<Fa icon={faFileClipboard} />
 			<span>Copy</span>
 		</button>
+		<button class="button !justify-start" on:click={() => importFileInput?.click()}>
+			<Fa icon={faFileImport} />
+			<span>Import</span>
+		</button>
 		<button class="button !justify-start" on:click={exportPipeline}>
 			<Fa icon={faFileExport} />
 			<span>Export</span>
@@ -435,6 +479,14 @@
 				<Fa icon={faArrowLeft} />
 				<span class="text-xs md:text-base">Pipelines</span>
 			</a>
+
+			<button
+				class="button-menu border-r border-color"
+				on:click={() => importFileInput?.click()}
+			>
+				<Fa icon={faFileImport} />
+				<span class="text-xs md:text-base">Import</span>
+			</button>
 
 			<button class="button-menu border-r border-color" on:click={exportPipeline}>
 				<Fa icon={faFileExport} />

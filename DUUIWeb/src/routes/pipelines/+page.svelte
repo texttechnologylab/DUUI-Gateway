@@ -7,6 +7,7 @@
 		faChevronUp,
 		faClose,
 		faFilter,
+		faFileImport,
 		faPlus,
 		faQuestion,
 		faRefresh,
@@ -18,7 +19,7 @@
 	import { page } from '$app/stores'
 	import { DUUIDrivers, type DUUIDriver } from '$lib/duui/component'
 	import { Status } from '$lib/duui/monitor.js'
-	import { usedDrivers } from '$lib/duui/pipeline'
+	import { blankPipeline, inflateComponent, type ExportedPipeline, usedDrivers } from '$lib/duui/pipeline'
 	import Dropdown from '$lib/svelte/components/Input/Dropdown.svelte'
 	import Search from '$lib/svelte/components/Input/Search.svelte'
 	import PipelineCard from '$lib/svelte/components/PipelineCard.svelte'
@@ -45,6 +46,8 @@
 		index: 0,
 		order: -1
 	}
+
+	let importFileInput: HTMLInputElement
 
 	paginationSettings.limit = +($page.url.searchParams.get('limit') || '12')
 
@@ -118,6 +121,42 @@
 		}
 	}
 
+	const importAsNewPipeline = async (event: Event) => {
+		const input = event.currentTarget as HTMLInputElement
+		const file = input.files?.[0]
+
+		if (!file) return
+
+		try {
+			const text = await file.text()
+			const data = JSON.parse(text) as ExportedPipeline
+
+			let newPipeline = blankPipeline()
+			newPipeline.name = data.name
+			newPipeline.description = data.description || ''
+			newPipeline.settings = data.settings || {}
+			newPipeline.components = data.components.map((component, index) =>
+				inflateComponent(component, newPipeline.oid, index, newPipeline.user_id)
+			)
+
+			const response = await fetch('/api/pipelines', {
+				method: 'POST',
+				body: JSON.stringify(newPipeline)
+			})
+
+			if (response.ok) {
+				const created = await response.json()
+				await goto(`/pipelines/${created.oid}`)
+			}
+		} catch (e) {
+			console.error(e)
+		} finally {
+			if (input) {
+				input.value = ''
+			}
+		}
+	}
+
 	const mobileFilter: PopupSettings = {
 		event: 'click',
 		target: 'mobile-filter',
@@ -169,6 +208,14 @@
 		<Fa icon={faPlus} />
 		<span>New</span>
 	</a>
+
+	<input
+		bind:this={importFileInput}
+		type="file"
+		accept="application/json"
+		class="hidden"
+		on:change={importAsNewPipeline}
+	/>
 
 	<button class="button-mobile" use:popup={sortPopup}>
 		<Fa icon={faSort} />
@@ -230,6 +277,13 @@
 						<Fa icon={faPlus} />
 						<span class="text-xs md:text-base">New</span>
 					</a>
+					<button
+						class="button-menu inline-flex gap-4 items-center px-4 border-x border-color"
+						on:click={() => importFileInput?.click()}
+					>
+						<Fa icon={faFileImport} />
+						<span>Import</span>
+					</button>
 					<button
 						class="button-menu inline-flex gap-4 items-center px-4 border-x border-color"
 						use:popup={sortPopup}
