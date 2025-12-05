@@ -30,7 +30,15 @@
 	import { afterNavigate, beforeNavigate, goto, onNavigate } from '$app/navigation'
 	import { initializeStores, storePopup } from '@skeletonlabs/skeleton'
 
-	import { isDarkModeStore, userSession } from '$lib/store'
+	import {
+		currentPipelineStore,
+		groupStore,
+		isDarkModeStore,
+		labelStore,
+		processSettingsStore,
+		registryStore,
+		userSession
+	} from '$lib/store'
 	import Documentation from '$lib/svelte/components/Documentation.svelte'
 	import DocumentModal from '$lib/svelte/components/Drawer/DocumentDrawer.svelte'
 	import Sidebar from '$lib/svelte/components/Drawer/Sidebar.svelte'
@@ -63,6 +71,8 @@
 	import SettingsEditor from '$lib/svelte/components/Drawer/SettingsEditor.svelte'
 	import RegistryEditor from "$lib/svelte/components/Drawer/RegistryEditor.svelte";
 	import CodeModal from '$lib/svelte/components/Modal/CodeModal.svelte'
+	import { blankPipeline } from '$lib/duui/pipeline'
+	import { blankSettings } from '$lib/duui/process'
 
 	export let data
 	let { user, theme } = data
@@ -117,6 +127,11 @@
 		const response = await fetch('/account/logout', { method: 'PUT' })
 		if (response.ok) {
 			userSession.set(undefined)
+			currentPipelineStore.set(blankPipeline())
+			processSettingsStore.set(blankSettings())
+			labelStore.set(undefined)
+			groupStore.set(undefined)
+			registryStore.set(undefined)
 
 			await goto('/account/login')
 		} else {

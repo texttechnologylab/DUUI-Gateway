@@ -4,7 +4,15 @@
 -->
 <script lang="ts">
 	import { goto, onNavigate } from '$app/navigation'
-	import { isDarkModeStore, userSession } from '$lib/store'
+	import {
+		currentPipelineStore,
+		groupStore,
+		isDarkModeStore,
+		labelStore,
+		processSettingsStore,
+		registryStore,
+		userSession
+	} from '$lib/store'
 	import { faGithub, faReadme, faXTwitter } from '@fortawesome/free-brands-svg-icons'
 	import {
 		faArrowRightFromBracket,
@@ -22,6 +30,8 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { LightSwitch, getDrawerStore, getModalStore } from '@skeletonlabs/skeleton'
 	import Fa from 'svelte-fa'
+	import { blankPipeline } from '$lib/duui/pipeline'
+	import { blankSettings } from '$lib/duui/process'
 
 	const drawerStore = getDrawerStore()
 
@@ -29,6 +39,11 @@
 		const response = await fetch('/account/logout', { method: 'PUT' })
 		if (response.ok) {
 			userSession.set(undefined)
+			currentPipelineStore.set(blankPipeline())
+			processSettingsStore.set(blankSettings())
+			labelStore.set(undefined)
+			groupStore.set(undefined)
+			registryStore.set(undefined)
 
 			await goto('/account/login')
 		} else {
