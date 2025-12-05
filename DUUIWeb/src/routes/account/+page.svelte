@@ -13,8 +13,10 @@
 	import {
 		faAdd,
 		faCheck,
+		faExclamationCircle,
 		faFileText,
 		faGlobe,
+		faInfoCircle,
 		faLink, faPeopleGroup, faPerson, faRefresh,
 		faTrash,
 		faUser,
@@ -42,6 +44,8 @@
 	import Chip from "$lib/svelte/components/Chip.svelte";
 	const { set, isEmpty } = _;
 
+	const MAX_STORAGE_CONNECTIONS = 3
+
 	const toastStore = getToastStore()
 	const modalStore = getModalStore()
 	const drawerStore = getDrawerStore()
@@ -49,6 +53,11 @@
 	export let data
 	let { user, dropbBoxURL, googleDriveURL, theme, users, labels, groups, settings, registries } = data
 
+	const hasDropboxOAuthConfig =
+		!!settings?.dbx_app_key && !!settings?.dbx_app_secret && !!settings?.dbx_redirect_url
+
+	const hasGoogleOAuthConfig =
+		!!settings?.google_client_id && !!settings?.google_client_secret && !!settings?.google_redirect_uri
 
 	const themes = Object.keys(COLORS)
 
@@ -662,108 +671,128 @@
 				</div>
 				<Accordion class="space-y-4" id="connections">
 					<div class="section-wrapper rounded-md" id="dropbox">
-						<AccordionItem open>
+						<AccordionItem open disabled={!hasDropboxOAuthConfig}>
 							<svelte:fragment slot="summary">
-								<b class="h2 scroll-mt-16 text-primary-500">
-									Dropbox
-								</b>
+								<div class="flex items-center gap-2">
+									<b class="h2 scroll-mt-16 text-primary-500">
+										Dropbox
+									</b>
+									{#if !hasDropboxOAuthConfig}
+										<span class="badge variant-soft-error font-bold">
+											NOT AVAILABLE
+										</span>
+									{/if}
+								</div>
 							</svelte:fragment>
 							<svelte:fragment slot="content">
-								<div class=" p-8 grid grid-rows-[auto_1fr_auto] gap-8">
-								<div class="space-y-8">
-									<div>
-										{#if isDropboxConnected}
-											<p>Your Dropbox account has been connected successfully.</p>
-											<p>
-												The folder <span class="badge px-2 mx-2 variant-soft-primary"
-													>Apps/Docker Unified UIMA Interface</span
-												> has been created.
-											</p>
-										{:else}
-											<p class="mb-8">
-												By connecting Dropbox and DUUI you can directly read and write data from and to your
-												Dropbox storage. After a succesfull OAuth2 authorization at <span class="font-bold"
-											>Dropbox</span
-											> an app folder called DUUI is created in your storage that is used as the root folder
-												for read and write operations.
-											</p>
-										{/if}
+								{#if !hasDropboxOAuthConfig}
+									<div class="p-8">
+										<Tip tipTheme="error" customIcon={faInfoCircle}>
+											This storage connection is currently unavailable.
+										</Tip>
 									</div>
-									<div>
-										<p class="flex-center-4">
-											<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
-											<span>
-												Read files and folders contained in your <strong>Dropbox Account</strong>
-											</span>
-										</p>
-										<p class="flex-center-4 mb-4">
-											<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
-											<span>Create files and folders in your <strong>Dropbox Account</strong> </span>
-										</p>
-									</div>
-									{#each Object.entries(dropboxConnections) as [name, _]}
-										<div class="bordered-soft rounded-md overflow-hidden">
-											<div class="space-y-4 p-4">
-												<TextInput
-													label="Alias"
-													style={"grow"}
-													name={name}
-													bind:value={dropboxConnections[name].alias}
-												/>
-												<div class="grid md:flex justify-between gap-4">
-													<button class="button-neutral" disabled={!dropboxConnections[name].alias}
-															on:click={() => {
-																if (checkAliasExists(dropboxConnections, dropboxConnections[name].alias, name))
-																	return;
-	
-																updateUser({
-																	['connections.dropbox.' + name]: {
-																		alias: dropboxConnections[name].alias,
-																	}
-																})
-													}}>
-														<Fa icon={faLink} />
-														<span>Save</span>
-													</button>
-													<button class="button-error" on:click={() => deleteDropboxAccess(name)}>
-														<Fa icon={faXmarkCircle} />
-														<span>Delete</span>
-													</button>
-												</div>
+								{:else}
+									<div class=" p-8 grid grid-rows-[auto_1fr_auto] gap-8">
+										<div class="space-y-8">
+											<div>
+												{#if isDropboxConnected}
+													<p>Your Dropbox account has been connected successfully.</p>
+													<p>
+														The folder <span class="badge px-2 mx-2 variant-soft-primary"
+															>Apps/Docker Unified UIMA Interface</span
+														> has been created.
+													</p>
+												{:else}
+													<p class="mb-8">
+														By connecting Dropbox and DUUI you can directly read and write data from and to your
+														Dropbox storage. After a succesfull OAuth2 authorization at <span class="font-bold"
+													>Dropbox</span
+													> an app folder called DUUI is created in your storage that is used as the root folder
+														for read and write operations.
+													</p>
+												{/if}
 											</div>
+											<div>
+												<p class="flex-center-4">
+													<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
+													<span>
+														Read files and folders contained in your <strong>Dropbox Account</strong>
+													</span>
+												</p>
+												<p class="flex-center-4 mb-4">
+													<Fa icon={isDropboxConnected ?  faCheck : faFileText} size="lg" class="text-primary-500" />
+													<span>Create files and folders in your <strong>Dropbox Account</strong> </span>
+												</p>
+											</div>
+											{#each Object.entries(dropboxConnections) as [name, _]}
+												<div class="bordered-soft rounded-md overflow-hidden">
+													<div class="space-y-4 p-4">
+														<TextInput
+															label="Alias"
+															style={"grow"}
+															name={name}
+															bind:value={dropboxConnections[name].alias}
+														/>
+														<div class="grid md:flex justify-between gap-4">
+															<button class="button-neutral" disabled={!dropboxConnections[name].alias}
+																	on:click={() => {
+																		if (checkAliasExists(dropboxConnections, dropboxConnections[name].alias, name))
+																			return;
+
+																		updateUser({
+																			['connections.dropbox.' + name]: {
+																				alias: dropboxConnections[name].alias,
+																			}
+																		})
+															}}>
+																<Fa icon={faLink} />
+																<span>Save</span>
+															</button>
+															<button class="button-error" on:click={() => deleteDropboxAccess(name)}>
+																<Fa icon={faXmarkCircle} />
+																<span>Delete</span>
+															</button>
+														</div>
+													</div>
+												</div>
+											{/each}
+											<div class="space-y-2">
+												<h3>Add New Connection</h3>
+												<div class="grid md:flex justify-between gap-4 mb-4">
+													<TextInput
+														label="Alias"
+														style={"grow"}
+														name="newDropboxAlias"
+														bind:value={newDropboxConnection.alias}
+													/>
+												</div>
+												<button class="button-neutral" disabled={!newDropboxConnection.alias || Object.keys(dropboxConnections || {}).length >= MAX_STORAGE_CONNECTIONS} on:click={() => {
+														if (checkAliasExists(dropboxConnections, newDropboxConnection.alias))
+															return;
+														startDropboxOauth(newDropboxConnection.alias)
+													}
+													}>
+													<Fa icon={faLink} />
+													<span>Connect</span>
+												</button>
+											</div>
+											{#if Object.keys(dropboxConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
+												<Tip customIcon={faExclamationCircle} tipTheme="warning">
+													Maximum number of storage connections reached.
+												</Tip>
+											{/if}
+											<p class="text-surface-500 dark:text-surface-200">
+												Visit
+												<a
+													href="https://help.dropbox.com/de-de/integrations/third-party-apps"
+													target="_blank"
+													class="anchor">Dropbox Apps</a
+												>
+												for further reading.
+											</p>
 										</div>
-									{/each}
-									<div class="space-y-2">
-										<h3>Add New Connection</h3>
-										<div class="grid md:flex justify-between gap-4 mb-4">
-											<TextInput
-												label="Alias"
-												style={"grow"}
-												name="newDropboxAlias"
-												bind:value={newDropboxConnection.alias}
-											/>
-										</div>
-										<button class="button-neutral" disabled={!newDropboxConnection.alias} on:click={() => {
-												if (checkAliasExists(dropboxConnections, newDropboxConnection.alias))
-													return;
-												startDropboxOauth(newDropboxConnection.alias)
-											}
-											}>
-											<Fa icon={faLink} />
-											<span>Connect</span>
-										</button>
 									</div>
-									<p class="text-surface-500 dark:text-surface-200">
-										Visit
-										<a
-											href="https://help.dropbox.com/de-de/integrations/third-party-apps"
-											target="_blank"
-											class="anchor">Dropbox Apps</a
-										>
-										for further reading.
-									</p>
-								</div>
-							</div>
+								{/if}
 							</svelte:fragment>
 						</AccordionItem>
 					</div>
@@ -854,7 +883,7 @@
 										<div class="grid md:flex justify-between gap-4">
 											<button
 													class="button-neutral"
-													disabled={!newMinioConnections.endpoint || !newMinioConnections.access_key || !newMinioConnections.secret_key || !newMinioConnections.alias}
+													disabled={!newMinioConnections.endpoint || !newMinioConnections.access_key || !newMinioConnections.secret_key || !newMinioConnections.alias || Object.keys(minioConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
 													on:click={() => {
 														if (checkAliasExists(minioConnections, newMinioConnections.alias))
 															return;
@@ -876,9 +905,14 @@
 													}}
 											>
 												<Fa icon={faLink} />
-												<span>{'Connect'}</span>
+												<span>Connect</span>
 											</button>
 										</div>
+										{#if Object.keys(minioConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
+											<Tip customIcon={faExclamationCircle} tipTheme="warning">
+												Maximum number of storage connections reached.
+											</Tip>
+										{/if}
 									</div>
 	
 									<p class="text-surface-500 dark:text-surface-200">
@@ -973,7 +1007,7 @@
 									<div class="grid md:flex justify-between gap-4">
 										<button
 												class="button-neutral"
-												disabled={!newNextcloud.uri || !newNextcloud.username || !newNextcloud.password || !newNextcloud.alias}
+												disabled={!newNextcloud.uri || !newNextcloud.username || !newNextcloud.password || !newNextcloud.alias || Object.keys(nextcloudConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
 												on:click={() => {
 													if (checkAliasExists(nextcloudConnections, newNextcloud.alias))
 														return;
@@ -995,9 +1029,14 @@
 												}}
 										>
 											<Fa icon={faLink} />
-											<span>{'Connect'}</span>
+											<span>Connect</span>
 										</button>
 									</div>
+									{#if Object.keys(nextcloudConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
+										<Tip customIcon={faExclamationCircle} tipTheme="warning">
+											Maximum number of storage connections reached.
+										</Tip>
+									{/if}
 								</div>
 	
 	
@@ -1012,103 +1051,123 @@
 					</div>
 
 					<div class="section-wrapper rounded-md" id="google">
-						<AccordionItem open>
+						<AccordionItem open disabled={!hasGoogleOAuthConfig}>
 							<svelte:fragment slot="summary">
-								<b class="h2 scroll-mt-16 text-primary-500">
-									Google Drive
-								</b>
+								<div class="flex items-center gap-2">
+									<b class="h2 scroll-mt-16 text-primary-500">
+										Google Drive
+									</b>
+									{#if !hasGoogleOAuthConfig}
+										<span class="badge variant-soft-error font-bold">
+											NOT AVAILABLE
+										</span>
+									{/if}
+								</div>
 							</svelte:fragment>
 							<svelte:fragment slot="content">
-								<div class="p-8 grid grid-rows-[auto_1fr_auto] gap-8">
-									<div class="space-y-8">
-										{#if isGoogleDriveConnected}
+								{#if !hasGoogleOAuthConfig}
+									<div class="p-8">
+										<Tip tipTheme="error" customIcon={faInfoCircle}>
+											This storage connection is currently unavailable.
+										</Tip>
+									</div>
+								{:else}
+									<div class="p-8 grid grid-rows-[auto_1fr_auto] gap-8">
+										<div class="space-y-8">
+											{#if isGoogleDriveConnected}
+												<div>
+													<p>Your Google Drive account has been connected successfully.</p>
+													<p>
+														The folder <span class="badge px-2 mx-2 variant-soft-primary"
+													>Apps/Docker Unified UIMA Interface</span
+													> has been created.
+													</p>
+												</div>
+											{:else}
+												<div>
+													<p class="mb-8">
+														By connecting GoogleDrive and DUUI you can directly read and write data from and to your
+														GoogleDrive storage. After a succesfull OAuth2 authorization at <span class="font-bold"
+													>GoogleDrive</span
+													> an app folder called DUUI is created in your storage that is used as the root folder
+														for read and write operations.
+													</p>
+												</div>
+											{/if}
 											<div>
-												<p>Your Google Drive account has been connected successfully.</p>
-												<p>
-													The folder <span class="badge px-2 mx-2 variant-soft-primary"
-												>Apps/Docker Unified UIMA Interface</span
-												> has been created.
+												<p class="flex-center-4">
+													<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
+													<span
+													>Read files and folders contained in your <strong>Google Drive Account</strong>
+													</span>
+												</p>
+												<p class="flex-center-4 mb-4">
+													<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
+													<span>Create files and folders in your <strong>Google Drive Account</strong> </span>
 												</p>
 											</div>
-										{:else}
-											<div>
-												<p class="mb-8">
-													By connecting GoogleDrive and DUUI you can directly read and write data from and to your
-													GoogleDrive storage. After a succesfull OAuth2 authorization at <span class="font-bold"
-												>GoogleDrive</span
-												> an app folder called DUUI is created in your storage that is used as the root folder
-													for read and write operations.
-												</p>
-											</div>
-										{/if}
-										<div>
-											<p class="flex-center-4">
-												<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
-												<span
-												>Read files and folders contained in your <strong>Google Drive Account</strong>
-												</span>
-											</p>
-											<p class="flex-center-4 mb-4">
-												<Fa icon={isGoogleDriveConnected ? faCheck: faFileText} size="lg" class="text-primary-500" />
-												<span>Create files and folders in your <strong>Google Drive Account</strong> </span>
-											</p>
-										</div>
-										{#each Object.entries(googledriveConnections) as [name, _]}
-											<div class="bordered-soft rounded-md overflow-hidden">
-												<div class="space-y-4 p-4">
+											{#each Object.entries(googledriveConnections) as [name, _]}
+												<div class="bordered-soft rounded-md overflow-hidden">
+													<div class="space-y-4 p-4">
+														<TextInput
+																label="Alias"
+																style={"grow"}
+																name={name}
+																placeholder="Input alias "
+																bind:value={googledriveConnections[name].alias}
+														/>
+														<div class="grid md:flex justify-between gap-4">
+															<button class="button-neutral" disabled={!googledriveConnections[name].alias}
+																	on:click={() => {
+																if (checkAliasExists(googledriveConnections, googledriveConnections[name].alias, name))
+																	return;
+
+																updateUser({
+																	['connections.google.' + name]: {
+																		alias: googledriveConnections[name].alias,
+																	}
+																})
+														}}>
+																<Fa icon={faLink} />
+																<span>Save</span>
+															</button>
+															<button class="button-error" on:click={() => deleteGoogleDriveAccess(name)}>
+																<Fa icon={faXmarkCircle} />
+																<span>Delete</span>
+															</button>
+														</div>
+													</div>
+												</div>
+											{/each}
+
+											<div class="space-y-2">
+												<h3>Add New Connection</h3>
+												<div class="grid md:flex justify-between gap-4 mb-4">
 													<TextInput
 															label="Alias"
 															style={"grow"}
-															name={name}
+															name="newGoogleAlias"
 															placeholder="Input alias "
-															bind:value={googledriveConnections[name].alias}
+															bind:value={newGoogleConnection.alias}
 													/>
-													<div class="grid md:flex justify-between gap-4">
-														<button class="button-neutral" disabled={!googledriveConnections[name].alias}
-																on:click={() => {
-															if (checkAliasExists(googledriveConnections, googledriveConnections[name].alias, name))
-																return;
-		
-															updateUser({
-																['connections.google.' + name]: {
-																	alias: googledriveConnections[name].alias,
-																}
-															})
-													}}>
-															<Fa icon={faLink} />
-															<span>Save</span>
-														</button>
-														<button class="button-error" on:click={() => deleteGoogleDriveAccess(name)}>
-															<Fa icon={faXmarkCircle} />
-															<span>Delete</span>
-														</button>
-													</div>
 												</div>
+												<button class="button-neutral" disabled={!newGoogleConnection.alias || Object.keys(googledriveConnections || {}).length >= MAX_STORAGE_CONNECTIONS} on:click={() => {
+													if (checkAliasExists(googledriveConnections, newGoogleConnection.alias))
+														return;
+													startGoogleDriveAccess(newGoogleConnection.alias)
+												}}>
+													<Fa icon={faLink} />
+													<span>Connect</span>
+												</button>
 											</div>
-										{/each}
-
-										<div class="space-y-2">
-											<h3>Add New Connection</h3>
-											<div class="grid md:flex justify-between gap-4 mb-4">
-												<TextInput
-														label="Alias"
-														style={"grow"}
-														name="newGoogleAlias"
-														placeholder="Input alias "
-														bind:value={newGoogleConnection.alias}
-												/>
-											</div>
-											<button class="button-neutral" disabled={!newGoogleConnection.alias} on:click={() => {
-												if (checkAliasExists(googledriveConnections, newGoogleConnection.alias))
-													return;
-												startGoogleDriveAccess(newGoogleConnection.alias)
-											}}>
-												<Fa icon={faLink} />
-												<span>Connect</span>
-											</button>
+											{#if Object.keys(googledriveConnections || {}).length >= MAX_STORAGE_CONNECTIONS}
+												<Tip customIcon={faExclamationCircle} tipTheme="warning">
+													Maximum number of storage connections reached.
+												</Tip>
+											{/if}
 										</div>
 									</div>
-								</div>
+								{/if}
 							</svelte:fragment>
 						</AccordionItem>
 					</div>
@@ -1184,69 +1243,6 @@
 		{:else if tab === 3}
 			{#if $userSession?.role === 'Admin'}
 				<div class="section-wrapper p-8 space-y-4 w-full">
-					<!--{#if users}-->
-					<!--	<FunctionalTable-->
-					<!--		title="Groups"-->
-					<!--		columns={{name: "Name", members: "Members"}}-->
-					<!--		data={$groupStore}-->
-					<!--		columnMapping={-->
-					<!--			{-->
-					<!--				members: {-->
-					<!--					icon: faPerson,-->
-					<!--					mapper: (memberId) => {-->
-					<!--						if (!users) return memberId;-->
-					<!--						const user = users.find((user) => user.oid === memberId);-->
-					<!--						return user ? user.email : memberId;-->
-					<!--					}-->
-					<!--				}-->
-					<!--			}-->
-					<!--		}-->
-					<!--		on:edit={(event) => {-->
-					<!--			if (!$groupStore || !$groupStore[event.detail.id]) return;-->
-
-					<!--			drawerStore.open({-->
-					<!--				id: 'group',-->
-					<!--				width: 'w-full lg:w-[60%] h-full',-->
-					<!--				position: 'right',-->
-					<!--				rounded: 'rounded-none',-->
-					<!--				border: 'border-l border-color',-->
-					<!--				meta: {-->
-					<!--					group: $groupStore[event.detail.id],-->
-					<!--					groupId: event.detail.id,-->
-					<!--					creating: false,-->
-					<!--					users: users-->
-					<!--				}-->
-					<!--			})}-->
-					<!--		}-->
-					<!--		on:add={() => {-->
-					<!--			if (!$groupStore) return;-->
-
-					<!--			const newGroupId = uuidv4();-->
-					<!--			$groupStore[newGroupId] = {-->
-					<!--				name: "",-->
-					<!--				members: [],-->
-					<!--				whitelist: []-->
-					<!--			};-->
-					<!--			drawerStore.open({-->
-					<!--				id: 'group',-->
-					<!--				width: 'w-full lg:w-[60%] h-full',-->
-					<!--				position: 'right',-->
-					<!--				rounded: 'rounded-none',-->
-					<!--				border: 'border-l border-color',-->
-					<!--				meta: {-->
-					<!--					group: $groupStore ? $groupStore[newGroupId] : undefined,-->
-					<!--					groupId: newGroupId,-->
-					<!--					creating: true,-->
-					<!--					users: users-->
-					<!--				}-->
-					<!--			})}-->
-					<!--		}-->
-					<!--	/>-->
-					<!--{:else}-->
-					<!--	<Tip>-->
-					<!--		Please register users to manage Groups.-->
-					<!--	</Tip>-->
-					<!--{/if}-->
 					{#if users && users.length > 0 && $groupStore !== undefined}
 						<FunctionalTable2
 							title="Groups"
@@ -1309,54 +1305,6 @@
 					{:else}
 						<Tip>Please register users to manage Groups.</Tip>
 					{/if}
-
-<!--					<FunctionalTable-->
-<!--						title="Labels"-->
-<!--						columns={{label: "Name", driver: "Driver", groups: "Groups"}}-->
-<!--						data={$labelStore}-->
-<!--						columnMapping={-->
-<!--							{-->
-<!--								groups: {-->
-<!--									icon: faPeopleGroup,-->
-<!--									mapper: (groupId) => {-->
-<!--										if (!groups) return "";-->
-<!--										return groups[groupId] ? groups[groupId].name : groupId;-->
-<!--									}-->
-<!--								}-->
-<!--							}-->
-<!--						}-->
-<!--						on:edit={(event) => {-->
-<!--							drawerStore.open({-->
-<!--								id: 'label',-->
-<!--								width: 'w-full lg:w-[60%] h-full',-->
-<!--								position: 'right',-->
-<!--								rounded: 'rounded-none',-->
-<!--								border: 'border-l border-color',-->
-<!--								meta: { -->
-<!--									creating: false, -->
-<!--									labelId: event.detail.id, -->
-<!--									label: $labelStore?.[event.detail.id] ?? {},-->
-<!--								}-->
-<!--							})}-->
-<!--						}-->
-<!--						on:add={() => {-->
-<!--							drawerStore.open({-->
-<!--								id: 'label',-->
-<!--								width: 'w-full lg:w-[60%] h-full',-->
-<!--								position: 'right',-->
-<!--								rounded: 'rounded-none',-->
-<!--								border: 'border-l border-color',-->
-<!--								meta: { -->
-<!--									creating: true, -->
-<!--									labelId: uuidv4(), -->
-<!--									label: {-->
-<!--										label: "",-->
-<!--										driver: "Any"-->
-<!--									},-->
-<!--								}-->
-<!--							})}-->
-<!--						}-->
-<!--					/>-->
 					<FunctionalTable2
 							title="Labels"
 							columns={{ label: "Name", driver: "Driver", groups: "Groups" }}
@@ -1448,46 +1396,6 @@
 						  }}
 					>
 					</FunctionalTable2>
-<!--					<FunctionalTable-->
-<!--							title="Registries"-->
-<!--							columns={{name: "Name", endpoint: "Endpoint", scope: "Scope"}}-->
-<!--							data={$registryStore}-->
-<!--							on:edit={(event) => {-->
-<!--								drawerStore.open({-->
-<!--									id: 'registry',-->
-<!--									width: 'w-full lg:w-[60%] h-full',-->
-<!--									position: 'right',-->
-<!--									rounded: 'rounded-none',-->
-<!--									border: 'border-l border-color',-->
-<!--									meta: {-->
-<!--										creating: false,-->
-<!--										registryId: event.detail.id,-->
-<!--										registry: $registryStore?.[event.detail.id] ?? {},-->
-<!--									}-->
-<!--								})-->
-<!--							}-->
-<!--						}-->
-<!--							on:add={() => {-->
-<!--								drawerStore.open({-->
-<!--									id: 'registry',-->
-<!--									width: 'w-full lg:w-[60%] h-full',-->
-<!--									position: 'right',-->
-<!--									rounded: 'rounded-none',-->
-<!--									border: 'border-l border-color',-->
-<!--									meta: {-->
-<!--										creating: true,-->
-<!--										registryId: uuidv4(),-->
-<!--										registry: {-->
-<!--											name: "",-->
-<!--											endpoint: "",-->
-<!--											scope: "USER",-->
-<!--											groups: []-->
-<!--										},-->
-<!--									}-->
-<!--								})-->
-<!--							}-->
-<!--						}-->
-<!--					/>-->
 
 					<div class="section-wrapper p-4 space-y-4">
 						<h3 class="h3">Global Setting</h3>
