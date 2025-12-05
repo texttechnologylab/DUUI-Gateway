@@ -155,6 +155,8 @@
         return new Map<string, string>()
     }
 
+    let registryUnreachable = false;
+
     const fetchRegistry = async () => {
 
         if (!selectedRegistryEndpoint) {
@@ -170,7 +172,12 @@
         if (response.ok) {
             entries = await response.json()
         } else {
-            toastStore.trigger(errorToast(`ERROR ${response.status}: ${response.statusText} \n Failed to fetch registry entries. Registry is not reachable.`))
+            if (response.status === 503) {
+                registryUnreachable = true;
+            }
+            else {
+                console.log(`ERROR ${response.status}: ${response.statusText} \n Failed to fetch registry entries.`)
+            }
             entries = [];
         }
     }
@@ -372,7 +379,11 @@
 
             <div class="divider my-4 border-t border-gray-300"></div>
 
-            {#if filteredRegistryEndpoints.size < 1}
+            {#if registryUnreachable}
+                <Tip tipTheme="error">
+                    The selected registry is currently unreachable. Please check your network connection or contact the administrator.
+                </Tip>
+            {:else if filteredRegistryEndpoints.size < 1}
                 <Tip tipTheme="error">
                         You have no registries available. Access can be granted by an administrator.
                 </Tip>
