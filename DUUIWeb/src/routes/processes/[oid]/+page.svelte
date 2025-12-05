@@ -200,7 +200,7 @@
 	const showDocumentModal = (document: DUUIDocument) => {
 		const drawer: DrawerSettings = {
 			id: 'document',
-			width: 'w-full lg:w-[60%] h-full',
+			width: 'w-full xl:w-[60%] h-full',
 			position: 'right',
 			rounded: 'rounded-none',
 			border: 'border-l border-color',

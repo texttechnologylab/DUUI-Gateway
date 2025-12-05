@@ -575,14 +575,16 @@
 							class="self-stretch text-sm overflow-hidden grid sm:grid-cols-2 xl:grid-cols-3 gap-4"
 						>
 							{#each annotationFilter.entries() as [key, value]}
-								<div class="grid grid-cols-2 card gap-4 p-4">
-									<div class="flex flex-col items-start justify-center gap-2">
-										<p class="font-bold">Class</p>
-										<p class="">{key.split('.').slice(-1)}</p>
-									</div>
-									<div class="flex flex-col items-start justify-center gap-2">
-										<p class="font-bold">Count</p>
-										<p>{value}</p>
+								<div class="card p-4">
+									<div class="flex items-start justify-between gap-4">
+										<div class="flex flex-col items-start justify-center gap-2">
+											<p class="font-bold">Class</p>
+											<p class="break-all">{key.split('.').slice(-1)}</p>
+										</div>
+										<div class="flex flex-col items-end justify-center gap-2">
+											<p class="font-bold">Count</p>
+											<p>{value}</p>
+										</div>
 									</div>
 								</div>
 							{/each}
