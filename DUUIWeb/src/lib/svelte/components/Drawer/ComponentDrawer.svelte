@@ -210,6 +210,9 @@
 	}
 
 	const onEdited = async () => {
+
+		component.parameters = Object.fromEntries(parameters)
+
 		if (creating) {
 			const copy = cloneDeep(component)
 			copy.id = uuidv4()
