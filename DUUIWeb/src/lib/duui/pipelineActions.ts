@@ -41,7 +41,7 @@ export const copyPipelineWithPrompt = async (
 	if (response.ok) {
 		const data = await response.json()
 		toastStore.trigger(infoToast('Pipeline copied successfully'))
-		await gotoFn(`/pipelines?id=${data.oid}`)
+		await gotoFn(`/pipelines/${data.oid}?tab=0`)
 	} else {
 		toastStore.trigger(errorToast('Error: ' + response.statusText))
 	}
@@ -97,3 +97,40 @@ export const deletePipelineWithConfirm = async (
 	}
 }
 
+export const deletePipelinesWithConfirm = async (
+	pipelines: DUUIPipeline[],
+	modalStore: ModalStore,
+	toastStore: ToastStore
+) => {
+	if (pipelines.length === 0) return false
+
+	const count = pipelines.length
+
+	const confirm = await showConfirmationModal(
+		{
+			title: 'Delete Pipelines',
+			message: `Are you sure you want to delete ${count} pipeline${count > 1 ? 's' : ''}?`,
+			textYes: `Delete ${count}`
+		},
+		modalStore
+	)
+
+	if (!confirm) return false
+
+	for (const pipeline of pipelines) {
+		const response = await fetch('/api/pipelines', {
+			method: 'DELETE',
+			body: JSON.stringify({ oid: pipeline.oid })
+		})
+
+		if (!response.ok) {
+			toastStore.trigger(errorToast('Error: ' + response.statusText))
+			return false
+		}
+	}
+
+	toastStore.trigger(
+		infoToast(`Deleted ${count} pipeline${count > 1 ? 's' : ''} successfully.`)
+	)
+	return true
+}
