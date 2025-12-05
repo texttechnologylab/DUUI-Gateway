@@ -21,7 +21,8 @@
 	let cursorVisible = false
 	let popupEl: HTMLDivElement | null = null
 
-	export let cursorOffsetY = 5
+	export let cursorOffsetY = 0
+	export let cursorOffsetX = 0
 	export let viewportMarginX = 8
 
 	function updateFromEvent(event: MouseEvent) {
@@ -81,7 +82,7 @@
 			<div
 				class={`fixed z-[9999] pointer-events-none ${popupWidth}`}
 				bind:this={popupEl}
-				style={`left: ${tooltipX}px; top: ${tooltipY}px;`}
+				style={`left: ${tooltipX + cursorOffsetX}px; top: ${tooltipY + cursorOffsetY}px;`}
 			>
 				<div class="py-4 relative">
 					<slot name="popup" />

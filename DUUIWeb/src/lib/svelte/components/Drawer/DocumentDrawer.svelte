@@ -493,7 +493,9 @@
 					<div class={`flex-grow ${activeAnnotation ? 'w-3/4' : 'w-full'} space-y-1 relative`}>
 						<IconTip
 							text="Click highlighted sections to view annotation details."
-							size="sm"
+							size="xl"
+							customTipSize={true}
+							tipSize="sm"
 							followCursor={true}
 						/>
 						<div class={`h-96 overflow-y-auto leading-relaxed `}>
@@ -527,8 +529,11 @@
 
 								<IconTip
 									text="Click the highlighted text again to hide details."
-									size="xs"
+									size="lg"
+									customTipSize={true}
+									tipSize="xs"
 									tipTheme="primary"
+									followCursor={true}
 								/>
 							</div>
 

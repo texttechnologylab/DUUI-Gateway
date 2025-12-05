@@ -44,7 +44,6 @@
 		deletePipelineWithConfirm,
 		exportPipelineToFile
 	} from '$lib/duui/pipelineActions'
-	import IconTip from '$lib/svelte/components/IconTip.svelte'
 	import Checkbox from '$lib/svelte/components/Input/Checkbox.svelte'
 	import MobilePopup from '$lib/svelte/components/MobilePopup.svelte'
 	import ResponsivePopup from '$lib/svelte/components/ResponsivePopup.svelte'
