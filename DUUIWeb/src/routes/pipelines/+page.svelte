@@ -38,10 +38,11 @@
 	import { getModalStore, getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
-	import { errorToast } from '$lib/duui/utils/ui'
+	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import {
 		copyPipelineWithPrompt,
 		deletePipelineWithConfirm,
+		deletePipelinesWithConfirm,
 		exportPipelineToFile
 	} from '$lib/duui/pipelineActions'
 	import Checkbox from '$lib/svelte/components/Input/Checkbox.svelte'
@@ -233,6 +234,30 @@
 		}
 	}
 
+	const deleteSelectedPipelines = async () => {
+
+		if (selectedOids.length === 1) {
+			const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
+			for (const p of selected) await deletePipeline(p)
+			clearSelection()
+		}
+
+		const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
+		const deleted = await deletePipelinesWithConfirm(selected, modalStore, toastStore)
+
+		if (deleted) {
+			const selectedCount = selected.length
+			pipelines = pipelines.filter((pl) => !selectedOids.includes(pl.oid))
+			count = Math.max(0, count - selectedCount)
+			clearSelection()
+			toastStore.trigger(
+				successToast(
+					`${selectedCount} pipeline${selectedCount > 1 ? 's' : ''} deleted successfully.`
+				)
+			)
+		}
+	}
+
 	const mobileFilter: PopupSettings = {
 		event: 'click',
 		target: 'mobile-filter',
@@ -336,12 +361,7 @@
 
 			<button
 				class="button !justify-start text-error-500"
-				on:click={async () => {
-					const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
-					for (const p of selected) await deletePipeline(p)
-					clearSelection()
-				}}
-				disabled={!singleSelectionMode}
+				on:click={deleteSelectedPipelines}
 			>
 				<Fa icon={faTrash} />
 				<span>Delete</span>
@@ -417,45 +437,7 @@
 						<Fa icon={faCheckDouble} />
 						<span>Select All</span>
 					</button>
-					
-					<!-- {#if selectionMode}
-						<button
-							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color"
-							on:click={() => {
-								const p = pipelines.find((pl) => pl.oid === selectedOids[0])
-								if (p) copyPipeline(p)
-							}}
-							disabled={!singleSelectionMode}
-						>
-							<Fa icon={faFileClipboard} />
-							<span class="hidden lg:inline text-xs lg:text-base">Copy</span>
-						</button>
-						<button
-							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color"
-							on:click={() => {
-								const p = pipelines.find((pl) => pl.oid === selectedOids[0])
-								if (p) exportPipeline(p)
-							}}
-							disabled={!singleSelectionMode}
-						>
-							<Fa icon={faFileExport} />
-							<span class="hidden lg:inline text-xs lg:text-base">Export</span>
-						</button>
-						<button
-							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color text-error-500"
-							on:click={async () => {
-								const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
-								for (const p of selected) {
-									await deletePipeline(p)
-								}
-								clearSelection()
-							}}
-							disabled={!singleSelectionMode}
-						>
-							<Fa icon={faTrash} />
-							<span class="hidden lg:inline text-xs lg:text-base">Delete</span>
-						</button>
-					{/if} -->
+
 					{#if selectionMode}
 						<ResponsivePopup breakpoint="xl">
 							<button
@@ -484,12 +466,7 @@
 
 							<button
 								class="button-menu inline-flex gap-2 items-center px-4 !text-error-500"
-								on:click={async () => {
-									const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
-									for (const p of selected) await deletePipeline(p)
-									clearSelection()
-								}}
-								disabled={!singleSelectionMode}
+								on:click={deleteSelectedPipelines}
 							>
 								<Fa icon={faTrash} />
 								<span>Delete</span>
@@ -540,7 +517,7 @@
 									<!-- svelte-ignore a11y-no-static-element-interactions -->
 									<!-- svelte-ignore a11y-click-events-have-key-events -->
 									<div
-										class="absolute left-4 top-4 z-10"
+										class="absolute left-3 top-3 z-10"
 										on:click={(event) => {
 											event.stopPropagation()
 											event.preventDefault()
@@ -555,14 +532,12 @@
 									</div>
 
 									<a
-										class="card-fancy {pipeline.status === Status.Idle
+										class="!pl-12 card-fancy {pipeline.status === Status.Idle
 											? '!border-l-8 !border-l-success-500'
-											: ''} grid items-start min-h-[300px]"
+											: ''} grid items-start min-h-[300px] "
 										href={`/pipelines/${pipeline.oid}`}
 									>
-										<div class="mt-3 ml-3">
-											<PipelineCard {pipeline} />
-										</div>
+										<PipelineCard {pipeline} />
 									</a>
 								</div>
 

@@ -361,18 +361,6 @@
 						<span>Loading</span>
 					</button>
 				{:else}
-					<!-- TODO fix tooltip trigger-->
-					<!-- <TooltipTrigger
-						tooltipVisible={!hasOutputStorage}
-						tooltipMessage="Configure an output storage to download processed documents."
-						tipTheme="tertiary"
-						tipIcon={faWarning}
-					>
-						<button class="button-neutral" on:click={download} disabled={!hasOutputStorage}>
-							<Fa icon={faDownload} />
-							<span>Download</span>
-						</button>
-					</TooltipTrigger> -->
 					<button class="button-neutral" on:click={download} disabled={!hasOutputStorage}>
 						<Fa icon={faDownload} />
 						<span>Download</span>
@@ -384,17 +372,6 @@
 						<span>Processing Document</span>
 					</button>
 				{:else}
-					<!-- <TooltipTrigger
-						tooltipVisible={!hasOutputStorage}
-						tooltipMessage="Configure an output storage to download processed documents."
-						tipTheme="tertiary"
-						tipIcon={faWarning}
-					>
-						<button class="button-neutral" on:click={preprocessDocument} disabled={!hasOutputStorage}>
-							<Fa icon={faDownload} />
-							<span>Read Document</span>
-						</button>
-					</TooltipTrigger> -->
 					<button class="button-neutral" on:click={preprocessDocument} disabled={!hasOutputStorage}>
 						<Fa icon={faDownload} />
 						<span>Read Document</span>
@@ -489,8 +466,8 @@
 						searchPlaceholder="Search annotations..."
 				/>
 				<hr class="border-t border-gray-300 my-4 rounded-md">
-				<div class="p-8 py-4 border-b border-color flex gap-8">
-					<div class={`flex-grow ${activeAnnotation ? 'w-3/4' : 'w-full'} space-y-1 relative`}>
+				<div class="flex-col pb-8 border-b border-color flex relative">
+					<div>
 						<IconTip
 							text="Click highlighted sections to view annotation details."
 							size="xl"
@@ -498,53 +475,57 @@
 							tipSize="sm"
 							followCursor={true}
 						/>
-						<div class={`h-96 overflow-y-auto leading-relaxed `}>
-							{#each processedAnnotations as part}
-								{#if part.annotationType }
-									<button
-										type="button"
-										class={`variant-soft-primary px-1 rounded cursor-pointer transition
-											hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary-500
-											${activeAnnotation === part ? 'ring-2 ring-primary-500 font-semibold' : ''}`}
-										on:click={() => (activeAnnotation = activeAnnotation === part ? null : part)}
-									>
-										{part.text}
-									</button>
-								{:else}
-									<span>{part.text}</span>
-								{/if}
-							{/each}
-						</div>
 					</div>
-
-					{#if activeAnnotation}
-						<div class="w-1/4 border border-color rounded text-sm">
-							<!-- Header -->
-							<div class="flex items-center justify-between px-2 py-1 border-b border-color">
-								<p class="font-semibold truncate mr-2">
-									{activeAnnotation.annotationType
-									? activeAnnotation.annotationType.split('.').slice(-1)
-									: 'Details'}
-								</p>
-
-								<IconTip
-									text="Click the highlighted text again to hide details."
-									size="lg"
-									customTipSize={true}
-									tipSize="xs"
-									tipTheme="primary"
-									followCursor={true}
-								/>
-							</div>
-
-							<!-- Content -->
-							<div class="max-h-96 overflow-y-auto p-2">
-								<pre class="whitespace-pre-wrap break-words text-xs">
-									{activeAnnotation.details}
-								</pre>
+					<div class="flex gap-4">
+						<div class={`flex-grow ${activeAnnotation ? 'w-3/4' : 'w-full'} space-y-1 max-h-96`}>
+							<div class={`max-h-96 overflow-y-auto leading-relaxed `}>
+								{#each processedAnnotations as part}
+									{#if part.annotationType }
+										<button
+											type="button"
+											class={`variant-soft-primary px-1 rounded cursor-pointer transition
+												hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary-500
+												${activeAnnotation === part ? 'ring-2 ring-primary-500 font-semibold' : ''}`}
+											on:click={() => (activeAnnotation = activeAnnotation === part ? null : part)}
+										>
+											{part.text}
+										</button>
+									{:else}
+										<span>{part.text}</span>
+									{/if}
+								{/each}
 							</div>
 						</div>
-					{/if}
+	
+						{#if activeAnnotation}
+							<div class="w-1/4 border border-color rounded text-sm">
+								<!-- Header -->
+								<div class="flex items-center justify-between px-2 py-1 border-b border-color">
+									<p class="font-semibold truncate mr-2">
+										{activeAnnotation.annotationType
+										? activeAnnotation.annotationType.split('.').slice(-1)
+										: 'Details'}
+									</p>
+	
+									<IconTip
+										text="Click the highlighted text again to hide details."
+										size="lg"
+										customTipSize={true}
+										tipSize="xs"
+										tipTheme="primary"
+										followCursor={true}
+									/>
+								</div>
+	
+								<!-- Content -->
+								<div class=" max-h-96 overflow-y-auto p-2">
+									<pre class="whitespace-pre-wrap break-words text-xs">
+										{activeAnnotation.details}
+									</pre>
+								</div>
+							</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 			<hr class="border-t border-gray-300 my-4 rounded-md">
