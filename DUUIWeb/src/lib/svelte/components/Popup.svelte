@@ -19,13 +19,31 @@
 	let tooltipX = 0
 	let tooltipY = 0
 	let cursorVisible = false
+	let popupEl: HTMLDivElement | null = null
 
-	const cursorOffsetY = 18
+	export let cursorOffsetY = 5
+	export let viewportMarginX = 8
 
 	function updateFromEvent(event: MouseEvent) {
 		if (!followCursor) return
-		tooltipX = event.clientX
-		tooltipY = event.clientY
+		let x = event.clientX
+		let y = event.clientY + cursorOffsetY
+
+		if (browser && popupEl) {
+			const viewportWidth = window.innerWidth || 0
+			const popupWidth = popupEl.offsetWidth || 0
+			const marginX = Math.max(0, viewportMarginX)
+			const maxLeft = Math.max(marginX, viewportWidth - popupWidth - marginX)
+			x = Math.max(marginX, Math.min(x, maxLeft))
+
+			const viewportHeight = window.innerHeight || 0
+			const popupHeight = popupEl.offsetHeight || 0
+			const maxTop = Math.max(0, viewportHeight - popupHeight)
+			y = Math.min(y, maxTop)
+		}
+
+		tooltipX = x
+		tooltipY = y
 	}
 
 	function handleMouseEnter(event: MouseEvent) {
@@ -62,7 +80,8 @@
 		{#if cursorVisible}
 			<div
 				class={`fixed z-[9999] pointer-events-none ${popupWidth}`}
-				style={`left: ${tooltipX}px; top: ${tooltipY + cursorOffsetY}px;`}
+				bind:this={popupEl}
+				style={`left: ${tooltipX}px; top: ${tooltipY}px;`}
 			>
 				<div class="py-4 relative">
 					<slot name="popup" />

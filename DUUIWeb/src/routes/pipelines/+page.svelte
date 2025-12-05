@@ -6,26 +6,48 @@
 		faChevronRight,
 		faChevronUp,
 		faClose,
+		faFileClipboard,
+		faFileExport,
+		faTrash,
 		faFilter,
 		faFileImport,
 		faPlus,
 		faQuestion,
 		faRefresh,
 		faSearch,
-		faSort
+		faSort,
+
+		faCheckDouble
+
 	} from '@fortawesome/free-solid-svg-icons'
 
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { DUUIDrivers, type DUUIDriver } from '$lib/duui/component'
 	import { Status } from '$lib/duui/monitor.js'
-	import { blankPipeline, inflateComponent, type ExportedPipeline, usedDrivers } from '$lib/duui/pipeline'
+	import {
+		blankPipeline,
+		inflateComponent,
+		type DUUIPipeline,
+		type ExportedPipeline,
+		usedDrivers
+	} from '$lib/duui/pipeline'
 	import Dropdown from '$lib/svelte/components/Input/Dropdown.svelte'
 	import Search from '$lib/svelte/components/Input/Search.svelte'
 	import PipelineCard from '$lib/svelte/components/PipelineCard.svelte'
-	import { popup, type PopupSettings } from '@skeletonlabs/skeleton'
+	import { getModalStore, getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import Fa from 'svelte-fa'
+	import { errorToast } from '$lib/duui/utils/ui'
+	import {
+		copyPipelineWithPrompt,
+		deletePipelineWithConfirm,
+		exportPipelineToFile
+	} from '$lib/duui/pipelineActions'
+	import IconTip from '$lib/svelte/components/IconTip.svelte'
+	import Checkbox from '$lib/svelte/components/Input/Checkbox.svelte'
+	import MobilePopup from '$lib/svelte/components/MobilePopup.svelte'
+	import ResponsivePopup from '$lib/svelte/components/ResponsivePopup.svelte'
 
 	export let data
 
@@ -77,6 +99,9 @@
 
 	let loading: boolean = false
 
+	const modalStore = getModalStore()
+	const toastStore = getToastStore()
+
 	const loadMore = async () => {
 		loading = true
 		paginationSettings.limit += 12
@@ -97,6 +122,41 @@
 
 		loading = false
 	}
+
+	// Selection functionality 
+	let selectedOids: string[] = []
+
+	$: selectionMode = selectedOids.length > 0
+
+	$: singleSelectionMode = selectedOids.length === 1
+
+	const isSelected = (oid: string) => selectedOids.includes(oid)
+
+	const toggleSelected = (oid: string) => {
+		selectedOids = isSelected(oid)
+			? selectedOids.filter((id) => id !== oid)
+			: [...selectedOids, oid]
+	}
+
+	const clearSelection = () => {
+		selectedOids = []
+	}
+
+	const selectAllVisible = () => {
+		const visibleIds = filteredPipelines.map((p: DUUIPipeline) => p.oid)
+
+		const allVisibleSelected = visibleIds.every((id) => selectedOids.includes(id))
+
+		if (allVisibleSelected) {
+			// unselect only the currently visible ones
+			selectedOids = selectedOids.filter((id) => !visibleIds.includes(id))
+		} else {
+			// add all visible ones, keep any already-selected non-visible ones
+			const merged = new Set([...selectedOids, ...visibleIds])
+			selectedOids = Array.from(merged)
+		}
+	}
+
 
 	const sortCriteria = ['created_at', 'name', 'times_used']
 	const sortCriteriaNames = ['Created At', 'Name', 'Times Used']
@@ -154,6 +214,23 @@
 			if (input) {
 				input.value = ''
 			}
+		}
+	}
+
+	const copyPipeline = async (pipeline: DUUIPipeline) => {
+		await copyPipelineWithPrompt(pipeline, modalStore, toastStore, goto)
+	}
+
+	const exportPipeline = (pipeline: DUUIPipeline) => {
+		exportPipelineToFile(pipeline)
+	}
+
+	const deletePipeline = async (pipeline: DUUIPipeline) => {
+		const deleted = await deletePipelineWithConfirm(pipeline, modalStore, toastStore)
+
+		if (deleted) {
+			pipelines = pipelines.filter((p: DUUIPipeline) => p.oid !== pipeline.oid)
+			count = Math.max(0, count - 1)
 		}
 	}
 
@@ -217,6 +294,12 @@
 		on:change={importAsNewPipeline}
 	/>
 
+	<button class="button-mobile" on:click={selectAllVisible}>
+		<Fa icon={faCheckDouble} />
+		<span>Select all</span>
+	</button>
+
+
 	<button class="button-mobile" use:popup={sortPopup}>
 		<Fa icon={faSort} />
 		<span>Sort</span>
@@ -226,6 +309,47 @@
 		<Fa icon={searchOpen ? faClose : faFilter} />
 		<span>Filter</span>
 	</button>
+	{#if selectionMode}
+		<MobilePopup>
+			<button
+				class="button !justify-start"
+				on:click={() => {
+					const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+					if (p) copyPipeline(p)
+				}}
+				disabled={!singleSelectionMode}
+			>
+				<Fa icon={faFileClipboard} />
+				<span>Copy</span>
+			</button>
+
+			<button
+				class="button !justify-start"
+				on:click={() => {
+					const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+					if (p) exportPipeline(p)
+				}}
+				disabled={!singleSelectionMode}
+			>
+				<Fa icon={faFileExport} />
+				<span>Export</span>
+			</button>
+
+			<button
+				class="button !justify-start text-error-500"
+				on:click={async () => {
+					const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
+					for (const p of selected) await deletePipeline(p)
+					clearSelection()
+				}}
+				disabled={!singleSelectionMode}
+			>
+				<Fa icon={faTrash} />
+				<span>Delete</span>
+			</button>
+			
+		</MobilePopup>
+	{/if}
 </div>
 
 <div data-popup="sort-popup" class="z-50">
@@ -273,17 +397,107 @@
 		<div class="grid relative pb-16 isolate">
 			<div class="sticky top-0 bg-surface-50-900-token border-b border-color hidden md:block z-10">
 				<div class="grid md:flex items-stretch md:justify-between relative">
-					<a class="anchor-menu mr-auto border-r border-color" href="/pipelines/build">
-						<Fa icon={faPlus} />
-						<span class="text-xs md:text-base">New</span>
-					</a>
+					<div class="flex mr-auto">
+						<a class="anchor-menu border-r border-color" href="/pipelines/build">
+							<Fa icon={faPlus} />
+							<span class="text-xs md:text-base">New</span>
+						</a>
+						<button
+							class="button-menu inline-flex gap-4 items-center px-4 border-r border-color"
+							on:click={() => importFileInput?.click()}
+						>
+							<Fa icon={faFileImport} />
+							<span>Import</span>
+						</button>
+					</div>
 					<button
-						class="button-menu inline-flex gap-4 items-center px-4 border-x border-color"
-						on:click={() => importFileInput?.click()}
+						class={`button-menu inline-flex gap-2 items-center px-4 border-x border-color
+							${selectionMode ? 'variant-filled-primary !text-surface-50-900-token' : ''}`}
+						on:click={selectAllVisible}
 					>
-						<Fa icon={faFileImport} />
-						<span>Import</span>
+						<Fa icon={faCheckDouble} />
+						<span>Select All</span>
 					</button>
+					
+					<!-- {#if selectionMode}
+						<button
+							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color"
+							on:click={() => {
+								const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+								if (p) copyPipeline(p)
+							}}
+							disabled={!singleSelectionMode}
+						>
+							<Fa icon={faFileClipboard} />
+							<span class="hidden lg:inline text-xs lg:text-base">Copy</span>
+						</button>
+						<button
+							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color"
+							on:click={() => {
+								const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+								if (p) exportPipeline(p)
+							}}
+							disabled={!singleSelectionMode}
+						>
+							<Fa icon={faFileExport} />
+							<span class="hidden lg:inline text-xs lg:text-base">Export</span>
+						</button>
+						<button
+							class="button-menu inline-flex gap-2 items-center px-4 border-x border-color text-error-500"
+							on:click={async () => {
+								const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
+								for (const p of selected) {
+									await deletePipeline(p)
+								}
+								clearSelection()
+							}}
+							disabled={!singleSelectionMode}
+						>
+							<Fa icon={faTrash} />
+							<span class="hidden lg:inline text-xs lg:text-base">Delete</span>
+						</button>
+					{/if} -->
+					{#if selectionMode}
+						<ResponsivePopup breakpoint="xl">
+							<button
+								class="button-menu inline-flex gap-2 items-center px-4"
+								on:click={() => {
+									const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+									if (p) copyPipeline(p)
+								}}
+								disabled={!singleSelectionMode}
+							>
+								<Fa icon={faFileClipboard} />
+								<span>Copy</span>
+							</button>
+
+							<button
+								class="button-menu inline-flex gap-2 items-center px-4"
+								on:click={() => {
+									const p = pipelines.find((pl) => pl.oid === selectedOids[0])
+									if (p) exportPipeline(p)
+								}}
+								disabled={!singleSelectionMode}
+							>
+								<Fa icon={faFileExport} />
+								<span>Export</span>
+							</button>
+
+							<button
+								class="button-menu inline-flex gap-2 items-center px-4 !text-error-500"
+								on:click={async () => {
+									const selected = pipelines.filter((pl) => selectedOids.includes(pl.oid))
+									for (const p of selected) await deletePipeline(p)
+									clearSelection()
+								}}
+								disabled={!singleSelectionMode}
+							>
+								<Fa icon={faTrash} />
+								<span>Delete</span>
+							</button>
+							
+						</ResponsivePopup>
+					{/if}
 					<button
 						class="button-menu inline-flex gap-4 items-center px-4 border-x border-color"
 						use:popup={sortPopup}
@@ -323,14 +537,36 @@
 					<div class="md:min-h-[800px] container mx-auto p-4 space-y-4">
 						<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8 relative">
 							{#each filteredPipelines as pipeline}
-								<a
-									class="card-fancy {pipeline.status === Status.Idle
-										? '!border-l-8 !border-l-success-500'
-										: ''} grid items-start min-h-[300px]"
-									href="/pipelines/{pipeline.oid}"
-								>
-									<PipelineCard {pipeline} />
-								</a>
+								<div class="relative">
+									<!-- svelte-ignore a11y-no-static-element-interactions -->
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<div
+										class="absolute left-4 top-4 z-10"
+										on:click={(event) => {
+											event.stopPropagation()
+											event.preventDefault()
+											toggleSelected(pipeline.oid)
+										}}
+									>
+										<Checkbox
+											label=""
+											name={`selectPipeline_${pipeline.oid}`}
+											checked={selectedOids.includes(pipeline.oid)}
+										/>
+									</div>
+
+									<a
+										class="card-fancy {pipeline.status === Status.Idle
+											? '!border-l-8 !border-l-success-500'
+											: ''} grid items-start min-h-[300px]"
+										href={`/pipelines/${pipeline.oid}`}
+									>
+										<div class="mt-3 ml-3">
+											<PipelineCard {pipeline} />
+										</div>
+									</a>
+								</div>
+
 							{/each}
 						</div>
 						{#if count - pipelines.length > 0}

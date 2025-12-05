@@ -5,12 +5,14 @@
 	import {
 		blankPipeline,
 		getPipelineTagsAsString,
+		inflateComponent,
 		usedDrivers,
-		type DUUIPipeline
+		type DUUIPipeline,
+		type ExportedPipeline
 	} from '$lib/duui/pipeline'
 
 	import { includes } from '$lib/duui/utils/text'
-	import { successToast } from '$lib/duui/utils/ui'
+	import { errorToast, successToast } from '$lib/duui/utils/ui'
 	import { currentPipelineStore } from '$lib/store'
 	import ComponentPopup from '$lib/svelte/components/ComponentPopup.svelte'
 	import DriverIcon from '$lib/svelte/components/DriverIcon.svelte'
@@ -49,6 +51,7 @@
 	})
 
 	let step: number = +($page.url.searchParams.get('step') || '0')
+	let importFileInput: HTMLInputElement
 
 	let settings: Map<string, string>
 
@@ -104,6 +107,39 @@
 		$currentPipelineStore.components = $currentPipelineStore.components.map((c) => {
 			return { ...c, index: $currentPipelineStore.components.indexOf(c) }
 		})
+	}
+
+	const importIntoBuilder = async (event: Event) => {
+		const input = event.currentTarget as HTMLInputElement
+		const file = input.files?.[0]
+
+		if (!file) return
+
+		try {
+			const text = await file.text()
+			const data = JSON.parse(text) as ExportedPipeline
+
+			let importedPipeline = blankPipeline()
+			importedPipeline.name = data.name
+			importedPipeline.description = data.description || ''
+			importedPipeline.settings = data.settings || {}
+			importedPipeline.components = data.components.map((component, index) =>
+				inflateComponent(component, importedPipeline.oid, index, importedPipeline.user_id)
+			)
+
+			$currentPipelineStore = importedPipeline
+			settings = new Map(Object.entries(importedPipeline.settings || {}))
+
+			step = 1
+			await goto('/pipelines/build?step=1')
+		} catch (e) {
+			console.error(e)
+			toastStore.trigger(errorToast('Invalid pipeline file'))
+		} finally {
+			if (input) {
+				input.value = ''
+			}
+		}
 	}
 
 	const createPipeline = async () => {
@@ -265,6 +301,13 @@
 		{/if}
 		{#if step === 0}
 			<div class="space-y-8">
+				<input
+					bind:this={importFileInput}
+					type="file"
+					accept="application/json"
+					class="hidden"
+					on:change={importIntoBuilder}
+				/>
 				<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8">
 					<button
 						class="card-fancy text-left grid items-start min-h-[300px] md:col-span-2 xl:col-span-1 xl:col-start-2"
@@ -280,6 +323,19 @@
 							{#each DUUIDrivers as driver}
 								<DriverIcon {driver} />
 							{/each}
+						</div>
+					</button>
+					<button
+						class="card-fancy text-left grid items-start min-h-[300px] md:col-span-2 xl:col-span-1 xl:col-start-2"
+						on:click={() => importFileInput?.click()}
+					>
+						<div class="flex-center-4 justify-between">
+							<p class="text-lg font-bold">Import from file</p>
+						</div>
+
+						<p class="row-span-2">Import a Pipeline configuration from a JSON export.</p>
+						<div class="flex items-center justify-end gap-4 self-end">
+							<Fa icon={faUpload} />
 						</div>
 					</button>
 				</div>

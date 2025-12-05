@@ -55,6 +55,11 @@
 	} from './charts'
 	import Popup from '$lib/svelte/components/Popup.svelte'
 	import Tip from '$lib/svelte/components/Tip.svelte'
+	import {
+		copyPipelineWithPrompt,
+		deletePipelineWithConfirm,
+		exportPipelineToFile
+	} from '$lib/duui/pipelineActions'
 
 	const modalStore = getModalStore()
 	const toastStore = getToastStore()
@@ -137,62 +142,11 @@
 	}
 
 	const deletePipeline = async () => {
-		const confirm = await showConfirmationModal(
-			{
-				title: 'Delete Pipeline',
-				message: `Are you sure you want to delete ${$currentPipelineStore.name}?`,
-				textYes: 'Delete'
-			},
-			modalStore
-		)
-
-		if (!confirm) return
-
-		const response = await fetch(`/api/pipelines`, {
-			method: 'DELETE',
-			body: JSON.stringify({ oid: $currentPipelineStore.oid })
-		})
-
-		if (response.ok) {
-			await goto('/pipelines')
-			toastStore.trigger(infoToast('Pipeline deleted successfully'))
-		} else {
-			toastStore.trigger(errorToast('Error: ' + response.statusText))
-		}
+		await deletePipelineWithConfirm($currentPipelineStore, modalStore, toastStore, goto)
 	}
 
 	const copyPipeline = async () => {
-		new Promise<string>((resolve) => {
-			const modal: ModalSettings = {
-				type: 'component',
-				component: 'promptModal',
-				meta: {
-					title: 'Copy Pipeline',
-					message: `Choose a new Name`,
-					value: $currentPipelineStore.name + ' - Copy'
-				},
-				response: (r: string) => {
-					resolve(r)
-				}
-			}
-			modalStore.trigger(modal)
-		}).then(async (newName: string) => {
-			if (!newName) return
-
-			const response = await fetch('/api/pipelines', {
-				method: 'POST',
-				body: JSON.stringify({
-					...$currentPipelineStore,
-					name: newName
-				})
-			})
-
-			if (response.ok) {
-				const data = await response.json()
-				toastStore.trigger(infoToast('Pipeline copied successfully'))
-				await goto(`/pipelines?id=${data.oid}`)
-			}
-		})
+		await copyPipelineWithPrompt($currentPipelineStore, modalStore, toastStore, goto)
 	}
 
 	const manageService = async () => {
@@ -240,17 +194,7 @@
 	}
 
 	const exportPipeline = () => {
-		const blob = new Blob([JSON.stringify(pipelineToJson($currentPipelineStore))], {
-			type: 'application/json'
-		})
-		const url = URL.createObjectURL(blob)
-		const anchor = document.createElement('a')
-		anchor.href = url
-		anchor.download = `${$currentPipelineStore.name}.json`
-		document.body.appendChild(anchor)
-		anchor.click()
-		document.body.removeChild(anchor)
-		URL.revokeObjectURL(url)
+		exportPipelineToFile($currentPipelineStore)
 	}
 
 	const importIntoCurrentPipeline = async (event: Event) => {
