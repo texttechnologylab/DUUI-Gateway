@@ -6,17 +6,70 @@
 -->
 
 <script lang="ts">
+	import { onDestroy } from 'svelte'
+	import { browser } from '$app/environment'
+
 	export let arrow: boolean = true
 	export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
 	export let classes: string = ''
 	export let autoPopupWidth: boolean = false
+	// When true, position popup based on cursor instead of trigger element.
+	export let followCursor: boolean = false
+
+	let tooltipX = 0
+	let tooltipY = 0
+	let cursorVisible = false
+
+	const cursorOffsetY = 18
+
+	function updateFromEvent(event: MouseEvent) {
+		if (!followCursor) return
+		tooltipX = event.clientX
+		tooltipY = event.clientY
+	}
+
+	function handleMouseEnter(event: MouseEvent) {
+		if (!followCursor || !browser) return
+		cursorVisible = true
+		updateFromEvent(event)
+		window.addEventListener('mousemove', updateFromEvent)
+	}
+
+	function handleMouseLeave() {
+		if (!followCursor || !browser) return
+		cursorVisible = false
+		window.removeEventListener('mousemove', updateFromEvent)
+	}
+
+	onDestroy(() => {
+		if (browser) {
+			window.removeEventListener('mousemove', updateFromEvent)
+		}
+	})
 
 	const popupWidth = autoPopupWidth ? "w-auto min-w-max" : ""
 </script>
 
-<div class="group relative {classes}"  style="display: inline;">
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+	class="group relative {classes}"
+	style="display: inline;"
+	on:mouseenter={handleMouseEnter}
+	on:mouseleave={handleMouseLeave}
+>
 	<slot name="trigger" />
-	{#if position === 'bottom'}
+	{#if followCursor}
+		{#if cursorVisible}
+			<div
+				class={`fixed z-[9999] pointer-events-none ${popupWidth}`}
+				style={`left: ${tooltipX}px; top: ${tooltipY + cursorOffsetY}px;`}
+			>
+				<div class="py-4 relative">
+					<slot name="popup" />
+				</div>
+			</div>
+		{/if}
+	{:else if position === 'bottom'}
 		<div
 			class={`invisible group-hover:visible translate-y-4 transition-all origin-top opacity-0
                 absolute left-1/2 -translate-x-1/2 top-full z-[9999]
@@ -36,7 +89,7 @@
 	{:else if position === 'top'}
 		<div
 			class={`invisible group-hover:visible -translate-y-4 transition-all origin-bottom opacity-0
-                absolute left-1/2 -translate-x-1/2 bottom-full z-[100]
+                absolute left-1/2 -translate-x-1/2 bottom-full z-[9999]
                 group-hover:translate-y-0 duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="py-4 relative">
@@ -54,7 +107,7 @@
 	{:else if position === 'right'}
 		<div
 			class={`invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
-                absolute right-2 top-1/2 -translate-y-1/2 z-[100]
+                absolute right-2 top-1/2 -translate-y-1/2 z-[9999]
                 group-hover:translate-x-full duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="translate-x-4 relative">
@@ -72,7 +125,7 @@
 	{:else if position === 'left'}
 		<div
 			class={`invisible group-hover:visible -translate-x-8 transition-all origin-bottom opacity-0
-                absolute left-2 top-1/2 -translate-y-1/2 z-[100]
+                absolute left-2 top-1/2 -translate-y-1/2 z-[9999]
                 group-hover:-translate-x-full duration-300 group-hover:opacity-100 ${popupWidth}`}
 		>
 			<div class="-translate-x-4 relative">

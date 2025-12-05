@@ -4,7 +4,7 @@
 -->
 
 <script lang="ts">
-	import { equals, toTitleCase } from '$lib/duui/utils/text'
+	import { equals, toTitleCase, includes } from '$lib/duui/utils/text'
 	import type { Placement } from '@floating-ui/dom'
 	import { faCheck, faChevronDown, faL, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 	import { ListBox, ListBoxItem, popup, type PopupSettings } from '@skeletonlabs/skeleton'
@@ -22,6 +22,10 @@
 
 	export let initFirst: boolean = false 
 
+	// When true, display a search input at the top of the dropdown and filter options.
+	export let searchable: boolean = false
+	export let searchPlaceholder: string = 'Search...'
+
 	export let icon: IconDefinition = faChevronDown
 	export let placement: Placement = 'bottom-end'
 
@@ -34,6 +38,7 @@
 	export let minWidth: string = 'md:min-w-[220px]'
 
 	let dropdownId = '';
+	let searchTerm: string = ''
 
 	onMount(() => {
 		dropdownId = uuidv4();
@@ -53,8 +58,6 @@
 	let optionsMap: Map<string | number, string | number>
 	if (options instanceof Map) {
 		optionsMap = options
-
-
 	} else if (Array.isArray(options)) {
 		optionsMap = new Map(
 			options.map(item => [item, item] as [string | number, string | number])
@@ -78,6 +81,21 @@
 			value  = optionsMap.keys().toArray().shift() ?? value;
 		}
 	}
+
+	let entries: [string | number, string | number][]
+	let filteredEntries: [string | number, string | number][]
+
+	$: entries = Array.from(optionsMap.entries())
+
+	$: filteredEntries =
+		!searchable || !searchTerm
+			? entries
+			: entries.filter(([key, displayValue]) => {
+				const label = String(displayValue ?? '')
+				const keyText = String(key ?? '')
+				return includes(label, searchTerm) || includes(keyText, searchTerm)
+			})
+
 	$: rawLabel = (optionsMap.get(value) ?? value) as string;
 	$: displayLabel = rawLabel
 		? (capitalize ? toTitleCase(rawLabel) : rawLabel)
@@ -98,8 +116,20 @@
 
 <div data-popup={name} id={dropdownId} class="fixed overflow-y-auto h64 mt-1 z-10">
 	<div class="popup-solid p-2 {minWidth} overflow-scroll max-h-96">
+		{#if searchable}
+			<div class="mb-2">
+				<input
+					type="text"
+					class="w-full px-2 py-1 text-sm border border-color rounded-md bg-surface-50-900-token"
+					placeholder={searchPlaceholder}
+					bind:value={searchTerm}
+					on:click|stopPropagation
+				/>
+			</div>
+		{/if}
+
 		<ListBox class="overflow-hidden" rounded="rounded-md" spacing="space-y-2">
-			{#each Array.from(optionsMap.entries()) as [key, displayValue]}
+			{#each filteredEntries as [key, displayValue]}
 				<ListBoxItem
 					on:change
 					bind:group={value}

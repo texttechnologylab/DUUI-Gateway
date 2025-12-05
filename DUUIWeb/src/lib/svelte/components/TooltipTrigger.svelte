@@ -7,7 +7,11 @@
 	export let tooltipMessage: string = ''
 	export let tipIcon = faWarning
 	export let tipTheme: string = 'tertiary'
+	export let tipIconSize: "sm" | "lg" | "md" | "xl" = "lg" 
+	export let tipSize: "xs" | "sm" | "md" | "lg" = "md"
 	export let autoPopupWidth: boolean = true
+	export let showIcon: boolean = true
+
 </script>
 
 {#if tooltipVisible}
@@ -16,7 +20,7 @@
 			<slot />
 		</svelte:fragment>
 		<svelte:fragment slot="popup">
-			<Tip customIcon={tipIcon} tipTheme={tipTheme}>{tooltipMessage}</Tip>
+			<Tip customIcon={tipIcon} {showIcon} tipTheme={tipTheme}>{tooltipMessage}{tipIconSize}{tipSize}</Tip>
 		</svelte:fragment>
 	</Popup>
 {:else}

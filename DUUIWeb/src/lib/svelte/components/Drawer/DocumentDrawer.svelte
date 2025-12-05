@@ -28,11 +28,10 @@
 	} from '../../../../routes/processes/[oid]/chart'
 	import Number from '../Input/Number.svelte'
 	import Search from '../Input/Search.svelte'
-	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
-	import Popup from '$lib/svelte/components/Popup.svelte'
+	import Dropdown from '$lib/svelte/components/Input/Dropdown.svelte';
 	import Link from '$lib/svelte/components/Link.svelte'
-import Tip from '../Tip.svelte'
-import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
+	import Tip from '../Tip.svelte'
+	import IconTip from '../IconTip.svelte'
 
 	const drawerStore = getDrawerStore()
 
@@ -148,6 +147,7 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 	let unprocessedAnnotations: Annotation[]
 	let processedAnnotations: ProcessedAnnotation[]
 	let processingText = false
+	let activeAnnotation: ProcessedAnnotation | null = null
 
 	let keyList: string[]
 
@@ -485,33 +485,61 @@ import TooltipTrigger from '$lib/svelte/components/TooltipTrigger.svelte'
 							processedAnnotations = getHighlightedText(documentText, unprocessedAnnotations, selectedAnnotation)}
 						style=""
 						options={annotationNames}
+						searchable={true}
+						searchPlaceholder="Search annotations..."
 				/>
 				<hr class="border-t border-gray-300 my-4 rounded-md">
 				<div class="p-8 py-4 border-b border-color flex gap-8">
-					<div class="flex flex-col items-start  gap-2">
-						<div class="h-64 overflow-y-auto">
+					<div class={`flex-grow ${activeAnnotation ? 'w-3/4' : 'w-full'} space-y-1 relative`}>
+						<IconTip
+							text="Click highlighted sections to view annotation details."
+							size="sm"
+							followCursor={true}
+						/>
+						<div class={`h-96 overflow-y-auto leading-relaxed `}>
 							{#each processedAnnotations as part}
-								{#if part.annotationType}
-										<span class=" variant-soft-primary px-1 rounded">
-												<Popup autoPopupWidth={true} arrow={false} position="left">
-														<svelte:fragment slot="trigger">
-																{part.text}
-														</svelte:fragment>
-														<svelte:fragment slot="popup" >
-																<div class="bg-primary-50-900-token bg-transparent absolute p-3 rounded-md w-48 overflow-y-auto h-36">
-																		<small class="max-w-prose text-primary-700 whitespace-pre-wrap">
-																				{part.details}
-																		</small>
-																</div>
-														</svelte:fragment>
-												</Popup>
-										</span>
+								{#if part.annotationType }
+									<button
+										type="button"
+										class={`variant-soft-primary px-1 rounded cursor-pointer transition
+											hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary-500
+											${activeAnnotation === part ? 'ring-2 ring-primary-500 font-semibold' : ''}`}
+										on:click={() => (activeAnnotation = activeAnnotation === part ? null : part)}
+									>
+										{part.text}
+									</button>
 								{:else}
 									<span>{part.text}</span>
 								{/if}
 							{/each}
 						</div>
 					</div>
+
+					{#if activeAnnotation}
+						<div class="w-1/4 border border-color rounded text-sm">
+							<!-- Header -->
+							<div class="flex items-center justify-between px-2 py-1 border-b border-color">
+								<p class="font-semibold truncate mr-2">
+									{activeAnnotation.annotationType
+									? activeAnnotation.annotationType.split('.').slice(-1)
+									: 'Details'}
+								</p>
+
+								<IconTip
+									text="Click the highlighted text again to hide details."
+									size="xs"
+									tipTheme="primary"
+								/>
+							</div>
+
+							<!-- Content -->
+							<div class="max-h-96 overflow-y-auto p-2">
+								<pre class="whitespace-pre-wrap break-words text-xs">
+									{activeAnnotation.details}
+								</pre>
+							</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 			<hr class="border-t border-gray-300 my-4 rounded-md">
