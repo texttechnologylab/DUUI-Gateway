@@ -23,8 +23,8 @@
 		<Fa icon={faCircleNodes} class="text-slate-500" size="2x" />
 	{:else if equals(driver, DUUIRemoteDriver)}
 		<Fa icon={faWifi} class="text-success-500" size="2x" scale="0.9" />
-	{:else if equals(driver, DUUIUIMADriver)}
-		<Fa icon={faJava} class="text-error-500" size="2x" />
+	<!-- {:else if equals(driver, DUUIUIMADriver)}
+		<Fa icon={faJava} class="text-error-500" size="2x" /> -->
 	{:else if equals(driver, DUUIKubernetesDriver)}
 		<svg
 			viewBox="0 -10.44 722.846 722.846"

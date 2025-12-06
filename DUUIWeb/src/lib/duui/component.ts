@@ -25,7 +25,7 @@ export const DUUIDriverFilters = [
 	'DUUIRemoteDriver',
 	'DUUIDockerDriver',
 	'DUUISwarmDriver',
-	'DUUIUIMADriver',
+	// 'DUUIUIMADriver',
 	'DUUIKubernetesDriver',
 	'DUUIPodmanDriver'
 ]
@@ -77,7 +77,7 @@ export const DUUIDrivers: string[] = [
 	DUUIRemoteDriver,
 	DUUIDockerDriver,
 	DUUISwarmDriver,
-	DUUIUIMADriver,
+	// DUUIUIMADriver,
 	DUUIKubernetesDriver,
     DUUIPodmanDriver
 ]

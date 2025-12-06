@@ -8,7 +8,7 @@ import type { ToastStore } from '@skeletonlabs/skeleton'
 
 export const driverTargetMap: Map<string, string> = new Map([
 	[DUUIRemoteDriver, 'Address'],
-	[DUUIUIMADriver, 'Class Path'],
+	// [DUUIUIMADriver, 'Class Path'],
 	[DUUIDockerDriver, 'Image Name'],
 	[DUUISwarmDriver, 'Image Name']
 ])

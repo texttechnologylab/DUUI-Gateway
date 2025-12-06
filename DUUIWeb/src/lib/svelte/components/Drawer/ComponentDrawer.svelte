@@ -745,8 +745,9 @@
 
 					<div class="hidden group-focus-within:block">
 						<Tip>
-							The target can be a Docker image name (Docker, Swarm and Kubernetes Driver), a URL
-							(Remote Driver) or a Java class path (UIMADriver).
+							The target can be a Docker image name (Docker, Swarm and Kubernetes Driver) or a URL
+							(Remote Driver). 
+							 <!-- or a Java class path (UIMADriver). -->
 					</Tip>
 				</div>
 			</div>
