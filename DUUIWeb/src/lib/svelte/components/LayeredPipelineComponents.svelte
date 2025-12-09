@@ -220,7 +220,7 @@
 			// invalid move across layers -> revert, show toast, and recompute edges after DOM settles
 			const restored = snapshot
 			orderedComponents = restored
-			orderedComponents = restored
+			components = restored
 
 			toastStore.trigger(
 				errorToast('Cannot move component across dependency layers', 3000)

@@ -678,7 +678,6 @@
 						component.outputs = (entryMetadata.resulting_types ?? [])
 							.map((t) => (t ?? '').trim())
 							.filter((t) => t.length > 0)
-						component.outputs = entryMetadata.resulting_types ?? []
 						lastSuggestedTarget = suggestedTarget
 
 						}

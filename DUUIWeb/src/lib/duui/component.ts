@@ -227,31 +227,6 @@ export function computeLayers(components: DUUIComponent[], edges: Dependency[]) 
   return { layer, topoOrder };
 }
 
-export function groupByLayer(
-  components: DUUIComponent[],
-  layer: Map<string, number>,
-  topoOrder: string[]
-) {
-  const byLayer = new Map<number, string[]>();
-
-  // ensure deterministic order: use topoOrder
-  for (const id of topoOrder) {
-    const l = layer.get(id) ?? 0;
-    if (!byLayer.has(l)) byLayer.set(l, []);
-    byLayer.get(l)!.push(id);
-  }
-
-  // normalize to an array sorted by layer
-  const layers = Array.from(byLayer.entries())
-    .sort(([a], [b]) => a - b)
-    .map(([layerIndex, nodeIds]) => ({ layerIndex, nodeIds }));
-
-  return layers;
-}
-
-
-
-
 /**
  * Create a blank component given a pipeline Id and an index in that pipeline.
  *

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -96,6 +97,17 @@ public class DUUIComponentRequestHandler {
         }
 
         log.debug("Creating component Document");
+
+        // Ensure annotation type lists are never null
+        List<String> inputs = data.getList("inputs", String.class);
+        if (inputs == null) {
+            inputs = new ArrayList<>();
+        }
+        List<String> outputs = data.getList("outputs", String.class);
+        if (outputs == null) {
+            outputs = new ArrayList<>();
+        }
+
         Document component = DUUIComponentController
             .insertOne(new Document()
                 .append("name", name)
@@ -104,8 +116,8 @@ public class DUUIComponentRequestHandler {
                 .append("status", DUUIStatus.INACTIVE)
                 .append("driver", data.getString("driver"))
                 .append("target", data.getString("target"))
-                .append("inputs", data.getList("inputs", String.class))
-                .append("outputs", data.getList("outputs", String.class))
+                .append("inputs", inputs)
+                .append("outputs", outputs)
                 .append("options", options)
                 .append("parameters", parameters)
                 .append("pipeline_id", isTemplate ? null : data.getString("pipeline_id"))

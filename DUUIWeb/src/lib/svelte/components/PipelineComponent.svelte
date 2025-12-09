@@ -10,7 +10,7 @@
 	import pkg from 'lodash'
 	const { cloneDeep } = pkg
 
-	import { splitClass, type DUUIComponent } from '$lib/duui/component'
+	import { type DUUIComponent } from '$lib/duui/component'
 	import { slugify } from '$lib/duui/utils/text'
 	import { faClone, faEdit } from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton'
