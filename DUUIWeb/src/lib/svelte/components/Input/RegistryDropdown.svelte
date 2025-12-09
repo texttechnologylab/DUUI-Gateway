@@ -252,58 +252,60 @@
     }
 </script>
 
-<div class="w-full flex gap-6">
-    <div class="label flex-col w-[65%]">
-        <span class="form-label text-start">DUUI-Registry Selection</span>
+<div class="w-full spacy-y-8 mb-3">
+    <div class="w-full flex justify-between pr-4">
+        <div class="label flex-col w-[60%]">
+            <span class="form-label text-start">DUUI-Registry Selection</span>
 
-        <!-- Main dropdown for entries -->
-        <button
-                bind:this={dropdownElement}
-                class=" w-full flex items-center !justify-between gap-2 px-3 py-2 leading-6 border border-color rounded-md input-wrapper"
-                on:click={() => {
-                    displayEntries = !displayEntries;
-                }}
+            <!-- Main dropdown for entries -->
+            <button
+                    bind:this={dropdownElement}
+                    class=" w-full flex items-center !justify-between gap-2 px-3 py-2 leading-6 border border-color rounded-md input-wrapper"
+                    on:click={() => {
+                        displayEntries = !displayEntries;
+                    }}
 
-        >
-            <span>{selectedEntry.name || 'Select Registry Entry'}</span>
-            <Fa icon={faChevronDown} />
-        </button>
+            >
+                <span>{selectedEntry.name || 'Select Registry Entry'}</span>
+                <Fa icon={faChevronDown} />
+            </button>
+        </div>
+
+        <div class="label flex-col w-[30%] ">
+            {#if selectedEntry}
+                <!-- Side dropdown for tags -->
+                <Dropdown
+                        label="Meta‐Tag"
+                        bind:value={selectedTag}
+                        options={getMetaList(selectedEntry).map(m => m.tag)}
+                        on:change={() => {
+                        const metaList = getMetaList(selectedEntry);
+                        selectedMetaData = metaList.find(m => m.tag === selectedTag) ?? fallbackMeta;
+                        change();
+                    }}
+                />
+            {/if}
+        </div>
+
     </div>
+    <!-- Popup pane style="width: {popupWidth};" overflow-y-auto -->
+    {#if displayEntries}
+        <div class="w-full" >
+            <div class="border-2 p-2 rounded-md">
+                <!-- Filter inside dropdown pane -->
+                <div class="flex justify-between mb-2 gap-2">
+                    {#key filteredRegistryEndpoints.size}
+                        <Dropdown
+                                name="availableRegistries"
+                                label="Registries"
+                                bind:value={selectedRegistryId}
+                                options={filteredRegistryEndpoints}
+                                initFirst={true}
+                                minWidth=""
+                        />
+                    {/key}
 
-    <div class="label flex-col w-[15%] ">
-        {#if selectedEntry}
-            <!-- Side dropdown for tags -->
-            <Dropdown
-                    label="Meta‐Tag"
-                    bind:value={selectedTag}
-                    options={getMetaList(selectedEntry).map(m => m.tag)}
-                    on:change={() => {
-                    const metaList = getMetaList(selectedEntry);
-                    selectedMetaData = metaList.find(m => m.tag === selectedTag) ?? fallbackMeta;
-                    change();
-                }}
-            />
-        {/if}
-    </div>
-
-</div>
-<!-- Popup pane style="width: {popupWidth};" overflow-y-auto -->
-{#if displayEntries}
-    <div class="w-full" >
-        <div class="border-2 p-2 rounded-md">
-            <!-- Filter inside dropdown pane -->
-            <div class="flex justify-between  mb-2 gap-2">
-                {#key filteredRegistryEndpoints.size}
-                    <Dropdown
-                            name="availableRegistries"
-                            label="Registries"
-                            bind:value={selectedRegistryId}
-                            options={filteredRegistryEndpoints}
-                            initFirst={true}
-                    />
-                {/key}
-
-                {#if selectedRegistryEndpoint }
+                    {#if selectedRegistryEndpoint }
                         <div class="w-8/12 mt-7">
                             <div class="relative input-wrapper">
                                 <input
@@ -366,107 +368,101 @@
                                 </div>
                             </div>
                         </div>
+                    {/if}
+
+        <!--                <button on:click={fetchRegistry} class="px-3 py-1 bg-blue-600 text-white rounded-md">-->
+        <!--                    Reset-->
+        <!--                </button>-->
+                </div>
+
+                <div class="divider my-4 border-t border-gray-300"></div>
+
+                {#if registryUnreachable}
+                    <Tip tipTheme="error">
+                        The selected registry is currently unreachable. Please check your network connection or contact the administrator.
+                    </Tip>
+                {:else if filteredRegistryEndpoints.size < 1}
+                    <Tip tipTheme="error">
+                            You have no registries available. Access can be granted by an administrator.
+                    </Tip>
+                {:else if !entries.length }
+                    <Tip tipTheme="tertiary">
+                    No entries found in the selected registry.
+                    </Tip>
+                {:else}
+                    <div class="overflow-y-visible">
 
 
+                        <div class="flex justify-between p-2 border-b border-gray-300 font-bold">
+                            <span>Entry Name</span>
+                            <span>Language</span>
+                            <span>Output Types</span>
+                        </div>
+                        <ListBox class="overflow-y-scroll h-80 overflow-x-hidden" rounded="rounded-md" spacing="space-y-2">
 
+                            {#each entries as entry (entry._id)}
+                                <ListBoxItem
+                                        class="listbox-item"
+                                        on:change
+                                        bind:group={selectedEntry}
+                                        name="entry-dropdown"
+                                        value={entry}
+                                        rounded="rounded-md"
+                                        hover="hover:bg-surface-100-800-token"
+                                        active="variant-soft-primary"
 
+                                >
+    <!--                                <svelte:fragment slot="lead">-->
+    <!--                                    <Fa class={equals(selectedEntry?._id, entry._id) ? '' : 'invisible'} icon={faCheck} />-->
+    <!--                                </svelte:fragment>-->
+                                    <div class="grid w-full grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2">
+                                        <span class="truncate">
+
+                                            <span class="truncate">{entry.name}</span>
+                                            <!--                                             
+                                            {#if entry.meta_data[0]?.documentation}
+                                                <Popup autoPopupWidth={true} arrow={false} followCursor={true}>
+                                                    <svelte:fragment slot="trigger">
+                                                        <span class="items-start gap-1">
+                                                            <div class="inline-flex items-center justify-center rounded-full border variant-soft-primary p-2">
+                                                                <Fa icon={faInfo} size="xs" class="text-variant-soft-primary" />
+                                                            </div>
+                                                        </span>
+                                                    </svelte:fragment>
+                                                    <svelte:fragment slot="popup" >
+
+                                                        <div class="bg-primary-50-900-token bg-transparent absolute p-3 rounded-md w-96 overflow-y-auto h-36">
+                                                            <small class="max-w-prose text-primary-700">
+                                                                {entry.meta_data[0].description}
+                                                            </small>
+
+                                                            <span class="mb-2">
+                                                                <Link href={entry.meta_data[0].documentation} underline={true}>
+                                                                    <small>Documentation</small>
+                                                                </Link>
+
+                                                            </span>
+
+                                                        </div>
+                                                    </svelte:fragment>
+                                                </Popup>
+                                            {/if} -->
+
+                                        </span>
+                                        <small class=" text-gray-500 truncate flex items-center justify-center text-center">
+                                            {entry.meta_data[0]?.language?.map(lo => lo.name).toString() ?? '—'}
+                                        </small>
+                                        <small class="text-gray-500 truncate text-right">
+                                            {entry.meta_data[0]?.resulting_types?.map(rt => rt.toString().split(".").pop()).toString() ?? '—'}
+                                        </small>
+                                    </div>
+                                </ListBoxItem>
+                            {/each}
+                        </ListBox>
+                    </div>
                 {/if}
 
-    <!--                <button on:click={fetchRegistry} class="px-3 py-1 bg-blue-600 text-white rounded-md">-->
-    <!--                    Reset-->
-    <!--                </button>-->
             </div>
-
-            <div class="divider my-4 border-t border-gray-300"></div>
-
-            {#if registryUnreachable}
-                <Tip tipTheme="error">
-                    The selected registry is currently unreachable. Please check your network connection or contact the administrator.
-                </Tip>
-            {:else if filteredRegistryEndpoints.size < 1}
-                <Tip tipTheme="error">
-                        You have no registries available. Access can be granted by an administrator.
-                </Tip>
-            {:else if !entries.length }
-                <Tip tipTheme="tertiary">
-                   No entries found in the selected registry.
-                </Tip>
-            {:else}
-                <div class="overflow-visible">
-
-
-                    <div class="flex justify-between p-2 border-b border-gray-300 font-bold">
-                        <span>Entry Name</span>
-                        <span>Language</span>
-                        <span>Output Types</span>
-                    </div>
-                    <ListBox class="overflow-scroll h-60" rounded="rounded-md" spacing="space-y-2">
-
-                        {#each entries as entry (entry._id)}
-                            <ListBoxItem
-                                    class="listbox-item"
-                                    on:change
-                                    bind:group={selectedEntry}
-                                    name="entry-dropdown"
-                                    value={entry}
-                                    rounded="rounded-md"
-                                    hover="hover:bg-surface-100-800-token"
-                                    active="variant-soft-primary"
-
-                            >
-<!--                                <svelte:fragment slot="lead">-->
-<!--                                    <Fa class={equals(selectedEntry?._id, entry._id) ? '' : 'invisible'} icon={faCheck} />-->
-<!--                                </svelte:fragment>-->
-                                <div class="flex justify-between ">
-                                    <span>
-
-                                        {#if !entry.meta_data[0]?.documentation}
-                                           <span class="truncate">{entry.name}</span>
-                                        {:else}
-
-                                            <Popup autoPopupWidth={true} arrow={false} position="bottom">
-                                                <svelte:fragment slot="trigger">
-                                                    <span class="items-start gap-1">
-                                                        {entry.name}
-<!--                                                        <Fa icon={faInfo} size="xs" class=" variant-soft-primary" />-->
-                                                        <div class="inline-flex items-center justify-center rounded-full border variant-soft-primary p-2">
-                                                            <Fa icon={faInfo} size="xs" class="text-variant-soft-primary" />
-                                                        </div>
-                                                    </span>
-                                                </svelte:fragment>
-                                                <svelte:fragment slot="popup" >
-
-                                                    <div class="bg-primary-50-900-token bg-transparent absolute p-3 rounded-md w-96 overflow-y-auto h-36">
-                                                        <small class="max-w-prose text-primary-700">
-                                                            {entry.meta_data[0].description}
-                                                        </small>
-
-                                                        <span class="mb-2">
-                                                            <Link href={entry.meta_data[0].documentation} underline={true}>
-                                                                <small>Documentation</small>
-                                                            </Link>
-
-                                                        </span>
-
-                                                    </div>
-                                                </svelte:fragment>
-                                            </Popup>
-                                        {/if}
-
-                                    </span>
-                                    <small class="text-gray-500">
-                                        {entry.meta_data[0]?.language?.map(lo => lo.name).toString() ?? '—'}
-                                    </small>
-                                    <small class="text-gray-500">
-                                        {entry.meta_data[0]?.resulting_types?.map(rt => rt.toString().split(".").pop()).toString() ?? '—'}
-                                    </small>
-                                </div>
-                            </ListBoxItem>
-                        {/each}
-                    </ListBox>
-                </div>
-            {/if}
-
         </div>
-    </div>
-{/if}
+    {/if}
+</div>
