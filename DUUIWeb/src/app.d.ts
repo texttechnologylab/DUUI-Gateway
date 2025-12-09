@@ -145,8 +145,7 @@ type Sort = {
 }
 
 // Types related to the documentation of the api at /documentation/api
-type AggregationStep = { _id: string; count: number[] }
-type AggreationResult = AggreationStep[]
+
 
 type APIMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 type ParameterType = 'Query' | 'Body'

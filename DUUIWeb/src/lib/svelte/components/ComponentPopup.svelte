@@ -73,6 +73,8 @@
 			name: source.name ?? base.name,
 			driver: source.driver ?? base.driver,
 			target: source.target ?? base.target,
+			inputs: source.inputs ?? base.inputs,
+			outputs: source.outputs ?? base.outputs,
 			options: mergedOptions,
 			parameters: source.parameters ?? base.parameters,
 			id: uuidv4()

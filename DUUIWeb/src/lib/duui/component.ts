@@ -43,6 +43,10 @@ export const LabelDrivers = [
     DUUIPodmanDriver
 ]
 
+// Fully qualified UIMA annotation class name, e.g. "org.example.MyAnnotation".
+// Kept as string at runtime / JSON, but branded in TypeScript for clarity.
+export type UIMAAnnotationClass = string & { __brand: 'UIMAAnnotationClass' }
+
 // optional language info in each meta entry
 export type Language = {
 	name: string;
@@ -100,6 +104,8 @@ export interface DUUIComponent {
 	tags: string[]
 	driver: DUUIDriver
 	target: string
+	inputs: UIMAAnnotationClass[]
+	outputs: UIMAAnnotationClass[]
 	options: {
 		use_GPU: boolean
 		docker_image_fetching: boolean
@@ -136,6 +142,8 @@ export const blankComponent = (pipelineId: string, index: number) =>
 		description: '',
 		driver: DUUIDockerDriver,
 		target: '',
+		inputs: [],
+		outputs: [],
 		options: {
 			use_GPU: false,
 			docker_image_fetching: true,
@@ -169,7 +177,16 @@ export const componentToJson = (component: DUUIComponent) => {
 		description: component.description,
 		driver: component.driver,
 		target: component.target,
+		inputs: component.inputs, 
+		outputs: component.outputs,
 		options: component.options,
 		parameters: component.parameters
 	}
 }
+
+export const splitClass = (fqn: string) => {
+		const parts = fqn.split('.')
+		const simple = parts.pop() || fqn
+		const pkg = parts.join('.')
+		return { simple, pkg }
+	}

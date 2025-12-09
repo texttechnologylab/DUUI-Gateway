@@ -5,11 +5,12 @@
 
 <script lang="ts">
 	import DriverIcon from '$lib/svelte/components/DriverIcon.svelte'
+	import AnnotationChip from '$lib/svelte/components/AnnotationChip.svelte'
 
 	import pkg from 'lodash'
 	const { cloneDeep } = pkg
 
-	import { type DUUIComponent } from '$lib/duui/component'
+	import { splitClass, type DUUIComponent } from '$lib/duui/component'
 	import { slugify } from '$lib/duui/utils/text'
 	import { faClone, faEdit } from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton'
@@ -39,6 +40,11 @@
 	{!component.driver || !component.name || !component.target ? '!border-error-500' : ''}
 	"
 >
+	<AnnotationChip
+		connector="input"
+		values={component.inputs}
+		componentId={component.id}
+	/>
 	<header
 		class="flex justify-between gap-4 items-center p-4 bg-surface-50-900-token dark:bg-surface-200-700-token"
 	>
@@ -70,4 +76,9 @@
 			</button>
 		</div>
 	</header>
+	<AnnotationChip
+		connector="output"
+		values={component.outputs}
+		componentId={component.id}
+	/>
 </li>

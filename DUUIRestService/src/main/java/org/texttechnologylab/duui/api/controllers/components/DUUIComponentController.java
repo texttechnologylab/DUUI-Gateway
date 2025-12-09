@@ -30,6 +30,8 @@ public class DUUIComponentController {
         "status",
         "driver",
         "target",
+        "inputs",
+        "outputs",
         "parameters",
         "options",
         "index"
@@ -47,6 +49,8 @@ public class DUUIComponentController {
             .append("tags", new ArrayList<>())
             .append("driver", null)
             .append("target", null)
+            .append("inputs", new ArrayList<>())
+            .append("outputs", new ArrayList<>())
             .append("options", getDefaultOptions())
             .append("parameters", new Document())
             .append("created_at", Instant.now().toEpochMilli())
@@ -111,6 +115,16 @@ public class DUUIComponentController {
                 .Components()
                 .find(Filters.eq(new ObjectId(id)))
                 .first();
+
+            if (component != null) {
+                // Ensure new fields exist for legacy components
+                if (!component.containsKey("inputs")) {
+                    component.append("inputs", new ArrayList<>());
+                }
+                if (!component.containsKey("outputs")) {
+                    component.append("outputs", new ArrayList<>());
+                }
+            }
             return DUUIMongoDBStorage.convertObjectIdToString(component);
         } catch (IllegalArgumentException exception) {
             return null;
@@ -181,7 +195,16 @@ public class DUUIComponentController {
             .aggregate(aggregationPipeline)
             .into(new ArrayList<>());
 
-        components.forEach(DUUIMongoDBStorage::convertObjectIdToString);
+        components.forEach(component -> {
+            // Ensure new fields exist for legacy components
+            if (!component.containsKey("inputs")) {
+                component.append("inputs", new ArrayList<>());
+            }
+            if (!component.containsKey("outputs")) {
+                component.append("outputs", new ArrayList<>());
+            }
+            DUUIMongoDBStorage.convertObjectIdToString(component);
+        });
         return components;
     }
 

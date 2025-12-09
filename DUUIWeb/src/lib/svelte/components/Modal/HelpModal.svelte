@@ -68,6 +68,8 @@
 			id: '1',
 			tags: [],
 			description: '',
+			inputs: [],
+			outputs: [],
 			options: {
 				use_GPU: true,
 				docker_image_fetching: true,
@@ -95,6 +97,8 @@
 			id: '2',
 			tags: [],
 			description: '',
+			inputs: [],
+			outputs: [],
 			options: {
 				use_GPU: true,
 				docker_image_fetching: true,

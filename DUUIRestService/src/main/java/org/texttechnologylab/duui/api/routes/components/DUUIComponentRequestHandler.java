@@ -104,6 +104,8 @@ public class DUUIComponentRequestHandler {
                 .append("status", DUUIStatus.INACTIVE)
                 .append("driver", data.getString("driver"))
                 .append("target", data.getString("target"))
+                .append("inputs", data.getList("inputs", String.class))
+                .append("outputs", data.getList("outputs", String.class))
                 .append("options", options)
                 .append("parameters", parameters)
                 .append("pipeline_id", isTemplate ? null : data.getString("pipeline_id"))

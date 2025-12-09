@@ -33,6 +33,7 @@
 	import { v4 as uuidv4 } from 'uuid'
 	import DriverIcon from '../DriverIcon.svelte'
 	import Chips from '../Input/Chips.svelte'
+	import UIMAAnnotationInput from '../Input/UIMAAnnotationInput.svelte'
 	import ComponentOptions from '../Input/ComponentOptions.svelte'
 	import Dropdown from '../Input/Dropdown.svelte'
 	import JsonInput from '../Input/JsonInput.svelte'
@@ -664,6 +665,14 @@
 						component.name = registryEntry.name
 						component.target = suggestedTarget;
 						component.description = entryMetadata.description
+						component.inputs = (entryMetadata.required_types ?? [])
+							.map((t) => (t ?? '').trim())
+							.filter((t) => t.length > 0)
+
+						component.outputs = (entryMetadata.resulting_types ?? [])
+							.map((t) => (t ?? '').trim())
+							.filter((t) => t.length > 0)
+						component.outputs = entryMetadata.resulting_types ?? []
 						lastSuggestedTarget = suggestedTarget
 
 						}
@@ -754,6 +763,8 @@
 
 
 			<Chips style="md:col-span-2" label="Tags" bind:values={component.tags} />
+			<UIMAAnnotationInput label="Inputs (UIMA Annotations)" bind:values={component.inputs} />
+			<UIMAAnnotationInput label="Outputs (UIMA Annotations)" bind:values={component.outputs} />
 			<TextArea
 				style="md:col-span-2"
 				label="Description"

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { componentToJson, type DUUIDriver, type DUUIComponent } from './component'
+import { componentToJson, type DUUIDriver, type DUUIComponent, type UIMAAnnotationClass } from './component'
 
 export interface DUUIPipeline {
 	oid: string
@@ -30,6 +30,8 @@ export type ExportedComponent = {
 	description: string
 	driver: DUUIDriver
 	target: string
+	inputs: UIMAAnnotationClass[]
+	outputs: UIMAAnnotationClass[]
 	options: DUUIComponent['options']
 	parameters: any
 }
@@ -55,6 +57,8 @@ export const inflateComponent = (
 		tags: component.tags || [],
 		driver: component.driver,
 		target: component.target,
+		inputs: component.inputs, 
+		outputs: component.outputs,
 		options: component.options,
 		parameters: component.parameters || {},
 		pipeline_id: pipelineId,
@@ -125,3 +129,6 @@ export const usedDrivers = (pipeline: DUUIPipeline) =>
 export const getPipelineTagsAsString = (pipeline: DUUIPipeline) => {
 	return pipeline.components.map((c) => c.tags.join(' ')).join(' ')
 }
+
+type AggregationStep = { _id: string; count: number[] }
+type AggreationResult = AggregationStep[]
