@@ -27,10 +27,14 @@
 	const dispatcher = createEventDispatcher()
 
 	const drawerStore = getDrawerStore()
-	const drawer: DrawerSettings = {
-		id: 'component',
-		...componentDrawerSettings,
-		meta: { component: component, inEditor: inEditor, example: example }
+
+	const openDrawer = () => {
+		const drawer: DrawerSettings = {
+			id: 'component',
+			...componentDrawerSettings,
+			meta: { component, inEditor, example }
+		}
+		drawerStore.open(drawer)
 	}
 </script>
 
@@ -67,9 +71,7 @@
 			<button
 				disabled={!editable}
 				class="pointer-events-auto button-neutral !border-none"
-				on:click={() => {
-					drawerStore.open(drawer)
-				}}
+				on:click={openDrawer}
 			>
 				<Fa icon={faEdit} size="lg" />
 				<p>Edit</p>

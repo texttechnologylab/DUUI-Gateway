@@ -311,7 +311,7 @@
 		use:dndzone={{ items: orderedComponents, dropTargetStyle: {} }}
 		on:consider={handleDndConsider}
 		on:finalize={handleDndFinalize}
-		class="grid md:max-w-5xl mx-auto !cursor-move p-20 variant-soft-primary"
+		class="grid md:max-w-5xl mx-auto !cursor-move p-20"
 	>
 		{#each orderedComponents as component, i (component.id)}
 			<div
