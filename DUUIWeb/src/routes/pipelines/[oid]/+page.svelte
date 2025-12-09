@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import PipelineComponent from '$lib/svelte/components/PipelineComponent.svelte'
 	import {
 		faArrowDownWideShort,
 		faArrowLeft,
@@ -17,9 +16,7 @@
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton'
 
-	import { dndzone, type DndEvent } from 'svelte-dnd-action'
 	import Fa from 'svelte-fa'
-	import { flip } from 'svelte/animate'
 	import { v4 as uuidv4 } from 'uuid'
 
 	import { page } from '$app/stores'
@@ -31,7 +28,7 @@
 	import { getDuration } from '$lib/duui/utils/time'
 	import { errorToast, getStatusIcon, infoToast } from '$lib/duui/utils/ui'
 	import { currentPipelineStore, isDarkModeStore } from '$lib/store'
-	import ComponentPopup from '$lib/svelte/components/ComponentPopup.svelte'
+	import LayeredPipelineComponents from '$lib/svelte/components/LayeredPipelineComponents.svelte'
 	import Chips from '$lib/svelte/components/Input/Chips.svelte'
 	import JsonInput from '$lib/svelte/components/Input/JsonInput.svelte'
 	import Select from '$lib/svelte/components/Input/Select.svelte'
@@ -114,20 +111,6 @@
 
 	let sortedProcessses: DUUIProcess[] = processes
 	let tabSet: number = +($page.url.searchParams.get('tab') || 0)
-
-	const handleDndConsider = (event: CustomEvent<DndEvent<DUUIComponent>>) => {
-		$currentPipelineStore.components = [...event.detail.items]
-	}
-
-	const handleDndFinalize = (event: CustomEvent<DndEvent<DUUIComponent>>) => {
-		$currentPipelineStore.components = [...event.detail.items]
-		$currentPipelineStore.components.forEach(
-			(c: { index: any; oid: any }) =>
-				(c.index = $currentPipelineStore.components.map((c: DUUIComponent) => c.oid).indexOf(c.oid))
-		)
-
-		updatePipeline()
-	}
 
 	const updatePipeline = async () => {
 		$currentPipelineStore.settings = Object.fromEntries(settings.entries())
@@ -569,43 +552,11 @@
 				<hr class="hr !w-full" />
 				<div class="space-y-4 p-4">
 					<h2 class="h2 text-center">Components</h2>
-					<div class="min-h-[400px] space-y-8 isolate md:p-16">
-						<ul
-							use:dndzone={{ items: $currentPipelineStore.components, dropTargetStyle: {} }}
-							on:consider={(event) => handleDndConsider(event)}
-							on:finalize={(event) => handleDndFinalize(event)}
-							class="grid md:max-w-5xl mx-auto !cursor-move"
-						>
-							{#each $currentPipelineStore.components as component (component.id)}
-								<div animate:flip={{ duration: 300 }} class="relative !cursor-move">
-									<PipelineComponent
-										{component}
-										cloneable={true}
-										on:clone={(event) => cloneComponent(event.detail)}
-										on:deleteComponent={(event) => {
-											$currentPipelineStore.components = $currentPipelineStore.components.filter(
-												(c) => c.oid !== event.detail.oid
-											)
-										}}
-									/>
-									{#if component.index < $currentPipelineStore.components.length - 1}
-										<div
-											class="my-4 mx-auto flex items-center justify-center
-											relative
-											before:absolute before:h-full before:w-1 before:-translate-x-1/2 before:left-1/2
-											before:bg-surface-100-800-token before:-z-50 before:scale-y-[200%]
-											"
-										>
-											<ComponentPopup {templateComponents} index={component.index + 1} />
-										</div>
-									{/if}
-								</div>
-							{/each}
-						</ul>
-						<div class="mx-auto flex items-center justify-center">
-							<ComponentPopup {templateComponents} />
-						</div>
-					</div>
+					<LayeredPipelineComponents
+						bind:components={$currentPipelineStore.components}
+						{templateComponents}
+						on:reorder={updatePipeline}
+					/>
 				</div>
 			</div>
 		{:else if tabSet === 1}

@@ -152,6 +152,8 @@
 				$currentPipelineStore.components.forEach((c, index) => (c.index = index))
 				component.id = uuidv4()
 				$currentPipelineStore.components[component.index] = component
+				// force reactive updates (graph / curves / layers)
+				$currentPipelineStore.components = [...$currentPipelineStore.components]
 			}
 		}
 
@@ -226,6 +228,10 @@
 			)
 		} else {
 			$currentPipelineStore.components[component.index] = component
+			// ensure downstream listeners see the change
+			$currentPipelineStore.components = $currentPipelineStore.components.map(
+				(c: DUUIComponent, index: number) => ({ ...c, index })
+			)
 		}
 
 		drawerStore.close()

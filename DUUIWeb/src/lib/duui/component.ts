@@ -126,6 +126,132 @@ export interface DUUIComponent {
 	index: number
 }
 
+export type Dependency = {
+  from: string;
+  to: string;
+  types: string[];
+};
+
+export function buildGraph(components: DUUIComponent[]) {
+  const typeProducers = new Map<string, Set<string>>();
+
+  for (const c of components) {
+    for (const t of c.outputs ?? []) {
+      if (!typeProducers.has(t)) typeProducers.set(t, new Set());
+      typeProducers.get(t)!.add(c.id);
+    }
+  }
+
+  const edgeKeyToTypes = new Map<string, Set<string>>();
+
+  for (const c of components) {
+    for (const t of c.inputs ?? []) {
+      const producers = typeProducers.get(t);
+      if (!producers) continue; // pre-annotated input
+
+      for (const fromId of producers) {
+        if (fromId === c.id) continue;
+        const key = `${fromId}->${c.id}`;
+        if (!edgeKeyToTypes.has(key)) edgeKeyToTypes.set(key, new Set());
+        edgeKeyToTypes.get(key)!.add(t);
+      }
+    }
+  }
+
+  const edges: Dependency[] = [];
+  for (const [key, typesSet] of edgeKeyToTypes) {
+    const [from, to] = key.split("->");
+    edges.push({ from, to, types: [...typesSet] });
+  }
+
+  return { nodes: components, edges };
+}
+
+export function computeLayers(components: DUUIComponent[], edges: Dependency[]) {
+  const ids = components.map(c => c.id);
+
+  const preds = new Map<string, string[]>();
+  const succs = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+
+  for (const id of ids) {
+    preds.set(id, []);
+    succs.set(id, []);
+    inDegree.set(id, 0);
+  }
+
+  for (const e of edges) {
+    succs.get(e.from)!.push(e.to);
+    preds.get(e.to)!.push(e.from);
+    inDegree.set(e.to, (inDegree.get(e.to) ?? 0) + 1);
+  }
+
+  // Kahn topo + layer
+  const queue: string[] = [];
+  const layer = new Map<string, number>();
+
+  for (const [id, deg] of inDegree) {
+    if (deg === 0) {
+      queue.push(id);
+      const comp = components.find((c) => c.id === id);
+      const hasInputs = !!comp && (comp.inputs?.length ?? 0) > 0;
+      // Nodes with no inputs at all are true sources (layer 0),
+      // nodes that require pre-annotated input start one layer below.
+      layer.set(id, hasInputs ? 1 : 0);
+    }
+  }
+
+  const topoOrder: string[] = [];
+
+  while (queue.length) {
+    const id = queue.shift()!;
+    topoOrder.push(id);
+
+    for (const succ of succs.get(id) ?? []) {
+      // update succ layer based on this predecessor
+      const currentLayer = layer.get(succ) ?? 0;
+      const newLayer = Math.max(currentLayer, (layer.get(id) ?? 0) + 1);
+      layer.set(succ, newLayer);
+
+      inDegree.set(succ, (inDegree.get(succ) ?? 0) - 1);
+      if (inDegree.get(succ) === 0) {
+        queue.push(succ);
+      }
+    }
+  }
+
+  if (topoOrder.length !== ids.length) {
+    throw new Error("Graph has a cycle (pipeline invalid)");
+  }
+
+  return { layer, topoOrder };
+}
+
+export function groupByLayer(
+  components: DUUIComponent[],
+  layer: Map<string, number>,
+  topoOrder: string[]
+) {
+  const byLayer = new Map<number, string[]>();
+
+  // ensure deterministic order: use topoOrder
+  for (const id of topoOrder) {
+    const l = layer.get(id) ?? 0;
+    if (!byLayer.has(l)) byLayer.set(l, []);
+    byLayer.get(l)!.push(id);
+  }
+
+  // normalize to an array sorted by layer
+  const layers = Array.from(byLayer.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([layerIndex, nodeIds]) => ({ layerIndex, nodeIds }));
+
+  return layers;
+}
+
+
+
+
 /**
  * Create a blank component given a pipeline Id and an index in that pipeline.
  *
