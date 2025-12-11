@@ -44,11 +44,6 @@
 	{!component.driver || !component.name || !component.target ? '!border-error-500' : ''}
 	"
 >
-	<AnnotationChip
-		connector="input"
-		values={component.inputs}
-		componentId={component.id}
-	/>
 	<header
 		class="flex justify-between gap-4 items-center p-4 bg-surface-50-900-token dark:bg-surface-200-700-token"
 	>
@@ -65,7 +60,7 @@
 					}}
 				>
 					<Fa icon={faClone} size="lg" />
-					<p>Clone</p>
+					<p class="md:hidden">Clone</p>
 				</button>
 			{/if}
 			<button
@@ -74,10 +69,15 @@
 				on:click={openDrawer}
 			>
 				<Fa icon={faEdit} size="lg" />
-				<p>Edit</p>
+				<p class="md:hidden">Edit</p>
 			</button>
 		</div>
 	</header>
+	<AnnotationChip
+		connector="input"
+		values={component.inputs}
+		componentId={component.id}
+	/>
 	<AnnotationChip
 		connector="output"
 		values={component.outputs}

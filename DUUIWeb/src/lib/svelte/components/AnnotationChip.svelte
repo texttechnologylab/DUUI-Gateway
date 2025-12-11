@@ -11,9 +11,10 @@
 
 	const toastStore = getToastStore()
 
-	const inputContainerClass = 'flex flex-wrap gap-3 px-2 pb-1 m-4'
+	const inputContainerClass =
+		'relative flex flex-wrap gap-3 px-2 pb-1 m-4 bg-surface-100 rounded-md p-2'
 	const outputContainerClass =
-		'flex flex-wrap items-end justify-end gap-3 px-2 pb-1 m-4'
+		'relative flex flex-wrap items-end justify-end gap-3 px-2 pb-1 m-4 bg-surface-100 rounded-md p-2'
 
 	const inputChipClass =
 		'uima-chip-input relative inline-flex items-center px-4 py-2 pr-8 variant-soft-primary border text-sm rounded-md'
@@ -28,6 +29,13 @@
 		? inputContainerClass
 		: outputContainerClass}
 >
+	<span
+		class={connector === 'input'
+			? 'absolute -top-3 left-3 bg-surface-100 px-2 text-xs rounded-md text-surface-400 font-medium'
+			: 'absolute -top-3 right-3 bg-surface-100 px-2 text-xs rounded-md text-surface-400 font-medium'}
+	>
+		{connector === 'input' ? 'Input' : 'Output'}
+	</span>
 	{#each values as value (value)}
 		{@const parts = splitClass(value)}
 		<div
@@ -36,10 +44,14 @@
 			data-component-id={componentId}
 			data-type={value}
 		>
-			<div class="flex flex-col items-start">
-				<span class="text-sm font-semibold">{parts.simple}</span>
+			<div class="relative inline-block pb-3">
+				<span class="block text-[0.9rem]">{parts.simple}</span>
 				{#if parts.pkg}
-					<span class="text-[0.7rem]">{parts.pkg}</span>
+					<span
+						class="absolute left-0 block w-full text-[0.5rem] truncate" title={parts.pkg}
+					>
+						{parts.pkg}
+					</span>
 				{/if}
 			</div>
 			<button

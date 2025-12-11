@@ -1,29 +1,24 @@
 <!--
 	@component
-	Layered editor for DUUI components with drag-and-drop restricted to each layer.
+	Layered editor for DUUI components with a zoomable & pannable canvas.
 -->
 <script lang="ts">
-	import { dndzone, type DndEvent } from 'svelte-dnd-action'
 	import { buildGraph, computeLayers, type Dependency, type DUUIComponent } from '$lib/duui/component'
 	import PipelineComponent from '$lib/svelte/components/PipelineComponent.svelte'
 	import ComponentPopup from '$lib/svelte/components/ComponentPopup.svelte'
 	import Tip from '$lib/svelte/components/Tip.svelte'
 	import { componentDrawerSettings } from '$lib/config'
-	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
-	import { createEventDispatcher, afterUpdate, onMount, onDestroy } from 'svelte'
+	import { getDrawerStore } from '@skeletonlabs/skeleton'
+	import { createEventDispatcher, onMount, onDestroy } from 'svelte'
 	import { flip } from 'svelte/animate'
-	import { errorToast } from '$lib/duui/utils/ui'
-	import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+	import { faExclamationTriangle, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
+	import Fa from 'svelte-fa'
 
 	const drawerStore = getDrawerStore()
-	const toastStore = getToastStore()
 	const dispatch = createEventDispatcher<{ reorder: { components: DUUIComponent[] } }>()
 
 	export let components: DUUIComponent[] = []
 	export let templateComponents: DUUIComponent[] = []
-
-	// snapshot of the components array before a drag starts
-	let snapshot: DUUIComponent[] | null = null
 
 	// current layer mapping for visualization / validation
 	let layerById: Map<string, number> = new Map()
@@ -38,6 +33,16 @@
 
 	let edgePaths: EdgePath[] = []
 	let container: HTMLDivElement
+	let viewport: HTMLDivElement
+
+	// zoom / pan state for the canvas
+	let scale = 1
+	const MIN_SCALE = 0.5
+	const MAX_SCALE = 2
+	let panX = 0
+	let panY = 0
+	let isPanning = false
+	let lastPan = { x: 0, y: 0 }
 
 	const recalcGraphAndEdges = (source?: DUUIComponent[]) => {
 
@@ -82,6 +87,27 @@
 		})
 	}
 
+	type LayerItem = { component: DUUIComponent; orderIndex: number }
+	type LayerGroup = { layer: number; items: LayerItem[] }
+
+	let layers: LayerGroup[] = []
+
+	// group components by computed layer for horizontal alignment
+	$: {
+		const groups = new Map<number, LayerItem[]>()
+
+		orderedComponents.forEach((component, orderIndex) => {
+			const layer = layerById.get(component.id) ?? 0
+			const list = groups.get(layer) ?? []
+			list.push({ component, orderIndex })
+			groups.set(layer, list)
+		})
+
+		layers = Array.from(groups.entries())
+			.sort(([a], [b]) => a - b)
+			.map(([layer, items]) => ({ layer, items }))
+	}
+
 	// recompute layers whenever components change
 	$: {
 		const comps = components ?? []
@@ -103,11 +129,20 @@
 		}
 
 		const containerRect = container.getBoundingClientRect()
+		const currentScale = scale || 1
 
 		const getAnchor = (el: HTMLElement, side: 'left' | 'right') => {
 			const rect = el.getBoundingClientRect()
-			const x = side === 'left' ? rect.left - containerRect.left : rect.right - containerRect.left
-			const y = rect.top + rect.height / 2 - containerRect.top
+			// center X for both, different vertical anchor:
+			// - 'right'  (fromChip): bottom center
+			// - 'left'   (toChip):   top center
+			const xRaw = rect.left + rect.width / 2 - containerRect.left
+			const yRaw =
+				side === 'right'
+					? rect.bottom - containerRect.top
+					: rect.top - containerRect.top
+			const x = xRaw / currentScale
+			const y = yRaw / currentScale
 			return { x, y }
 		}
 
@@ -135,12 +170,17 @@
 				const { x: x1, y: y1 } = getAnchor(fromChip, 'right')
 				const { x: x2, y: y2 } = getAnchor(toChip, 'left')
 
-				const dx = x2 - x1 || 1
-				const offset = dx * 0.3
-				const cx1 = x1 + offset
-				const cx2 = x2 - offset
+				// "Hanging" S-curve: leave from-chip vertically downward,
+				// travel through a lowered midline, then approach to-chip vertically upward.
+				const verticalPadding = 40
+				const midY = (y1 + y2) / 2 + verticalPadding
 
-				const d = `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`
+				const cx1x = x1
+				const cx1y = midY
+				const cx2x = x2
+				const cx2y = midY
+
+				const d = `M ${x1} ${y1} C ${cx1x} ${cx1y}, ${cx2x} ${cx2y}, ${x2} ${y2}`
 				paths.push({ fromId, toId, d })
 			}
 		}
@@ -148,8 +188,21 @@
 		edgePaths = paths
 	}
 
-	let resizeObserver: ResizeObserver | null = null
-	let resizeHandler: (() => void) | null = null
+let resizeObserver: ResizeObserver | null = null
+let resizeHandler: (() => void) | null = null
+let mouseMoveHandler: ((event: MouseEvent) => void) | null = null
+let mouseUpHandler: ((event: MouseEvent) => void) | null = null
+let panZoomEdgeTimeout: ReturnType<typeof setTimeout> | null = null
+let hoveredComponentId: string | null = null
+
+	const scheduleEdgeRecalc = () => {
+		if (panZoomEdgeTimeout) {
+			clearTimeout(panZoomEdgeTimeout)
+		}
+		panZoomEdgeTimeout = setTimeout(() => {
+			recalcGraphAndEdges()
+		}, 100)
+	}
 
 	onMount(() => {
 		const recalc = () => recalcGraphAndEdges()
@@ -163,106 +216,108 @@
 			resizeHandler = () => recalc()
 			window.addEventListener('resize', resizeHandler)
 		}
+
+		if (typeof window !== 'undefined') {
+			mouseMoveHandler = (event: MouseEvent) => {
+				if (!isPanning) return
+				const dx = event.clientX - lastPan.x
+				const dy = event.clientY - lastPan.y
+				panX += dx
+				panY += dy
+				lastPan = { x: event.clientX, y: event.clientY }
+				scheduleEdgeRecalc()
+			}
+
+			mouseUpHandler = () => {
+				isPanning = false
+			}
+
+			window.addEventListener('mousemove', mouseMoveHandler)
+			window.addEventListener('mouseup', mouseUpHandler)
+		}
 	})
 
 	onDestroy(() => {
-	if (resizeObserver && container) {
-		resizeObserver.unobserve(container)
-		resizeObserver.disconnect()
-		resizeObserver = null
+		if (resizeObserver && container) {
+			resizeObserver.unobserve(container)
+			resizeObserver.disconnect()
+			resizeObserver = null
+		}
+		if (resizeHandler && typeof window !== 'undefined') {
+			window.removeEventListener('resize', resizeHandler)
+			resizeHandler = null
+		}
+		if (mouseMoveHandler && typeof window !== 'undefined') {
+			window.removeEventListener('mousemove', mouseMoveHandler)
+			mouseMoveHandler = null
+		}
+	if (mouseUpHandler && typeof window !== 'undefined') {
+		window.removeEventListener('mouseup', mouseUpHandler)
+		mouseUpHandler = null
 	}
-	if (resizeHandler && typeof window !== 'undefined') {
-		window.removeEventListener('resize', resizeHandler)
-		resizeHandler = null
+	if (panZoomEdgeTimeout) {
+		clearTimeout(panZoomEdgeTimeout)
+		panZoomEdgeTimeout = null
 	}
 })
 
-	// afterUpdate(() => {
-	// 	// keep curves in sync with DOM after DnD animations
-	// 	recalcGraphAndEdges()
-		
-	// 	// setTimeout(recalcGraphAndEdges, 100)
-	// 	// setTimeout(recalcGraphAndEdges, 500)
-	// 	setTimeout(recalcGraphAndEdges, 1000)
-	// })
+	const zoomBy = (factor: number) => {
+		if (!viewport) return
 
-	const handleDndConsider = (event: CustomEvent<DndEvent<DUUIComponent>>) => {
-		if (!snapshot) {
-			snapshot = [...orderedComponents]
-		}
-		orderedComponents = event.detail.items as DUUIComponent[]
+		const rect = viewport.getBoundingClientRect()
+		const cx = rect.width / 2
+		const cy = rect.height / 2
 
-		// setTimeout(recalcGraphAndEdges, 100)
-		// setTimeout(recalcGraphAndEdges, 500)
-		// setTimeout(recalcGraphAndEdges, 1000)
+		const prevScale = scale
+		let next = prevScale * factor
+		if (next < MIN_SCALE) next = MIN_SCALE
+		if (next > MAX_SCALE) next = MAX_SCALE
+		if (next === prevScale) return
+
+		const worldX = (cx - panX) / prevScale
+		const worldY = (cy - panY) / prevScale
+
+		scale = next
+		panX = cx - worldX * scale
+		panY = cy - worldY * scale
+		scheduleEdgeRecalc()
 	}
 
-	const handleDndFinalize = (event: CustomEvent<DndEvent<DUUIComponent>>) => {
-		const newOrder = event.detail.items as DUUIComponent[]
-		const base = snapshot ?? orderedComponents
+	const zoomIn = () => zoomBy(1.1)
+	const zoomOut = () => zoomBy(1 / 1.1)
 
-		// recompute layering from the pre-drag state (order-independent)
-		let currentLayerById: Map<string, number>
-		try {
-			const { edges } = buildGraph(base)
-			const { layer } = computeLayers(base, edges)
-			currentLayerById = layer
-		} catch {
-			currentLayerById = new Map(base.map((c) => [c.id, 0]))
-		}
+	const handleWheel = (event: WheelEvent) => {
+		event.preventDefault()
 
-		const layersOrder = newOrder.map((c) => currentLayerById.get(c.id) ?? 0)
-		const nonDecreasing = layersOrder.every(
-			(v, i, arr) => i === 0 || arr[i - 1] <= v
-		)
+		if (!viewport) return
 
-		if (!nonDecreasing && snapshot) {
-			// invalid move across layers -> revert, show toast, and recompute edges after DOM settles
-			const restored = snapshot
-			orderedComponents = restored
-			components = restored
+		const rect = viewport.getBoundingClientRect()
+		const cx = event.clientX - rect.left
+		const cy = event.clientY - rect.top
 
-			toastStore.trigger(
-				errorToast('Cannot move component across dependency layers', 3000)
-			)
+		const prevScale = scale
+		const delta = -event.deltaY * 0.001
+		let next = prevScale + delta
+		if (next < MIN_SCALE) next = MIN_SCALE
+		if (next > MAX_SCALE) next = MAX_SCALE
 
-			const recalc = () => {
-				recalcGraphAndEdges(restored)
-				dispatch('reorder', { components })
-			}
+		if (next === prevScale) return
 
-			setTimeout(recalc, 100)
-			// setTimeout(recalc, 500)
-			// setTimeout(recalc, 1000)
-			// if (typeof requestAnimationFrame !== 'undefined') {
-			// 	requestAnimationFrame(recalc)
-			// } else {
-			// 	setTimeout(recalc, 0)
-			// }
+		const worldX = (cx - panX) / prevScale
+		const worldY = (cy - panY) / prevScale
 
-			snapshot = null
-			return
-		}
+		scale = next
+		panX = cx - worldX * scale
+		panY = cy - worldY * scale
+		scheduleEdgeRecalc()
+	}
 
-		const updated = newOrder.map((c, index) => ({ ...c, index }))
-		orderedComponents = updated
-		components = updated
-
-		const recalc = () => {
-			recalcGraphAndEdges(updated)
-			dispatch('reorder', { components })
-		}
-
-		setTimeout(recalc, 100)
-		// setTimeout(recalc, 500)
-		// setTimeout(recalc, 1000)
-		// if (typeof requestAnimationFrame !== 'undefined') {
-		// 	requestAnimationFrame(recalc)
-		// } else {
-		// 	setTimeout(recalc, 0)
-		// }
-
-		snapshot = null
+	const handleCanvasMouseDown = (event: MouseEvent) => {
+		if (event.button !== 0) return
+		const target = event.target as HTMLElement
+		if (target.closest('button, a, input, textarea, [data-no-pan]')) return
+		isPanning = true
+		lastPan = { x: event.clientX, y: event.clientY }
 	}
 
 	const cloneComponent = ({ component }: { component: DUUIComponent }) => {
@@ -285,65 +340,112 @@
 		components = components.filter((c) => c.oid !== oid)
 		dispatch('reorder', { components })
 	}
+
+	const handleComponentMouseEnter = (componentId: string) => {
+		hoveredComponentId = componentId
+	}
+
+	const handleComponentMouseLeave = (componentId: string) => {
+		if (hoveredComponentId === componentId) {
+			hoveredComponentId = null
+		}
+	}
 </script>
-
-
-<div class="relative min-h-[400px] space-y-8 isolate md:p-16" bind:this={container}>
-	{#if cycleError} 
-		<div class="md:max-w-5xl mx-auto">
-			<Tip tipTheme="error" tipSize="lg" customIcon={faExclamationTriangle} >
-				{ cycleError }
-			</Tip>
-		</div>
-	{/if}
-	<svg class="absolute inset-0 pointer-events-none z-10" width="100%" height="100%">
-		{#each edgePaths as edge}
-		<path
-		d={edge.d}
-		class="text-primary-500 opacity-80"
-		stroke="currentColor"
-		stroke-width="4"
-				fill="none"
-			/>
-		{/each}
-	</svg>
-	<ul
-		use:dndzone={{ items: orderedComponents, dropTargetStyle: {} }}
-		on:consider={handleDndConsider}
-		on:finalize={handleDndFinalize}
-		class="grid md:max-w-5xl mx-auto !cursor-move p-20"
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+	class="relative min-h-[400px]  lg:max-w-[70%] md:p-4 overflow-hidden mx-auto bg-surface-100 rounded-md"
+	bind:this={viewport}
+	on:wheel|preventDefault={handleWheel}
+	on:mousedown={handleCanvasMouseDown}
+	style="background-image: radial-gradient(circle, rgba(148,163,184,0.35) 1px, transparent 0); background-size: 24px 24px;"
+>
+	<div
+		class="absolute top-4 right-4 flex flex-col gap-2 z-20"
+		data-no-pan
 	>
-		{#each orderedComponents as component, i (component.id)}
-			<div
-				animate:flip={{ duration: 300 }}
-				class="relative !cursor-move m-5"
-				data-layer={layerById.get(component.id) ?? 0}
-				data-component-id={component.id}
-			>
-				<div class="relative !cursor-move">
-					<PipelineComponent
-						{component}
-						cloneable={true}
-						on:clone={(event) => cloneComponent(event.detail)}
-						on:deleteComponent={(event) => deleteComponent(event.detail.oid)}
-					/>
-				</div>
-				{#if i < orderedComponents.length - 1}
-					<div
-						class="my-4 mx-auto flex items-center justify-center
-							relative
-							before:absolute before:h-full before:w-1 before:-translate-x-1/2 before:left-1/2
-							before:bg-surface-100-800-token before:-z-50 before:scale-y-[200%]
-							"
-					>
-						<ComponentPopup {templateComponents} index={i + 1} />
-					</div>
-				{/if}
-				<!-- <div class="divider my-4 border-t border-gray-300"></div> -->
+		<button
+			type="button"
+			class="button-neutral !px-2 !py-2 !rounded-md shadow"
+			on:click|stopPropagation={zoomIn}
+		>
+			<Fa icon={faPlus} />
+		</button>
+		<button
+			type="button"
+			class="button-neutral !px-2 !py-2 !rounded-md shadow"
+			on:click|stopPropagation={zoomOut}
+		>
+			<Fa icon={faMinus} />
+		</button>
+	</div>
+
+	<div
+		class="relative min-h-[400px] w-[1600px] space-y-8 isolate p-16"
+		bind:this={container}
+		
+		style={`transform: translate(${panX}px, ${panY}px) scale(${scale}); transform-origin: 0 0;`}
+	>
+		{#if cycleError}
+			<div class="md:max-w-5xl mx-auto">
+				<Tip tipTheme="error" tipSize="lg" customIcon={faExclamationTriangle}>
+					{cycleError}
+				</Tip>
 			</div>
-		{/each}
-	</ul>
-	<div class="mx-auto flex items-center justify-center">
-		<ComponentPopup {templateComponents} />
+		{/if}
+		<svg class="absolute inset-0 z-10 pointer-events-none" width="100%" height="100%">
+			{#each edgePaths as edge}
+				<path
+					d={edge.d}
+					class={`opacity-80 transition-colors ${
+						hoveredComponentId &&
+						(edge.fromId === hoveredComponentId || edge.toId === hoveredComponentId)
+							? 'text-primary-700'
+							: 'text-primary-200'
+					}`}
+					stroke="currentColor"
+					stroke-width="3"
+					fill="none"
+				/>
+			{/each}
+		</svg>
+		<div class="w-full flex flex-col gap-16">
+			{#each layers as layerGroup}
+				<div class="flex flex-row gap-8 items-start flex-nowrap">
+					{#each layerGroup.items as item (item.component.id)}
+						<div
+							animate:flip={{ duration: 300 }}
+							class="relative m-2 max-w-[400px] flex-shrink-0"
+							data-layer={layerById.get(item.component.id) ?? layerGroup.layer}
+							data-component-id={item.component.id}
+							on:mouseenter={() => handleComponentMouseEnter(item.component.id)}
+							on:mouseleave={() => handleComponentMouseLeave(item.component.id)}
+						>
+							<div class="relative">
+								<PipelineComponent
+									component={item.component}
+									cloneable={true}
+									on:clone={(event) => cloneComponent(event.detail)}
+									on:deleteComponent={(event) => deleteComponent(event.detail.oid)}
+								/>
+							</div>
+							<!-- {#if item.orderIndex < orderedComponents.length - 1} -->
+								<div
+									class="my-4 mx-auto flex items-center justify-center
+										relative
+										before:absolute before:h-full before:w-1 before:-translate-x-1/2 before:left-1/2
+										before:bg-surface-100-800-token before:-z-50 before:scale-y-[200%]
+									"
+								>
+									<ComponentPopup {templateComponents} index={item.orderIndex + 1} />
+								</div>
+							<!-- {/if} -->
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
+		<!-- <div class="mx-auto flex items-center justify-center">
+			<ComponentPopup {templateComponents} />
+		</div> -->
 	</div>
 </div>
