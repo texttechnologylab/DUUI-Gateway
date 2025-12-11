@@ -353,7 +353,7 @@ let hoveredComponentId: string | null = null
 </script>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="relative min-h-[400px]  lg:max-w-[70%] md:p-4 overflow-hidden mx-auto bg-surface-100 rounded-md"
+	class="relative min-h-[400px]  lg:max-w-[70%] md:p-4 overflow-hidden mx-auto bg-surface-100-700-token rounded-md"
 	bind:this={viewport}
 	on:wheel|preventDefault={handleWheel}
 	on:mousedown={handleCanvasMouseDown}
@@ -399,8 +399,8 @@ let hoveredComponentId: string | null = null
 					class={`opacity-80 transition-colors ${
 						hoveredComponentId &&
 						(edge.fromId === hoveredComponentId || edge.toId === hoveredComponentId)
-							? 'text-primary-700'
-							: 'text-primary-200'
+							? 'text-primary-800-100-token'
+							: 'text-primary-100-800-token'
 					}`}
 					stroke="currentColor"
 					stroke-width="3"

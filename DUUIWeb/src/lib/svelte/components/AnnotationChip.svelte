@@ -12,14 +12,14 @@
 	const toastStore = getToastStore()
 
 	const inputContainerClass =
-		'relative flex flex-wrap gap-3 px-2 pb-1 m-4 bg-surface-100 rounded-md p-2'
+		'relative flex flex-wrap gap-3 px-2 pb-1 m-4 bg-surface-100-800-token rounded-md p-2'
 	const outputContainerClass =
-		'relative flex flex-wrap items-end justify-end gap-3 px-2 pb-1 m-4 bg-surface-100 rounded-md p-2'
+		'relative flex flex-wrap items-end justify-end gap-3 px-2 pb-1 m-4 bg-surface-100-800-token rounded-md p-2'
 
 	const inputChipClass =
-		'uima-chip-input relative inline-flex items-center px-4 py-2 pr-8 variant-soft-primary border text-sm rounded-md'
+		'uima-chip-input relative inline-flex items-center px-4 py-2 pr-8 variant-soft-primary text-sm rounded-md'
 	const outputChipClass =
-		'uima-chip-output relative inline-flex items-center px-4 py-2 pr-8 variant-soft-primary border text-sm rounded-md'
+		'uima-chip-output relative inline-flex items-center px-4 py-2 pr-8 variant-soft-primary text-sm rounded-md'
 </script>
 
 <div
@@ -31,8 +31,8 @@
 >
 	<span
 		class={connector === 'input'
-			? 'absolute -top-3 left-3 bg-surface-100 px-2 text-xs rounded-md text-surface-400 font-medium'
-			: 'absolute -top-3 right-3 bg-surface-100 px-2 text-xs rounded-md text-surface-400 font-medium'}
+			? 'absolute -top-3 left-3 bg-surface-100-800-token px-2 text-xs rounded-md text-surface-400-900-token font-medium'
+			: 'absolute -top-3 right-3 bg-surface-100-800-token px-2 text-xs rounded-md text-surface-400-900-token font-medium'}
 	>
 		{connector === 'input' ? 'Input' : 'Output'}
 	</span>
