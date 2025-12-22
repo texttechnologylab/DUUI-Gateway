@@ -18,13 +18,12 @@
 		type FileExtension,
 		type OutputFileExtension,
 		type IOProvider,
-
 		isStatelessProvider,
-
 		hasFolderPicker,
-
-		isValidCloudProvider
-
+		isValidCloudProvider,
+		PROMPT_EXTENSIONS,
+		splitPromptAttachments,
+		toFileList
 	} from '$lib/duui/io.js'
 	import { Languages, blankSettings } from '$lib/duui/process'
 	import { equals } from '$lib/duui/utils/text'
@@ -218,18 +217,46 @@ import {
 	let uploading = false
 
 
+	let promptText = "";
+
+	function onPromptFilesDropped(dropped: FileList) {
+		const merged = [...Array.from(files ?? []), ...Array.from(dropped)];
+		const { wavs, pngs, mp4 } = splitPromptAttachments(toFileList(merged));
+
+		const next: File[] = [...pngs, ...wavs];
+		if (mp4) next.push(mp4);
+
+		files = toFileList(next);
+	}
+
 	const uploadFiles = async () => {
 		if (!files) return false
 
 		uploading = true
 		const formData = new FormData()
 
+		if (equals($processSettingsStore.input.provider, IO.Prompt)) {
+			const promptFile = new File([promptText], "promt_1.txt", 
+				{ type: "text/plain;charset=utf-8" }
+			);
+    		const merged = [promptFile, ...Array.from(files ?? [])];
+			files = toFileList(merged);
+		}
+
 		for (const file of files) {
 			formData.append('file', file, file.name)
 		}
 
+		const params = new URLSearchParams()
+		params.append("store", fileStorage.storeFiles)
+		params.append("provider", fileStorage.provider)
+		params.append("path", fileStorage.path)
+		params.append("providerId", fileStorage.provider_id)
+		params.append("prompt", equals($processSettingsStore.input.provider, IO.Prompt))
+		params.append("pipelineId", $processSettingsStore.pipeline_id)
+		
 		const fileUpload = await fetch(
-			`/api/files/upload?store=${fileStorage.storeFiles}&provider=${fileStorage.provider}&path=${fileStorage.path}&providerId=${fileStorage.provider_id}`,
+			`/api/files/upload?${params}`,
 			{
 				method: 'POST',
 				body: formData
@@ -238,7 +265,8 @@ import {
 
 		if (!fileUpload.ok) {
 			const errorMessge = await fileUpload.text()
-			toastStore.trigger(errorToast('File upload failed. ' + errorMessge + ' '))
+			toastStore.trigger(errorToast('ERROR: ' + errorMessge + ' '))
+			files = [] 
 			uploading = false
 			return false
 		}
@@ -257,7 +285,9 @@ import {
 
 		starting = true
 
-		if (equals($processSettingsStore.input.provider, IO.File)) {
+		if (equals($processSettingsStore.input.provider, IO.File) ||
+			equals($processSettingsStore.input.provider, IO.Prompt)
+			) {
 			const result = await uploadFiles()
 			if (!result) {
 				starting = false
@@ -569,6 +599,8 @@ import {
 										on:change={() => {
 											$processSettingsStore.input.provider_id = ''
 											$processSettingsStore.input.path = ''
+											files = []
+											promptText = ""
 											inputTree = undefined
 										}}
 									/>
@@ -615,22 +647,48 @@ import {
 									error={$processSettingsStore.input.content === '' ? 'Text cannot be empty' : ''}
 									bind:value={$processSettingsStore.input.content}
 								/>
-							{:else if equals($processSettingsStore.input.provider, IO.File)}
-								<div class="space-y-1 ">
-									<p class="form-label">File</p>
-									<FileDropzone
-										name="inputFile"
-										bind:files
-										accept={$processSettingsStore.input.file_extension}
-										multiple={true}
-										border="border border-color"
-										rounded="rounded-md"
-										class="input-wrapper"
+							{:else if equals($processSettingsStore.input.provider, IO.Prompt)
+								|| equals($processSettingsStore.input.provider, IO.File)
+							}
+								{#if equals($processSettingsStore.input.provider, IO.Prompt)}
+									<TextArea
+										label="Prompt"
+										name="content"
+										error={promptText === '' ? 'Text cannot be empty' : ''}
+										bind:value={promptText}
 									/>
-									<p class="form-label {(files?.length || 0) === 0 ? 'text-error-500' : ''}">
-										{files?.length || 0} files selected
-									</p>
-								</div>
+									<div class="space-y-1 ">
+										<p class="form-label">File</p>
+										<FileDropzone
+											name="inputFile"
+											on:files={(e) => onPromptFilesDropped(e.detail.files)}
+											accept={PROMPT_EXTENSIONS}
+											multiple={true}
+											border="border border-color"
+											rounded="rounded-md"
+											class="input-wrapper"
+										/>
+										<p class="form-label {(files?.length || 0) === 0 ? 'text-error-500' : ''}">
+											{files?.length || 0} files selected
+										</p>
+									</div>
+								{:else if equals($processSettingsStore.input.provider, IO.File)}
+									<div class="space-y-1 ">
+										<p class="form-label">File</p>
+										<FileDropzone
+											name="inputFile"
+											bind:files
+											accept={$processSettingsStore.input.file_extension}
+											multiple={true}
+											border="border border-color"
+											rounded="rounded-md"
+											class="input-wrapper"
+										/>
+										<p class="form-label {(files?.length || 0) === 0 ? 'text-error-500' : ''}">
+											{files?.length || 0} files selected
+										</p>
+									</div>
+								{/if}
 
 								<Checkbox
 									label="Upload input files to cloud storage."
@@ -639,8 +697,8 @@ import {
 
 								{#if fileStorage.storeFiles}
 									<div class="grid gap-4"
-										 class:grid-cols-1={!hasConnections(fileStorage.provider.toLowerCase())}
-										 class:grid-cols-2={hasConnections(fileStorage.provider.toLowerCase())}
+											class:grid-cols-1={!hasConnections(fileStorage.provider.toLowerCase())}
+											class:grid-cols-2={hasConnections(fileStorage.provider.toLowerCase())}
 									>
 										<Dropdown
 											label="Provider"

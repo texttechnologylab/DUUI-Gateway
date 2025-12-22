@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.Part;
 
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
@@ -44,6 +47,8 @@ import org.texttechnologylab.duui.api.metrics.providers.DUUIHTTPMetrics;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.routes.components.DUUIComponentRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
+import org.texttechnologylab.duui.api.utils.FileUploadUtils;
+import org.xml.sax.SAXException;
 
 import com.dropbox.core.DbxException;
 import static com.mongodb.client.model.Accumulators.push;
@@ -179,6 +184,8 @@ public class Main {
         if (DUUIRequestHelper.isNullOrEmpty(user)) return DUUIRequestHelper.unauthorized(response);
 
 
+        boolean isPrompt = request.queryParamOrDefault("prompt", "false").equalsIgnoreCase("true");
+        String language = request.queryParamOrDefault("language", "de");
         request.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
         Collection<Part> parts = request.raw().getParts();
         if (parts.isEmpty()) return DUUIRequestHelper.notFound(response);
@@ -186,18 +193,36 @@ public class Main {
         Path root = Paths.get(Main.config.getFileUploadPath(), uuid);
         boolean ignored = root.toFile().mkdirs();
 
-        for (Part part : parts) {
-            if (!part.getName().equals("file")) continue;
+        if (isPrompt) {
+            JCas cas;
+            try {
+                cas = FileUploadUtils.createCas(parts, language);
+                String pipelineId = request.queryParamOrDefault("pipelineId", "");
+                String name = FilenameUtils.getName(System.currentTimeMillis() 
+                    + Objects.requireNonNullElse(DUUIPipelineController
+                    .findOneById(pipelineId), new Document("name", "Pipeline")).getString("name")
+                    + "_Promt");
 
-            DUUIHTTPMetrics.incrementFilesUploaded(1);
-            Path path = Paths.get(root.toString(), part.getSubmittedFileName());
-
-            try (InputStream is = part.getInputStream()) {
-                Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
-                DUUIHTTPMetrics.incrementBytesUploaded((double) path.toFile().length());
-            } catch (IOException exception) {
+                FileUploadUtils.writeCasAsXmi(cas, root, name);
+                DUUIHTTPMetrics.incrementFilesUploaded(1);
+            } catch (UIMAException | IOException | SAXException e) {
                 response.status(500);
-                return "Failed to upload file " + exception;
+                return "Failed to create prompt file " + e.getMessage();
+            }
+        } else {
+            for (Part part : parts) {
+                if (!part.getName().equals("file")) continue;
+                Path path = Paths.get(root.toString(), part.getSubmittedFileName());
+
+                try (InputStream is = part.getInputStream()) {
+                    Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+                    DUUIHTTPMetrics.incrementBytesUploaded((double) path.toFile().length());
+                } catch (IOException exception) {
+                    response.status(500);
+                    return "Failed to upload file " + exception;
+                }
+
+                DUUIHTTPMetrics.incrementFilesUploaded(1);
             }
         }
 

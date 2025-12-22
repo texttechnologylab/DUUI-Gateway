@@ -35,7 +35,7 @@ export type DUUIDocumentProvider = {
 	provider_id: string;
 }
 
-export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'NextCloud' | 'Google'| 'LocalDrive' | 'None'
+export type IOProvider = 'Dropbox' | 'Minio' | 'File' | 'Text' | 'Prompt' | 'NextCloud' | 'Google'| 'LocalDrive' | 'None'
 export type FileExtension = '.txt' | '.xmi' | '.gz'
 export type OutputFileExtension = '.xmi' | '.gz'
 
@@ -44,17 +44,44 @@ export enum IO {
 	File = 'File',
 	Minio = 'Minio',
 	Text = 'Text',
+	Prompt = 'Prompt',
 	NextCloud = 'NextCloud',
 	Google = 'Google',
 	LocalDrive = 'LocalDrive',
 	None = 'None'
 }
 
-export const IO_INPUT: string[] = ['Dropbox', 'File', 'Minio', 'Text', 'NextCloud', 'Google', 'LocalDrive']
+export const PROMPT_EXTENSIONS = ".wav,.png,.mp4"
+
+export const IO_INPUT: string[] = ['Dropbox', 'File', 'Minio', 'Text', 'Prompt', 'NextCloud', 'Google', 'LocalDrive']
 export const INPUT_EXTENSIONS: string[] = ['.txt', '.xmi', '.gz']
 
 export const IO_OUTPUT: string[] = ['Dropbox', 'Minio', 'NextCloud', 'Google', 'LocalDrive', 'None']
 export const OUTPUT_EXTENSIONS: string[] = ['.xmi', '.gz']
+
+
+export const splitPromptAttachments = 
+	(fileList: FileList): { wavs: File[]; pngs: File[]; mp4: File | null } => {
+
+	const wavs: File[] = [];
+	const pngs: File[] = [];
+	let mp4: File | null = null;
+
+	for (const f of Array.from(fileList)) {
+		const n = f.name.toLowerCase();
+		if (n.endsWith(".png")) pngs.push(f);
+		else if (n.endsWith(".wav")) wavs.push(f);
+		else if (n.endsWith(".mp4") && mp4 == null) mp4 = f;
+	}
+
+	return { wavs, pngs, mp4 };
+}
+
+export const toFileList = (files: File[]): FileList => {
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    return dt.files;
+}
 
 /**
  * Check if the input and output for the process are valid. This also includes checking
@@ -96,6 +123,11 @@ export const isValidInput = (input: DUUIDocumentProvider, files: FileList, user:
 
 		if (equals(input.provider.toString(), IO.File)) {
 			return files?.length > 0
+		}
+
+		if (equals(input.provider.toString(), IO.Prompt)) {
+			// TODO add check for prompt text 
+			return files?.length > 0;
 		}
 
 		return true
@@ -150,6 +182,7 @@ export const isValidOutput = (output: DUUIDocumentProvider, user: User): boolean
 export const isStatelessProvider = (provider: IOProvider) => {
 	return equals(provider.toString(), IO.File) ||
 		equals(provider.toString(), IO.Text) ||
+		equals(provider.toString(), IO.Prompt) ||
 		equals(provider.toString(), IO.None)
 }
 
