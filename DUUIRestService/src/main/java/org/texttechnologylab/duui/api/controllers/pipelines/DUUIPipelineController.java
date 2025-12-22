@@ -29,6 +29,8 @@ import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.process.IDUUIProcessHandler;
 import org.texttechnologylab.duui.api.controllers.components.DUUIComponentController;
 import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
+import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
+
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.isNullOrEmpty;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.storage.MongoDBFilters;
@@ -532,11 +534,23 @@ public class DUUIPipelineController {
                 .Component(target)
                 .withScale(scale)
                 .build();
-            case "DUUIRemoteDriver" -> new DUUIRemoteDriver
-                .Component(target)
-                .withIgnoring200Error(ignore200Error)
-                .withScale(scale)
-                .build();
+            case "DUUIRemoteDriver" -> {
+                // Allow comma-separated URLs for the remote driver target
+                String[] urls = Arrays
+                    .stream(target.split(","))
+                    .map(String::trim)
+                    .filter(u -> !isNullOrEmpty(u))
+                    .toArray(String[]::new);
+
+                DUUIRemoteDriver.Component builder = (urls.length > 0)
+                    ? new DUUIRemoteDriver.Component(urls)
+                    : new DUUIRemoteDriver.Component(target);
+
+                yield builder
+                    .withIgnoring200Error(ignore200Error)
+                    .withScale(scale)
+                    .build();
+            }
             case "DUUIUIMADriver" -> new DUUIUIMADriver
                 .Component(AnalysisEngineFactory
                 .createEngineDescription(target))
