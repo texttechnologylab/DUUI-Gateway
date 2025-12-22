@@ -38,7 +38,7 @@ const fetchUser = async (
 	session: string,
 	event: RequestEvent
 ) => {
-	const response = await fetch(`${API_URL}/users/auth/`, {
+	const response = await fetch(`${API_URL}/users/auth`, {
 		method: 'GET',
 		headers: {
 			Authorization: session
