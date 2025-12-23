@@ -126,6 +126,7 @@ public class DUUIProcessController {
 
         if (process == null) return null;
 
+        normalizeProcessDocument(process);
         return DUUIMongoDBStorage.convertObjectIdToString(process.append("count", documentCount(id)));
     }
 
@@ -196,7 +197,10 @@ public class DUUIProcessController {
 
         Document result = documents.into(new ArrayList<>()).get(0);
         List<Document> findings = result.getList("processes", Document.class);
-        findings.forEach(DUUIMongoDBStorage::convertObjectIdToString);
+        findings.forEach(process -> {
+            DUUIMongoDBStorage.convertObjectIdToString(process);
+            normalizeProcessDocument(process);
+        });
         int count;
         try {
             count = result.getList("count", Document.class).get(0).getInteger("count");
@@ -205,6 +209,22 @@ public class DUUIProcessController {
         }
 
         return new Document("processes", findings).append("count", count);
+    }
+
+    private static void normalizeProcessDocument(Document process) {
+        String status = process.getString("status");
+        if (status != null) {
+            process.put("status", DUUIRequestHelper.toTitleCase(status));
+        }
+
+        Object pipelineStatus = process.get("pipeline_status");
+        if (pipelineStatus instanceof Document statusDocument) {
+            statusDocument.forEach((key, value) -> {
+                if (value instanceof String stringValue) {
+                    statusDocument.put(key, DUUIRequestHelper.toTitleCase(stringValue));
+                }
+            });
+        }
     }
 
     /**
@@ -273,7 +293,7 @@ public class DUUIProcessController {
         settings = mergeSettings(settings);
 
         Document process = new Document("pipeline_id", pipelineId)
-            .append("status", DUUIStatus.SETUP)
+            .append("status", DUUIRequestHelper.toTitleCase(DUUIStatus.SETUP.name()))
             .append("error", null)
             .append("progress", 0)
             .append("size", pipeline.getList("components", Document.class).size())
@@ -374,8 +394,12 @@ public class DUUIProcessController {
      * @param id     The id of the process.
      * @param status The new status {@link DUUIStatus}
      */
-    public static void setStatus(String id, String status) {
-        updateOne(id, "status", status);
+    public static void setStatus(String id, DUUIStatus status) {
+        updateOne(
+            id,
+            "status",
+            status != null ? DUUIRequestHelper.toTitleCase(status.name()) : null
+        );
     }
 
     /**
@@ -679,10 +703,10 @@ public class DUUIProcessController {
      * @param status    The status to filter by.
      * @return a list of documents with the given status.
      */
-    private static List<Document> filterDocumentByStatus(List<Document> documents, String status) {
+    private static List<Document> filterDocumentByStatus(List<Document> documents, DUUIStatus status) {
         return documents
                 .stream()
-                .filter((document) -> document.getString("status").equalsIgnoreCase(status))
+                .filter((document) -> document.getString("status").equalsIgnoreCase(status.toString()))
                 .toList();
     }
 }

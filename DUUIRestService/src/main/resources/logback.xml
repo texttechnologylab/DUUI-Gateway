@@ -9,21 +9,24 @@
         </encoder>
     </appender>
 
-<!--    &lt;!&ndash; 2) Rolling‐file appender (roll daily, keep 7 days) &ndash;&gt;-->
-<!--    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
-<!--        <file>logs/myapp.log</file>-->
-<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
-<!--            &lt;!&ndash; daily rollover &ndash;&gt;-->
-<!--            <fileNamePattern>logs/myapp.%d{yyyy-MM-dd}.log</fileNamePattern>-->
-<!--            &lt;!&ndash; keep 7 days of logs &ndash;&gt;-->
-<!--            <maxHistory>7</maxHistory>-->
-<!--        </rollingPolicy>-->
-<!--        <encoder>-->
-<!--            <pattern>-->
-<!--                %d{yyyy-MM-dd HH:mm:ss} [%level] [MyApp] – %msg%n-->
-<!--            </pattern>-->
-<!--        </encoder>-->
-<!--    </appender>-->
+    <!-- 2) Rolling-file appender (roll daily, keep 7 days) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/duui-gateway.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>logs/duui-gateway.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 7 days of logs -->
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%level] [DUUI-Gateway] – %msg%n
+            </pattern>
+        </encoder>
+    </appender>
 
     <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
         <!-- wie viele Log‐Events im Puffer, bevor verworfen wird -->
@@ -34,12 +37,15 @@
         <appender-ref ref="CONSOLE" />
     </appender>
 
-    <logger name="org.texttechnologylab.duui.api.controllers.users" level="TRACE"/>
+    <logger name="org.texttechnologylab.duui.api.controllers.users" level="INFO"/>
+    <!-- <logger name="org.texttechnologylab.duui.api.websocket" level="DEBUG"/>
+    <logger name="org.eclipse.jetty.websocket" level="DEBUG"/> -->
+    <!-- <logger name="org.eclipse.jetty.server.HttpChannel" level="DEBUG"/> -->
 
     <!-- 3) Root logger: send everything ≥ INFO to console & file -->
     <root level="INFO">
         <appender-ref ref="ASYNC_CONSOLE" />
-<!--        <appender-ref ref="FILE" />-->
+        <appender-ref ref="FILE" />
     </root>
 
 </configuration>

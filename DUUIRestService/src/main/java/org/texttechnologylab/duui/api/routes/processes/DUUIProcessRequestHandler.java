@@ -270,8 +270,18 @@ public class DUUIProcessRequestHandler {
         List<String> statusFilter = Stream.of(statusNames.split(";"))
             .map(DUUIRequestHelper::toTitleCase)
             .toList();
+        boolean includeAnyStatus = statusFilter
+            .stream()
+            .anyMatch(status -> status.equalsIgnoreCase(DUUIStatus.ANY.name()));
 
         MongoDBFilters filters = new MongoDBFilters();
+        Bson statusClause = includeAnyStatus
+            ? Filters.exists("status")
+            : Filters.or(statusFilter.stream()
+                .map(status -> Filters.regex(
+                    "status",
+                    Pattern.compile("^" + Pattern.quote(status) + "$", Pattern.CASE_INSENSITIVE)))
+                .toList());
         filters.limit(DUUIRequestHelper.getLimit(request));
         filters.skip(DUUIRequestHelper.getSkip(request));
         filters.order(DUUIRequestHelper.getOrder(request, 1));
@@ -280,9 +290,7 @@ public class DUUIProcessRequestHandler {
         filters.addFilter(Filters.and(
             Filters.eq("process_id", processId),
             new Document("name", Pattern.compile(filters.getSearch(), Pattern.CASE_INSENSITIVE)),
-            statusFilter.contains(DUUIStatus.ANY) ?
-                Filters.exists("status") :
-                Filters.in("status", statusFilter)
+            statusClause
         ));
 
         return DUUIDocumentController.findMany(filters).toJson();

@@ -371,8 +371,14 @@ public class DUUIPipelineController {
      * @param id     The pipeline's id.
      * @param status The status to set. See {@link DUUIStatus}
      */
-    public static void setStatus(String id, String status) {
-        DUUIPipelineController.updateOne(id, new Document("status", status));
+    public static void setStatus(String id, DUUIStatus status) {
+        DUUIPipelineController.updateOne(
+            id,
+            new Document(
+                "status",
+                status != null ? DUUIRequestHelper.toTitleCase(status.name()) : null
+            )
+        );
     }
 
     /**

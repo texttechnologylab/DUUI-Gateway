@@ -1,5 +1,6 @@
 package org.texttechnologylab.duui.analysis.process;
 
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 
 /**
  * An interface for running processes with DUUI.
@@ -90,5 +91,5 @@ public interface IDUUIProcessHandler extends Runnable {
      *
      * @return one of {@link org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus}
      */
-    String getStatus();
+    DUUIStatus getStatus();
 }

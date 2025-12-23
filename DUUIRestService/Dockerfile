@@ -13,17 +13,18 @@ WORKDIR /app
 
 COPY ./pom.xml ./pom.xml
 COPY ./src ./src
+COPY ./target ./target
 
 # Install Kubernetes command line tool
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
-    chmod +x kubectl && \
-    mv kubectl /usr/local/bin/
+# RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+#     chmod +x kubectl && \
+#     mv kubectl /usr/local/bin/
 
 # Expose port 2605 where the server is addressed to
 EXPOSE 2605
 
 # # Compile Java project and create the JAR-file
-RUN mvn package -DskipTests
+# RUN mvn package -DskipTests
 
 COPY ./config.ini  ./config.ini
 

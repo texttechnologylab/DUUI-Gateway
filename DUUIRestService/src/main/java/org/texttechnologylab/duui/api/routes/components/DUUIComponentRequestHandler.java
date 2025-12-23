@@ -113,7 +113,7 @@ public class DUUIComponentRequestHandler {
                 .append("name", name)
                 .append("tags", data.getList("tags", String.class))
                 .append("description", data.getString("description"))
-                .append("status", DUUIStatus.INACTIVE)
+                .append("status", DUUIRequestHelper.toTitleCase(DUUIStatus.INACTIVE.name()))
                 .append("driver", data.getString("driver"))
                 .append("target", data.getString("target"))
                 .append("inputs", inputs)

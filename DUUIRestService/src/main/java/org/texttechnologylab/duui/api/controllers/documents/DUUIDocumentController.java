@@ -1,6 +1,7 @@
 package org.texttechnologylab.duui.api.controllers.documents;
 
 import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
+import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.storage.MongoDBFilters;
 import com.mongodb.client.AggregateIterable;
@@ -159,6 +160,10 @@ public class DUUIDocumentController {
 
             documents.forEach(document -> {
                 DUUIMongoDBStorage.convertObjectIdToString(document);
+                String status = document.getString("status");
+                if (status != null) {
+                    document.put("status", DUUIRequestHelper.toTitleCase(status));
+                }
                 List<Document> events = DUUIEventController.findManyByDocument(document.getString("oid"));
                 events.forEach(DUUIMongoDBStorage::convertObjectIdToString);
                 events.forEach(event -> DUUIMongoDBStorage.convertDateToTimestamp(event, "timestamp"));
@@ -189,11 +194,17 @@ public class DUUIDocumentController {
                         Filters.eq("path", document.getPath())
                     ),
                     Updates.combine(
+                        Updates.set("process_id", processId),
                         Updates.set("name", document.getName()),
                         Updates.set("path", document.getPath()),
                         Updates.set("size", document.getSize()),
                         Updates.set("progress", document.getProgess().get()),
-                        Updates.set("status", document.getStatus()),
+                        Updates.set(
+                            "status",
+                            document.getStatus() != null
+                                ? DUUIRequestHelper.toTitleCase(document.getStatus().toString())
+                                : null
+                        ),
                         Updates.set("error", document.getError()),
                         Updates.set("is_finished", document.isFinished()),
                         Updates.set("duration_decode", document.getDurationDecode()),

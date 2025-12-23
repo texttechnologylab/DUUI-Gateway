@@ -143,7 +143,7 @@ public class DUUIPipelineRequestHandler {
 
         Document pipeline = new Document("name", name)
             .append("description", description)
-            .append("status", DUUIStatus.INACTIVE)
+            .append("status", DUUIRequestHelper.toTitleCase(DUUIStatus.INACTIVE.name()))
             .append("tags", tags)
             .append("created_at", Instant.now().toEpochMilli())
             .append("modified_at", Instant.now().toEpochMilli())

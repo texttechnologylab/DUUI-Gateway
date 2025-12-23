@@ -81,7 +81,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
     /**
      * The current status of the process.
      */
-    private String status = DUUIStatus.SETUP;
+    private DUUIStatus status = DUUIStatus.SETUP;
 
     /**
      * The input document provider.
@@ -603,7 +603,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
      * @return The status of the process.
      */
     @Override
-    public String getStatus() {
+    public DUUIStatus getStatus() {
         return status;
     }
 
