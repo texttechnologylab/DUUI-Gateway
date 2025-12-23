@@ -10,6 +10,8 @@
 	import { formatFileSize, includes } from '$lib/duui/utils/text'
 	import {errorToast, getStatusIcon, infoToast} from '$lib/duui/utils/ui'
 	import { isDarkModeStore, userSession } from '$lib/store'
+	import { subscribeProcessEvents } from '$lib/ws/processEvents'
+	import type { WsEventEnvelope } from '$lib/ws/eventDispatcher'
 	import {
 		faChevronDown,
 		faClose,
@@ -20,11 +22,10 @@
 
 	} from '@fortawesome/free-solid-svg-icons'
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
-	import { onMount } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import Fa from 'svelte-fa'
 	import {
-		getAnnotationsPlotOptions,
-		getTimelinePlotOptions
+		getAnnotationsPlotOptions
 	} from '../../../../routes/processes/[oid]/chart'
 	import Number from '../Input/Number.svelte'
 	import Search from '../Input/Search.svelte'
@@ -53,6 +54,9 @@
 	let minimumCount: number = 1
 	let annotationFilter: Map<string, number> = new Map(Object.entries(_document.annotations || {}))
 	let downloading: boolean = false
+
+	let unsubscribe: (() => void) | null = null
+	let documentEvents: WsEventEnvelope[] = []
 
 	function getOutputName(
 		name: string,
@@ -297,13 +301,41 @@
 		}
 	}
 
-	let options
-	let eventOptions
+		let options
+		let eventOptions
 
-	$: {
-		options = getAnnotationsPlotOptions(annotationFilter, $isDarkModeStore)
-		eventOptions = getTimelinePlotOptions(process, pipeline, _document, $isDarkModeStore)
-	}
+		$: {
+			options = getAnnotationsPlotOptions(annotationFilter, $isDarkModeStore)
+			eventOptions = {
+				series: [
+					{
+						name: 'Events',
+						data: documentEvents.map((e, i) => ({
+							x: e.timestamp,
+							y: i,
+							message: e.event.message
+						}))
+					}
+				],
+				chart: {
+					height: 260,
+					type: 'scatter',
+					toolbar: { show: true }
+				},
+				xaxis: { type: 'datetime' },
+				yaxis: { labels: { show: false } },
+				grid: {
+					borderColor: $isDarkModeStore ? '#e7e7e720' : '#29292920'
+				},
+				tooltip: {
+					custom: ({ w, seriesIndex, dataPointIndex }: any) => {
+						const point = w?.config?.series?.[seriesIndex]?.data?.[dataPointIndex]
+						const message = point?.message ?? ''
+						return `<div style="padding:8px;max-width:420px;white-space:normal;">${message}</div>`
+					}
+				}
+			}
+		}
 
 	function handleBeforeUnload(event: BeforeUnloadEvent) {
 		if (keyList.length > 0) {
@@ -311,22 +343,53 @@
 		}
 	}
 
-	onMount(() => {
+		function matchesDocumentEvent(envelope: WsEventEnvelope, path: string): boolean {
+			const ctx: any = envelope?.event?.context
+			if (!ctx) return false
+
+			switch (ctx.kind) {
+				case 'DocumentContext':
+					return ctx.path === path
+				case 'DocumentProcessContext':
+					return ctx.document?.path === path
+				case 'DocumentComponentProcessContext':
+					return ctx.document?.document?.path === path
+				default:
+					return false
+			}
+		}
+
+		onMount(() => {
 		async function loadApexCharts() {
 			const module = await import('apexcharts')
 			ApexCharts = module.default
 			window.ApexCharts = ApexCharts
 			loaded = true
 		}
-		window.addEventListener('beforeunload', handleBeforeUnload);
+		window.addEventListener('beforeunload', handleBeforeUnload)
 
-		keyList = JSON.parse(localStorage.getItem("keyList") || "[]")
+		keyList = JSON.parse(localStorage.getItem('keyList') || '[]')
 
 		loadApexCharts()
+
+			// Live events WebSocket – URL resolved via API layer
+			unsubscribe = subscribeProcessEvents(process.oid, {
+				onEvent: (data: WsEventEnvelope) => {
+					if (matchesDocumentEvent(data, _document.path)) {
+						documentEvents = [...documentEvents, data]
+					}
+				}
+			})
 
 		if (hasOutputStorage) {
 			preprocessDocument()
 		}
+	})
+
+	onDestroy(() => {
+		window.removeEventListener('beforeunload', handleBeforeUnload)
+		unsubscribe?.()
+		unsubscribe = null
 	})
 
 	$: {
@@ -576,13 +639,23 @@
 					<div use:chart={options} />
 				{/if}
 			{/if}
-			{#if loaded && _document.events}
-				<h2 class="h2">Timeline</h2>
-				<div class="pr-4" use:chart={eventOptions} />
-			{/if}
+				{#if loaded && documentEvents.length > 0}
+					<h2 class="h2">Events</h2>
+					<div class="pr-4" use:chart={eventOptions} />
+					<div class="space-y-2 mt-4">
+						{#each documentEvents as e (e.timestamp + e.event._id)}
+							<div class="card p-3 text-sm">
+								<div class="flex items-start justify-between gap-4">
+									<p class="break-all">{e.event.message}</p>
+									<p class="dimmed whitespace-nowrap">{e.timestamp}</p>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		</div>
 	</div>
-</div>
 
 <style>
 	.content-wrapper {

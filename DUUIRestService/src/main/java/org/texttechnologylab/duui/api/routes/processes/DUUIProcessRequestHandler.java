@@ -4,7 +4,10 @@ import com.dropbox.core.DbxException;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUILocalDrivesDocumentHandler;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIDocumentHandler;
@@ -43,6 +46,7 @@ import static org.texttechnologylab.duui.api.controllers.processes.DUUIProcessCo
  * @author Cedric Borkowksi
  */
 public class DUUIProcessRequestHandler {
+    private static final Logger log = LoggerFactory.getLogger(DUUIProcessRequestHandler.class);
 
     /**
      * Retrieve the folder structure of a provider.
@@ -219,12 +223,15 @@ public class DUUIProcessRequestHandler {
 
             return process.toJson();
         } catch (URISyntaxException | IOException exception) {
+            log.error("Failed to start process pipeline_id={}", pipelineId, exception);
             response.status(500);
             return exception.getMessage();
         } catch (InsufficientWorkersException exception) {
+            log.warn("Process start rejected due to insufficient workers pipeline_id={}", pipelineId, exception);
             response.status(429);
             return exception.getMessage();
         } catch (InvalidIOException exception) {
+            log.info("Process start rejected due to invalid input pipeline_id={}", pipelineId, exception);
             response.status(400);
             return exception.getMessage();
         }

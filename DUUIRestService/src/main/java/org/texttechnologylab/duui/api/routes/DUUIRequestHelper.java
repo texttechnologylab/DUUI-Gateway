@@ -28,6 +28,12 @@ public class DUUIRequestHelper {
      */
     public static String getUserId(Request request) {
         String authorization = request.headers("Authorization");
+        if (isNullOrEmpty(authorization)) {
+            authorization = request.cookie("session");
+        }
+        if (isNullOrEmpty(authorization)) {
+            authorization = request.queryParams("token");
+        }
 
         Document user = authenticate(authorization);
         if (isNullOrEmpty(user)) return "";
@@ -104,6 +110,17 @@ public class DUUIRequestHelper {
         String key = request.headers("Authorization");
         if (key == null) return false;
         return validateSession(key) || validateApiKey(key);
+        // if (key != null && (validateSession(key) || validateApiKey(key))) {
+        //     return true;
+        // }
+
+        // String sessionCookie = request.cookie("session");
+        // if (sessionCookie != null && validateSession(sessionCookie)) {
+        //     return true;
+        // }
+
+        // String tokenParam = request.queryParams("token");
+        // return tokenParam != null && (validateSession(tokenParam) || validateApiKey(tokenParam));
     }
 
     /**

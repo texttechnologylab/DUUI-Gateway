@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import { IO, getTotalDuration, type DUUIDocument } from '$lib/duui/io.js'
+	import { IO, type DUUIDocument } from '$lib/duui/io.js'
 	import { Status, isActive } from '$lib/duui/monitor.js'
 	import { processToSeachParams } from '$lib/duui/process.js'
-	import { equals, formatFileSize, progresAsPercent, snakeToTitleCase } from '$lib/duui/utils/text'
-	import { formatMilliseconds, getDuration } from '$lib/duui/utils/time'
+	import { equals, formatFileSize, snakeToTitleCase } from '$lib/duui/utils/text'
+	import { getDuration } from '$lib/duui/utils/time'
 	import {
 		documentStatusNames,
-		getDocumentStatusIcon,
 		getStatusIcon,
 		infoToast,
 		successToast
@@ -41,8 +40,25 @@
 	import KeyValue from '$lib/svelte/components/KeyValue.svelte'
 	import Paginator from '$lib/svelte/components/Paginator.svelte'
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
-	import { onMount } from 'svelte'
+	import {
+		subscribeProcessEvents,
+		type WebSocketStatus
+	} from '$lib/ws/processEvents'
+	import { computeProcessTotals } from '$lib/ws/processTotals'
+	import { onDestroy, onMount } from 'svelte'
 	import Fa from 'svelte-fa'
+	import { writable, type Writable } from 'svelte/store'
+	import DocumentRow from './DocumentRow.svelte'
+	import {
+		createEventDispatcher,
+		type ComposerContext,
+		type DocumentContext,
+		type ReaderContext,
+		type DriverContext,
+		type WorkerContext,
+		type ComponentContext,
+		type InstantiatedComponentContext
+	} from '$lib/ws/eventDispatcher'
 
 	export let data
 	const toastStore = getToastStore()
@@ -50,8 +66,6 @@
 	let { pipeline, process } = data
 	let documents: DUUIDocument[] = []
 	let count: number = 0
-
-	let progressPercent: number = 0
 
 	let tableHeader: string[] = ['Name', 'Progress', 'Status', 'File Size', 'Duration']
 
@@ -80,38 +94,62 @@
 	let filter: string[] = [Status.Any]
 	let maxProgress = process.size || pipeline.components.length
 
-	const UPDATE_INTERVAL = 1_000
-	let interval: NodeJS.Timeout
+	let unsubscribe: (() => void) | null = null
+	let documentsTotal = process.document_names?.length || 0
+	const composerContextStore: Writable<ComposerContext | null> = writable(null)
+	const readerContextStore: Writable<ReaderContext | null> = writable(null)
+	const driverContextStores = new Map<string, Writable<DriverContext>>()
+	const workerContextStores = new Map<string, Writable<WorkerContext>>()
+	const documentContextStores = new Map<string, Writable<DocumentContext>>()
+	const componentContextStores = new Map<string, Writable<ComponentContext>>()
+	const componentInstanceContextStores = new Map<string, Writable<InstantiatedComponentContext>>()
+
+	const dispatcher = createEventDispatcher({
+		composerContextStore,
+		driverContextStores,
+		workerContextStores,
+		documentContextStores,
+		componentContextStores,
+		componentInstanceContextStores,
+		readerContextStore
+	})
+
+	$: processStatus = $composerContextStore?.status ?? process.status
+	$: processProgress = $composerContextStore?.progress ?? process.progress
+	$: processPipelineStatus = $composerContextStore?.pipeline_status ?? process.pipeline_status
+	$: processIsFinished =
+		processStatus === Status.Completed || processStatus === Status.Cancelled || processStatus === Status.Failed
+	$: documentsTotal = $readerContextStore?.total ?? documentsTotal
+
+	$: totals = computeProcessTotals(
+		{ ...process, status: processStatus, progress: processProgress, is_finished: processIsFinished },
+		documentsTotal,
+		paginationSettings.total
+	)
 
 	onMount(() => {
-		async function update() {
-			const response = await fetch(`/api/processes?process_id=${process.oid}`, {
-				method: 'GET'
-			})
+		// Initial document load
+		updateTable()
 
-			if (response.ok) {
-				try {
-					process = await response.json()
-					progressPercent = progresAsPercent(process.progress, process.document_names.length)
-				} catch (err) {}
-				await updateTable()
+		// Live process updates via WebSocket
+		unsubscribe = subscribeProcessEvents(process.oid, {
+			onEvent: (msg) => {
+				dispatcher.dispatchEvent(msg)
+				if (!isActive(processStatus)) {
+					updateTable()
+				}
+			},
+			onStatus: (status: WebSocketStatus) => {
+				if (status === 'closed' && processIsFinished) {
+					updateTable()
+				}
 			}
+		})
+	})
 
-			if (!isActive(process.status)) {
-				clearInterval(interval)
-			}
-
-			if (progressPercent > 100) progressPercent = 100
-			if (process.is_finished) {
-				clearInterval(interval)
-			}
-		}
-
-		if (!process.is_finished) {
-			interval = setInterval(update, UPDATE_INTERVAL)
-		}
-		update()
-		return () => clearInterval(interval)
+	onDestroy(() => {
+		unsubscribe?.()
+		unsubscribe = null
 	})
 
 	const cancelProcess = async () => {
@@ -222,7 +260,7 @@
 		<Fa icon={faArrowLeft} />
 		<span>Pipeline</span>
 	</a>
-	{#if process.is_finished}
+	{#if processIsFinished}
 		<button class="button-mobile" on:click={restart}>
 			<Fa icon={faRepeat} />
 			<span>Restart</span>
@@ -256,7 +294,7 @@
 					<Fa icon={faArrowLeft} />
 					<span>{pipeline.name}</span>
 				</a>
-				{#if process.is_finished}
+				{#if processIsFinished}
 					<button class="button-menu border-r border-color" on:click={restart}>
 						<Fa icon={faRepeat} />
 						<span>Restart</span>
@@ -289,31 +327,28 @@
 				>
 					<div class="flex-center-4 justify-center">
 						<Fa
-							icon={getStatusIcon(process.status)}
-							class={equals(process.status, Status.Active) ? 'animate-spin-slow ' : ''}
+							icon={getStatusIcon(processStatus)}
+							class={equals(processStatus, Status.Active) ? 'animate-spin-slow ' : ''}
 						/>
 						<p>
-							{process.status}
+							{processStatus}
 						</p>
 					</div>
 					<div class="flex-center-4 justify-center">
 						<Fa icon={faListCheck} />
 						<p>
-							{process.progress} / {process.document_names.length} ({progresAsPercent(
-								process.progress,
-								process.document_names.length
-							)}%)
+							{totals.progress} / {totals.documentsTotal} ({totals.progressPercent}%)
 						</p>
 					</div>
 					<div class="flex-center-4 justify-center">
-						<Fa icon={faClockRotateLeft} />
-						<p>{getDuration(process.started_at, process.finished_at)}</p>
+							<Fa icon={faClockRotateLeft} />
+							<p>{getDuration(process.started_at, process.finished_at)}</p>
+						</div>
 					</div>
-				</div>
 				<div class="section-wrapper !border-t-0 !rounded-t-none overflow-hidden">
 					<ProgressBar
-						value={process.progress}
-						max={process.document_names.length}
+						value={totals.progress}
+						max={totals.documentsTotal || 1}
 						height="h-4"
 						rounded="!rounded-none"
 						track="bg-surface-100-800-token"
@@ -376,37 +411,12 @@
 
 						<div class="overflow-hidden flex flex-col">
 							{#each documents as document}
-								<button
-									class="rounded-none
-										grid grid-cols-3 lg:grid-cols-5 gap-8 items-center
-										p-4
-										hover:variant-filled-primary
-										text-xs lg:text-sm text-start"
-									on:click={() => showDocumentModal(document)}
-								>
-									<p class="truncate" title={document.name}>{document.name}</p>
-									<div class="md:flex items-center justify-start md:gap-4 text-start">
-										<p>
-											{Math.round((Math.min(document.progress, maxProgress) / maxProgress) * 100)} %
-										</p>
-									</div>
-									<p class="flex justify-start items-center gap-2 md:gap-4">
-										<Fa
-											icon={getDocumentStatusIcon(document)}
-											size="lg"
-											class="{equals(document.status, Status.Active)
-												? 'animate-spin-slow'
-												: equals(document.status, Status.Waiting)
-												? 'animate-hourglass'
-												: ''} w-6"
-										/>
-										<span>{document.status}</span>
-									</p>
-									<p class="hidden lg:inline-flex">{formatFileSize(document.size)}</p>
-									<p class="hidden lg:inline-flex">
-										{formatMilliseconds(getTotalDuration(document))}
-									</p>
-								</button>
+								<DocumentRow
+									document={document}
+									ctxStore={documentContextStores.get(document.path)}
+									maxProgress={maxProgress}
+									onClick={() => showDocumentModal(document)}
+								/>
 							{/each}
 						</div>
 					</div>

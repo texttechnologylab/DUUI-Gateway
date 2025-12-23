@@ -13,6 +13,7 @@ import org.texttechnologylab.duui.api.routes.pipelines.DUUIPipelineRequestHandle
 import org.texttechnologylab.duui.api.routes.processes.DUUIProcessRequestHandler;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.utils.DUUIMailClient;
+import org.texttechnologylab.duui.api.websocket.ProcessEventWebSocketHandler;
 
 import java.time.Duration;
 
@@ -25,6 +26,7 @@ import static spark.Spark.options;
 import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
+import static spark.Spark.webSocket;
 
 /**
  * A class to set up the Java Spark path groups. This class is only used to increase readability and reduce
@@ -36,6 +38,13 @@ public class Methods {
 
     private static final Logger log = LoggerFactory.getLogger(Methods.class);
 
+    public static void initWS() {
+        // Spark's websocket path specs don't support ":id" segments.
+        // Match /ws/processes/<id>/events and extract the id in the handler.
+        // Servlet spec only allows '*' at the end of a prefix match.
+        // Use a catch-all mapping and validate the path in the handler.
+        webSocket("/ws/*", ProcessEventWebSocketHandler.class);
+    }
 
     /**
      * Initializes all endpoints including filters and options.
@@ -143,6 +152,7 @@ public class Methods {
                 get("", DUUIUserController::getGroups);
             });
 
+            get("/auth", DUUIUserController::authorizeUser);
             get("/:id", DUUIUserController::fetchUser);
             get("", DUUIUserController::fetchUsers);
             post("", DUUIUserController::insertOne);

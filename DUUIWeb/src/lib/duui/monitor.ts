@@ -1,11 +1,6 @@
-export interface DUUIEvent {
-	timestamp: number
-	event: {
-		process_id: string
-		sender: string
-		message: string
-	}
-}
+import type { WsEventEnvelope } from '$lib/ws/eventDispatcher'
+
+export type DUUIEvent = WsEventEnvelope
 
 export const statusNames: string[] = [
 	'Active',
