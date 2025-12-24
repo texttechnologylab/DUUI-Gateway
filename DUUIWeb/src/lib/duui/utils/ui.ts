@@ -59,6 +59,7 @@ export const documentStatusNamesString = [
 export function getStatusIcon(status: string) {
 	if (equals(status, Status.Input)) return faFileDownload
 	if (equals(status, Status.Setup)) return faArrowTrendUp
+	if (equals(status, Status.Instantiating) || equals(status, 'Instantiating')) return faHourglass
 	if (equals(status, Status.Active)) return faRefresh
 	if (equals(status, Status.Shutdown)) return faArrowTrendDown
 	if (equals(status, Status.Output)) return faFileUpload
