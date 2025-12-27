@@ -65,6 +65,7 @@
 	import 'highlight.js/styles/github-dark.css'
 	import { onMount } from 'svelte'
 	import ProcessDrawer from './processes/[oid]/ProcessDrawer.svelte'
+	import ProcessConfigurationDrawer from './processes/ProcessConfigurationDrawer.svelte'
 	import CiteModal from "$lib/svelte/components/Modal/CiteModal.svelte";
 	import GroupEditor from "$lib/svelte/components/Drawer/GroupEditor.svelte";
 	import LabelsEditor from '$lib/svelte/components/Drawer/LabelsEditor.svelte'
@@ -169,6 +170,8 @@
 		<ComponentDrawer />
 	{:else if $drawerStore.id === 'process'}
 		<ProcessDrawer />
+	{:else if $drawerStore.id === 'processConfiguration'}
+		<ProcessConfigurationDrawer />
 	{:else if $drawerStore.id === 'group'}
 		<GroupEditor />
 	{:else if $drawerStore.id === 'label'}

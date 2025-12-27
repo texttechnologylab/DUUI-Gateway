@@ -42,7 +42,9 @@
 	import Paginator from '$lib/svelte/components/Paginator.svelte'
 	import { showConfirmationModal } from '$lib/svelte/utils/modal'
 	import { onMount } from 'svelte'
+	import { get } from 'svelte/store'
 	import Fa from 'svelte-fa'
+	import { maybeContinueMultiQueue, multiProcessQueueStore } from '$lib/duui/multiProcessQueue'
 
 	export let data
 	const toastStore = getToastStore()
@@ -82,6 +84,7 @@
 
 	const UPDATE_INTERVAL = 1_000
 	let interval: NodeJS.Timeout
+	let continuing = false
 
 	onMount(() => {
 		async function update() {
@@ -104,6 +107,16 @@
 			if (progressPercent > 100) progressPercent = 100
 			if (process.is_finished) {
 				clearInterval(interval)
+				if (!continuing) {
+					continuing = true
+					try {
+						const nextOid = await maybeContinueMultiQueue()
+						if (nextOid) await goto(`/processes/${nextOid}`)
+					} catch (err) {
+						toastStore.trigger(infoToast('Failed to start next process: ' + err))
+						multiProcessQueueStore.set(null)
+					}
+				}
 			}
 		}
 

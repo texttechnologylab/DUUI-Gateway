@@ -88,9 +88,6 @@
 	let parameters: Map<string, string> = new Map(Object.entries(component.parameters))
 	const dispatcher = createEventDispatcher()
 
-	let lastSuggestedTarget = ''
-	let registrySelectionActive = false
-
 	let labels: string[]
 	component.options.labels = component.options.labels ? component.options.labels : []
 	let chosenLabels: Map<string, string> = new Map()
@@ -678,7 +675,6 @@
 						component.outputs = (entryMetadata.resulting_types ?? [])
 							.map((t) => (t ?? '').trim())
 							.filter((t) => t.length > 0)
-						lastSuggestedTarget = suggestedTarget
 
 						}
 					}
@@ -783,12 +779,6 @@
 			<ComponentOptions {component} />
 		</div>
 
-		{#if labels && labels.length > 0}
-			<div class="space-y-2 ">
-				<h4 class="h4">Labels</h4>
-				<JsonDropdownInput bind:dropdownList={labels} bind:target={component.options.labels} bind:data={chosenLabels}/>
-			</div>
-		{/if}
 		<div class="space-y-4 border-t border-color pt-4">
 			<h4 class="h4">Parameters</h4>
 			<JsonInput bind:data={parameters} />

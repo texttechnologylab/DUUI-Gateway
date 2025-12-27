@@ -27,12 +27,20 @@ import {
 	faFileArrowUp, faRefresh,
 } from '@fortawesome/free-solid-svg-icons'
 	import Fa from 'svelte-fa'
-	import { ProgressBar, getToastStore } from '@skeletonlabs/skeleton'
+	import { ProgressBar, getDrawerStore, getToastStore } from '@skeletonlabs/skeleton'
 	import { onMount } from 'svelte'
 	import { writable } from 'svelte/store'
 	import _ from 'lodash';
 	const { set, isEmpty } = _;
 	import { ProcessPageMode, ProcessPagePhase, type ProcessPageState, type ProcessPageStateStore } from '$lib/process-io/pageState'
+	import PipelinePicker from './PipelinePicker.svelte'
+	import {
+		applyPipelineDraftIfAny,
+		buildPayloadForPipeline,
+		cloneProcessSettings,
+		multiProcessQueueStore
+	} from '$lib/duui/multiProcessQueue'
+	import { get } from 'svelte/store'
 
 
 	export let data
@@ -41,6 +49,7 @@ import {
 	$userSession = user
 
 	const toastStore = getToastStore()
+	const drawerStore = getDrawerStore()
 
 	let inputPanel: any
 	let outputPanel: any
@@ -48,6 +57,7 @@ import {
 	let outputValid: boolean = false
 	let inputValidFileStorage: boolean = true
 	let uploadFilesCount: number = 0
+	let multiPipelineIds: string[] = []
 
 	const processPageState: ProcessPageStateStore = writable<ProcessPageState>({
 		mode: ProcessPageMode.New,
@@ -161,7 +171,12 @@ import {
 
 		starting = true
 
-			const result = await inputPanel?.uploadIfNeeded?.($processSettingsStore.pipeline_id)
+			const firstPipelineId = multiPipelineIds.at(0) || $processSettingsStore.pipeline_id
+			if (multiPipelineIds.length > 0) {
+				$processSettingsStore.pipeline_id = firstPipelineId
+			}
+
+			const result = await inputPanel?.uploadIfNeeded?.(firstPipelineId)
 			if (!result) {
 				starting = false
 				processPageState.update((s) => ({ ...s, phase: ProcessPagePhase.Editing, uploadFilesCount: 0 }))
@@ -191,6 +206,51 @@ import {
 			$processSettingsStore.output.content = ''
 		}
 
+		const isMulti = multiPipelineIds.length > 0
+
+		if (isMulti) {
+			const baseSettings = cloneProcessSettings($processSettingsStore)
+
+			const existing = get(multiProcessQueueStore)
+			multiProcessQueueStore.set({
+				pipelineIds: [...multiPipelineIds],
+				index: 0,
+				baseSettings,
+				configByPipelineId: existing?.configByPipelineId ?? {}
+			})
+
+			try {
+				await applyPipelineDraftIfAny(firstPipelineId)
+			} catch (err) {
+				toastStore.trigger(errorToast('Failed to apply component configuration: ' + err))
+				starting = false
+				return
+			}
+
+			const response = await fetch('/api/processes', {
+				method: 'POST',
+				body: JSON.stringify(buildPayloadForPipeline(firstPipelineId, baseSettings))
+			})
+
+			if (response.ok) {
+				try {
+					let process = await response.json()
+					// next index
+					const q = get(multiProcessQueueStore)
+					if (q) multiProcessQueueStore.set({ ...q, index: 1 })
+					await goto(`/processes/${process.oid}`)
+				} catch (err) {
+					toastStore.trigger(errorToast(response.statusText))
+					await goto(`/pipelines/${$processSettingsStore.pipeline_id}`)
+				}
+			} else {
+				toastStore.trigger(errorToast((await response.text())))
+				starting = false
+			}
+
+			return
+		}
+
 		const response = await fetch('/api/processes', {
 			method: 'POST',
 			body: JSON.stringify($processSettingsStore)
@@ -209,6 +269,17 @@ import {
 			starting = false
 		}
 
+	}
+
+	const openProcessConfiguration = (pipelineId: string) => {
+		drawerStore.open({
+			id: 'processConfiguration',
+			position: 'right',
+			rounded: 'rounded-none',
+			border: 'border-l border-color',
+			width: 'w-full lg:w-1/2 2xl:w-[40%]',
+			meta: { pipelineId }
+		})
 	}
 
 	let fetchingTree = false
@@ -326,6 +397,19 @@ import {
 		{:else}
 			<div class="container mx-auto max-w-4xl grid gap-4">
 					<div class="grid gap-4">
+							<div class="section-wrapper p-4 space-y-4">
+								<div class="flex items-center justify-between gap-4">
+									<h2 class="h3">Pipelines</h2>
+									<button
+										type="button"
+										class="button-neutral"
+										on:click={() => openProcessConfiguration($processSettingsStore.pipeline_id)}
+									>
+										<span>Process configuration</span>
+									</button>
+								</div>
+								<PipelinePicker bind:selectedIds={multiPipelineIds} />
+							</div>
 							<GeneralIoPanel
 								bind:this={inputPanel}
 								kind="input"
@@ -363,14 +447,19 @@ import {
 													/>
 													<span class="text-xs pl-2">Bytes</span>
 												</div>
-												<Number
-													label="Worker count"
-													min={1}
-													max={100}
-													help="The number of threads used for processing. The actual number of threads is limited by the system."
-													name="workerCount"
-													bind:value={$processSettingsStore.settings.worker_count}
-												/>
+												<div class="space-y-2">
+													<button
+														type="button"
+														class="button-neutral w-full !justify-between"
+														on:click={() => openProcessConfiguration($processSettingsStore.pipeline_id)}
+													>
+														<span>Process configuration</span>
+														<span class="text-xs dimmed">Workers + component options</span>
+													</button>
+													<p class="text-xs dimmed">
+														Workers: {$processSettingsStore.settings.worker_count}
+													</p>
+												</div>
 											</div>
 										{/if}
 										{#if !equals($processSettingsStore.input.provider, IO.Text) && !equals($processSettingsStore.input.provider, IO.File)}

@@ -10,7 +10,7 @@
 	import Dropdown from "$lib/svelte/components/Input/Dropdown.svelte";
 	import Chip from "$lib/svelte/components/Chip.svelte";
 
-	export let dropdownList: Map<string, any>
+	export let dropdownList: Map<string, any> | any[]
 	export let data: Map<string, any> = new Map()
 	export let target: string[] = []
 	export let leadingIcon: IconDefinition | undefined = undefined
