@@ -135,6 +135,7 @@ public class Main {
             port(2605);
         }
 
+        Methods.initWS();
         Methods.init();
 
         DUUIComponentRequestHandler.insertSpacyTemplate();

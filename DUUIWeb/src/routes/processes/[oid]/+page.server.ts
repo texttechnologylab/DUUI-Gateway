@@ -1,6 +1,7 @@
 import { API_URL } from '$env/static/private'
 import type { DUUIPipeline } from '$lib/duui/pipeline'
 import type { DUUIProcess } from '$lib/duui/process'
+import type { TimelineResponse } from '$lib/ws/eventTypes'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
@@ -12,6 +13,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 	})
 
 	const process: DUUIProcess = await response.json()
+	let timeline: TimelineResponse | null = null
 
 	const loadPipeline = async (process: DUUIProcess): Promise<DUUIPipeline> => {
 		const response = await fetch(`${API_URL}/pipelines/${process.pipeline_id}`, {
@@ -23,8 +25,21 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 		return await response.json()
 	}
 
+	if (process.is_finished) {
+		const eventsResponse = await fetch(`${API_URL}/processes/${params.oid}/events`, {
+			method: 'GET',
+			headers: {
+				Authorization: cookies.get('session') || ''
+			}
+		})
+		if (eventsResponse.ok) {
+			timeline = (await eventsResponse.json()) as TimelineResponse
+		}
+	}
+
 	return {
 		process: process,
-		pipeline: await loadPipeline(process)
+		pipeline: await loadPipeline(process),
+		timeline
 	}
 }

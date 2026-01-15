@@ -42,12 +42,19 @@ export interface DUUIProcess {
 	}
 	document_names: string[]
 	is_finished: boolean
+	is_terminal?: boolean
 	duration_setup: number
 	duration_instantiation: number
 	count: number
-	pipeline_status: Map<string, string>
+	pipeline_status: Record<string, string>
 	initial: number
 	skipped: number
+	total?: number
+	runKey?: string
+	thread?: string
+	last_updated_at?: number
+	last_event_id?: number
+	status_durations?: Record<string, number>
 }
 
 /**

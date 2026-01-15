@@ -89,11 +89,22 @@ public class DUUIMongoDBStorage {
      */
     public static void convertDateToTimestamp(Document document, String fieldName) {
         try {
-            Date timestamp = document.get(fieldName, Date.class);
-            document.remove(fieldName);
-            document.put(fieldName, timestamp.toInstant().toEpochMilli());
-        } catch (NullPointerException ignored) {
+            Object raw = document.get(fieldName);
+            if (raw == null) return;
 
+            long millis;
+            if (raw instanceof Date date) {
+                millis = date.toInstant().toEpochMilli();
+            } else if (raw instanceof Long l) {
+                millis = l;
+            } else if (raw instanceof Integer i) {
+                millis = i.longValue();
+            } else {
+                return;
+            }
+
+            document.put(fieldName, millis);
+        } catch (Exception ignored) {
         }
     }
 

@@ -1,28 +1,28 @@
 <script lang="ts">
-	import type { DUUIDocument } from '$lib/duui/io.js'
-	import type { DocumentContext } from '$lib/ws/eventDispatcher'
-	import type { Writable } from 'svelte/store'
+	export type DocumentRowState = {
+		path: string
+		name: string
+		progress: number
+		status: string
+		size: number
+		started_at: number
+		finished_at: number
+	}
 	import Fa from 'svelte-fa'
 	import { Status } from '$lib/duui/monitor.js'
 	import { equals, formatFileSize } from '$lib/duui/utils/text'
 	import { formatMilliseconds } from '$lib/duui/utils/time'
-	import { getTotalDuration } from '$lib/duui/io.js'
 	import { getDocumentStatusIcon } from '$lib/duui/utils/ui'
 
-	export let document: DUUIDocument
-	export let ctxStore: Writable<DocumentContext> | undefined
+	export let state: DocumentRowState
 	export let maxProgress: number
 	export let onClick: () => void
 
-	$: ctx = ctxStore ? $ctxStore : undefined
-
-	$: name = ctx?.name ?? document.name
-	$: progress = ctx?.progress ?? document.progress
-	$: status = ctx?.status ?? document.status
-	$: size = ctx?.size ?? document.size
-	$: duration = ctx
-		? Math.max(0, (ctx.finished_at ?? 0) - (ctx.started_at ?? 0))
-		: getTotalDuration(document)
+	$: name = state?.name ?? ''
+	$: progress = state?.progress ?? 0
+	$: status = state?.status ?? Status.Unknown
+	$: size = state?.size ?? 0
+	$: duration = Math.max(0, (state?.finished_at ?? 0) - (state?.started_at ?? 0))
 </script>
 
 <button

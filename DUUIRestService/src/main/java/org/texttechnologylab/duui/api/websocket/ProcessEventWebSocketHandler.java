@@ -12,6 +12,7 @@ import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineControll
 import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
 import org.texttechnologylab.duui.api.controllers.users.Role;
 import org.texttechnologylab.duui.api.controllers.events.DUUIEventController;
+import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
 import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 
 import java.util.List;
@@ -78,6 +79,18 @@ public class ProcessEventWebSocketHandler {
                 return;
             }
 
+            boolean isSession = DUUIRequestHelper.validateSession(authorization);
+            boolean isApiKey = DUUIRequestHelper.validateApiKey(authorization);
+            log.info(
+                "WebSocket auth candidate process_id={} auth_source={} token_prefix={} token_len={} is_session={} is_api_key={}",
+                processId,
+                authSource,
+                authorization.length() >= 8 ? authorization.substring(0, 8) : authorization,
+                authorization.length(),
+                isSession,
+                isApiKey
+            );
+
             Document user = DUUIRequestHelper.authenticate(authorization);
             if (DUUIRequestHelper.isNullOrEmpty(user)) {
                 log.warn("WebSocket connect denied: unauthorized process_id={} auth_source={}", processId, authSource);
@@ -135,7 +148,7 @@ public class ProcessEventWebSocketHandler {
                 .addSession(processId, session);
             log.info("WebSocket connected for process_id={} auth_source={}", processId, authSource);
 
-            sendEventBacklog(session, processId);
+            sendInitSnapshot(session, processId);
         } catch (Exception exception) {
             log.error("Error during WebSocket connect", exception);
             try {
@@ -172,18 +185,24 @@ public class ProcessEventWebSocketHandler {
         return null;
     }
 
-    private void sendEventBacklog(Session session, String processId) {
+    private void sendInitSnapshot(Session session, String processId) {
         try {
-            List<Document> events = DUUIEventController.findManyByProcess(processId);
-            if (events == null || events.isEmpty()) return;
-            for (Document event : events) {
-                if (session == null || !session.isOpen()) {
-                    return;
-                }
-                session.getRemote().sendStringByFuture(event.toJson());
-            }
+            Document process = DUUIProcessController.findOneById(processId);
+            if (process == null) return;
+
+            List<Document> documents = DUUIDocumentController.findStatesByProcess(processId);
+
+            Document init = new Document("kind", "init")
+                .append("process_id", processId)
+                .append("process", process)
+                .append("documents", documents)
+                .append("server_time", System.currentTimeMillis());
+
+            if (session == null || !session.isOpen()) return;
+            log.info("WebSocket sending init snapshot process_id={} documents={}", processId, documents.size());
+            session.getRemote().sendStringByFuture(init.toJson());
         } catch (Exception exception) {
-            log.warn("Failed to send WebSocket event backlog for process_id={}", processId, exception);
+            log.warn("Failed to send WebSocket init snapshot for process_id={}", processId, exception);
         }
     }
 

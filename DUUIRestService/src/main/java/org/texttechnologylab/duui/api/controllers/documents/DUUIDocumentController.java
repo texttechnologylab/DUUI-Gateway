@@ -5,17 +5,20 @@ import org.texttechnologylab.duui.api.routes.DUUIRequestHelper;
 import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.storage.MongoDBFilters;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.*;
 import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import org.texttechnologylab.duui.analysis.document.Provider;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.types.ObjectId;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.DUUIDocument;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.texttechnologylab.duui.api.routes.DUUIRequestHelper.*;
@@ -219,5 +222,45 @@ public class DUUIDocumentController {
                     new UpdateOptions().upsert(true)
                 );
         }
+    }
+
+    public static UpdateResult upsertState(String processId, String documentPath, Document state) {
+        if (processId == null || processId.isBlank() || documentPath == null || documentPath.isBlank()) return null;
+        if (state == null || state.isEmpty()) return null;
+
+        List<Bson> sets = new ArrayList<>();
+        sets.add(Updates.set("process_id", processId));
+
+        for (Map.Entry<String, Object> e : state.entrySet()) {
+            String key = e.getKey();
+            if (key == null || key.isBlank()) continue;
+            sets.add(Updates.set(key, e.getValue()));
+        }
+
+        return DUUIMongoDBStorage
+            .Documents()
+            .updateOne(
+                Filters.and(
+                    Filters.eq("process_id", processId),
+                    Filters.eq("path", documentPath)
+                ),
+                Updates.combine(sets),
+                new UpdateOptions().upsert(true)
+            );
+    }
+
+    /**
+     * Returns minimal document state for live init snapshot.
+     */
+    public static List<Document> findStatesByProcess(String processId) {
+        if (processId == null || processId.isBlank()) return new ArrayList<>();
+        FindIterable<Document> docs = DUUIMongoDBStorage
+            .Documents()
+            .find(Filters.eq("process_id", processId))
+            .projection(Projections.exclude("events"));
+
+        List<Document> out = docs.into(new ArrayList<>());
+        out.forEach(DUUIMongoDBStorage::convertObjectIdToString);
+        return out;
     }
 }

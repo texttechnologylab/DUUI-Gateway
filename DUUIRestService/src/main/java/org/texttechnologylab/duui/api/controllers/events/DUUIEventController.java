@@ -8,7 +8,8 @@ import com.mongodb.client.model.Sorts;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIContext;
-import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIContext.*;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIContext.Payload;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIContext.PayloadKind;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.api.controllers.documents.DUUIDocumentController;
@@ -17,7 +18,9 @@ import org.texttechnologylab.duui.api.storage.DUUIMongoDBStorage;
 import org.texttechnologylab.duui.api.websocket.ProcessWebSocketRegistry;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -85,6 +88,27 @@ public class DUUIEventController {
         return events;
     }
 
+    public static Document insert(String processId, DUUIEvent event) {
+        if (processId == null || processId.isBlank() || event == null) return null;
+        Document stored = serialize(processId, event);
+        
+        try {
+            DUUIMongoDBStorage
+                .Events()
+                .updateOne(
+                    Filters.eq("event.event_id", stored.get("event", Document.class).getString("event_id")),
+                    new Document("$setOnInsert", stored),
+                    new com.mongodb.client.model.UpdateOptions().upsert(true)
+                );
+        } catch (Exception ignored) {
+        }
+
+        return new Document("kind", "event")
+            .append("process_id", processId)
+            .append("timestamp", stored.getLong("timestamp"))
+            .append("event", stored.get("event", Document.class));
+    }
+
     /**
      * Insert one or more events that reference a process.
      *
@@ -92,132 +116,178 @@ public class DUUIEventController {
      * @param events    The list of events to insert.
      */
     public static void insertMany(String processId, List<DUUIEvent> events) {
-
-        if (events.isEmpty()) return;
-
-        Function<DUUIEvent, Document> serializeEvent = (DUUIEvent event) -> {
-            Document eventDoc = new Document("_id", processId + "_" + getEventId(event))
-            
-                .append("process_id", processId)
-                .append("sender", event.getSender() != null ? event.getSender().name() : null)
-                .append("message", event.getMessage())
-                .append("level", event.getDebugLevel().name())
-                .append("context", merge(
-                    serialize(event.getContext()),
-                        serialize(event.getContext().payloadRecord()))
-                            .append("kind", event.getContext().getClass().getSimpleName())
-                            .append("event_id", processId + "_" + getEventId(event))
-                );
-            
-            return new Document()
-                .append("timestamp", event.getTimestamp())
-                .append("event", eventDoc);
-        }; 
+        if (events == null || events.isEmpty() || processId == null || processId.isBlank()) return;
 
         List<DUUIEvent> inserts = new ArrayList<>(events);
-
-        // Prepare MongoDB documents
-
-        // Insert into MongoDB
-        DUUIMongoDBStorage
-            .Events()
-            .insertMany(
-                events
-                    .stream()
-                    .map(serializeEvent)
-                    .collect(Collectors.toList())
-        );
-
-        // Broadcast to WebSocket subscribers as DUUIEvent-shaped JSON
         ProcessWebSocketRegistry registry = ProcessWebSocketRegistry.getInstance();
-        inserts.stream().map(serializeEvent).forEach(e -> registry.broadcast(processId, e.toJson()));
-
+        for (DUUIEvent e : inserts) {
+            Document msg = insert(processId, e);
+            if (msg != null) {
+                registry.broadcast(processId, msg.toJson());
+            }
+        }
         events.removeAll(inserts);
     }
 
-    private static String getEventId(DUUIEvent event) {
-        if (event == null) return null;
-        return event.getClass().getName() + "@" + System.identityHashCode(event);
+    private static String eventId(String processId, DUUIEvent event) {
+        if (processId == null || processId.isBlank() || event == null) return null;
+        return processId + "_" + event.getId();
     }
 
     private static Document serialize(Payload payload) {
-        return switch (payload) {
-            case Payload(DUUIStatus status, String content, PayloadKind kind, String thread) 
-                when kind != PayloadKind.NONE -> 
-                    new Document("payload", 
-                            new Document("content", content)
-                                .append("type", kind.name()))
-                        .append("status", status.value())
-                        .append("thread", thread);
-            case Payload(DUUIStatus status, String content, PayloadKind kind, String thread) -> 
-                    new Document()
-                        .append("status", status.value())
-                        .append("thread", thread);
-            default -> new Document(); 
+        if (payload == null) return new Document();
+        Document out = new Document()
+            .append("status", payload.status() == null ? DUUIStatus.UNKNOWN.value() : payload.status().value())
+            .append("thread", payload.thread());
+        if (payload.kind() != null && payload.kind() != PayloadKind.NONE) {
+            out.append("payload",
+                new Document("content", payload.content())
+                    .append("type", payload.kind().name()));
+        };
+        return out;
+    }
+
+    private static Document serialize(DUUIContext context, String eventId) {
+        if (context == null) return new Document();
+
+        Document base = serialize(context.payloadRecord())
+            .append("event_id", eventId)
+            .append("kind", context.getClass().getSimpleName());
+
+        return switch (context) {
+            case DUUIContext.DefaultContext _ctx ->
+                base;
+            case DUUIContext.ComposerContext ctx ->
+                base
+                    .append("runKey", ctx.runKey())
+                    .append("pipeline_status",
+                        ctx.pipelineStatus().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                java.util.Map.Entry::getKey,
+                                e -> e.getValue() == null ? DUUIStatus.UNKNOWN.value() : DUUIRequestHelper.toTitleCase(e.getValue().name())
+                            )))
+                    .append("documentCount", ctx.documentCount());
+            case DUUIContext.WorkerContext ctx ->
+                base
+                    .append("name", ctx.name())
+                    .append("activeWorkers", ctx.activeWorkers().get())
+                    .append("composer", serialize(ctx.composer(), eventId));
+            case DUUIContext.DriverContext ctx ->
+                base.append("driver", ctx.driverName());
+            case DUUIContext.DocumentContext ctx -> {
+                var doc = ctx.document();
+                yield base
+                    .append("path", doc.getPath())
+                    .append("name", doc.getName())
+                    .append("size", doc.getSize())
+                    .append("progress", doc.getProgess().get())
+                    .append("error", doc.getError())
+                    .append("is_finished", doc.isFinished())
+                    .append("duration_decode", doc.getDurationDecode())
+                    .append("duration_deserialize", doc.getDurationDeserialize())
+                    .append("duration_wait", doc.getDurationWait())
+                    .append("duration_process", doc.getDurationProcess())
+                    .append("started_at", doc.getStartedAt())
+                    .append("finished_at", doc.getFinishedAt());
+            }
+            case DUUIContext.DocumentProcessContext ctx ->
+                base
+                    .append("document", serialize(ctx.document(), eventId))
+                    .append("composer", serialize(ctx.composer(), eventId));
+            case DUUIContext.ComponentContext ctx ->
+                base
+                    .append("component", ctx.componentId())
+                    .append("name", ctx.componentName())
+                    .append("driver", ctx.driverName())
+                    .append("instance_ids", ctx.instanceIds());
+            case DUUIContext.InstantiatedComponentContext ctx ->
+                base
+                    .append("component", serialize(ctx.component(), eventId))
+                    .append("instance_id", ctx.instanceId())
+                    .append("endpoint", ctx.endpoint());
+            case DUUIContext.DocumentComponentProcessContext ctx ->
+                base
+                    .append("document", serialize(ctx.document(), eventId))
+                    .append("instantiated_component", serialize(ctx.component(), eventId));
+            case DUUIContext.ReaderContext ctx ->
+                base
+                    .append("total", ctx.reader().getInitial())
+                    .append("skipped", ctx.reader().getSkipped())
+                    .append("read", ctx.reader().getDone())
+                    .append("remaining", ctx.reader().getSize())
+                    .append("used_bytes", ctx.reader().getCurrentMemorySize())
+                    .append("total_bytes", ctx.reader().getMaximumMemory());
+            case DUUIContext.ReaderDocumentContext ctx ->
+                base
+                    .append("reader", serialize(ctx.reader(), eventId))
+                    .append("document", serialize(ctx.document(), eventId));
         };
     }
 
-    private static Document serialize(DUUIContext context) {
-        return switch (context) {
-            case ComposerContext(var runKey, var pipelineStatus, var progress, var total, var payload) ->
-                new Document()
-                    .append("runKey", runKey)
-                    .append("pipeline_status", 
-                    pipelineStatus.entrySet().stream()
-                        .collect(Collectors.toMap(
-                            java.util.Map.Entry::getKey, 
-                            e -> DUUIRequestHelper.toTitleCase(e.getValue().name())))
-                        )
-                    .append("progress", progress.get())
-                    .append("total", total);
-            case DriverContext(var driver, var payload) ->
-                new Document("driver", driver);
-            case WorkerContext(var composer, var name, var activeWorkers, var payload) ->
-                new Document("composer", composer)
-                .append("name", name)
-                .append("activeWorkers", activeWorkers.get());
-            case DocumentContext(var document, var payloadRecord) ->
-                new Document()
-                .append("path", document.getPath())
-                .append("name", document.getName())
-                .append("size", document.getSize())
-                .append("progress", document.getProgess().get())
-                .append("error", document.getError())
-                .append("is_finished", document.isFinished())
-                .append("duration_decode", document.getDurationDecode())
-                .append("duration_deserialize", document.getDurationDeserialize())
-                .append("duration_wait", document.getDurationWait())
-                .append("duration_process", document.getDurationProcess())
-                .append("started_at", document.getStartedAt())
-                .append("finished_at", document.getFinishedAt());
-            case DocumentProcessContext(var document, var composer, var payloadRecord) ->
-                new Document("document", document)
-                    .append("composer", composer);
-            case ComponentContext(var uuid, var name, var driver, var instanceIds, var payload) ->
-                new Document()
-                    .append("component", uuid)
-                    .append("name", name)
-                    .append("driver", driver)
-                    .append("instance_ids", instanceIds);
-            case InstantiatedComponentContext(var component, var instanceId, var endpoint, var payload) ->
-                new Document("component",component)
-                    .append("instance_id", instanceId)
-                    .append("endpoint", endpoint);
-            case DocumentComponentProcessContext(var document, var component, var payload) ->
-                new Document("document", document)
-                    .append("instantiated_component", component);
-            case ReaderContext(var reader, var payload) ->
-                new Document()
-                    .append("total", reader.getInitial())
-                    .append("skipped", reader.getSkipped())
-                    .append("read", reader.getDone())
-                    .append("remaining", reader.getSize())
-                    .append("used_bytes", reader.getCurrentMemorySize())
-                    .append("total_bytes", reader.getMaximumMemory())
-                ;
-            default ->
-                new Document();
-        };
+    private static Document serialize(String processId, DUUIEvent event) {
+        String id = eventId(processId, event);
+        List<String> scopeKeys = deriveScopeKeys(processId, event.getContext());
+
+        Document eventDoc = new Document("event_id", id)
+            .append("process_id", processId)
+            .append("scope_keys", scopeKeys)
+            .append("sender", event.getSender() != null ? event.getSender().name() : null)
+            .append("message", event.getMessage())
+            .append("level", event.getDebugLevel().name())
+            .append("context", serialize(event.getContext(), id));
+
+        return new Document()
+            .append("timestamp", event.getTimestamp())
+            .append("event", eventDoc);
+    }
+
+    private static List<String> deriveScopeKeys(String processId, DUUIContext ctx) {
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        if (processId != null && !processId.isBlank()) keys.add("process:" + processId);
+        addContextKeys(keys, ctx);
+        return List.copyOf(keys);
+    }
+
+    private static void addContextKeys(Set<String> out, DUUIContext ctx) {
+        if (ctx == null) return;
+        switch (ctx) {
+            case DUUIContext.ComposerContext c -> {
+                if (c.runKey() != null && !c.runKey().isBlank()) out.add("run:" + c.runKey());
+            }
+            case DUUIContext.WorkerContext w -> {
+                if (w.name() != null && !w.name().isBlank()) out.add("worker:" + w.name());
+                addContextKeys(out, w.composer());
+            }
+            case DUUIContext.DriverContext d -> {
+                if (d.driverName() != null && !d.driverName().isBlank()) out.add("driver:" + d.driverName());
+            }
+            case DUUIContext.ComponentContext c -> {
+                if (c.componentId() != null && !c.componentId().isBlank()) out.add("component:" + c.componentId());
+                if (c.driverName() != null && !c.driverName().isBlank()) out.add("driver:" + c.driverName());
+            }
+            case DUUIContext.InstantiatedComponentContext i -> {
+                if (i.instanceId() != null && !i.instanceId().isBlank()) out.add("instance:" + i.instanceId());
+                addContextKeys(out, i.component());
+            }
+            case DUUIContext.DocumentContext d -> {
+                String path = d.document() != null ? d.document().getPath() : null;
+                if (path != null && !path.isBlank()) out.add("document:" + path);
+            }
+            case DUUIContext.DocumentProcessContext dp -> {
+                addContextKeys(out, dp.document());
+                addContextKeys(out, dp.composer());
+            }
+            case DUUIContext.DocumentComponentProcessContext dcp -> {
+                addContextKeys(out, dcp.document());
+                addContextKeys(out, dcp.component());
+            }
+            case DUUIContext.ReaderDocumentContext rd -> {
+                addContextKeys(out, rd.reader());
+                addContextKeys(out, rd.document());
+            }
+            default -> {
+            }
+        }
     }
 
     private static Document merge(Document... docs) {

@@ -8,6 +8,9 @@ ENV API_URL=${API_URL}
 ENV DBX_URL=${DBX_URL}
 ENV PUBLIC_VERIFICATION_REQUIRED=${PUBLIC_VERIFICATION_REQUIRED}
 
+# build deps for native modules (e.g. bcrypt)
+RUN apk add --no-cache python3 make g++
+
 RUN mkdir /app
 
 COPY . /app

@@ -1,11 +1,11 @@
-import type { WsEventEnvelope } from './eventDispatcher'
+import type { ProcessMessage } from './processMessages'
 
 export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error' | 'reconnecting'
 
-type WebSocketMessage = WsEventEnvelope
+type WebSocketMessage = ProcessMessage
 
 type ProcessEventHandlers = {
-	onEvent?: (message: WsEventEnvelope) => void
+	onMessage?: (message: ProcessMessage) => void
 	onStatus?: (status: WebSocketStatus) => void
 }
 
@@ -30,29 +30,44 @@ function notifyStatus(conn: Connection, status: WebSocketStatus) {
 }
 
 async function resolveWsUrl(processId: string): Promise<string> {
+	console.debug('[process-ws] resolving WS URL', processId)
 	const response = await fetch(`/api/processes/events?process_id=${encodeURIComponent(processId)}`, {
 		method: 'GET'
 	})
 	if (!response.ok) {
+		let body = ''
+		try {
+			body = await response.text()
+		} catch {
+			// ignore
+		}
+		console.debug('[process-ws] WS URL resolve failed', processId, response.status, body)
 		throw new Error(`Failed to resolve WebSocket URL for process ${processId}`)
 	}
 	const { url } = (await response.json()) as { url: string }
+	console.debug('[process-ws] resolved WS URL', processId, url)
 	return url
 }
 
 function parseMessage(data: string): WebSocketMessage | null {
 	try {
-		const parsed = JSON.parse(data)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const parsed: any = JSON.parse(data)
 		if (!parsed || typeof parsed !== 'object') return null
+		if (typeof parsed.kind !== 'string') return null
 		return parsed as WebSocketMessage
 	} catch {
+		console.debug('[process-ws] failed to parse message', data)
 		return null
 	}
 }
 
 function dispatchMessage(conn: Connection, message: WebSocketMessage) {
+	// Debug: confirm WS messages arrive and are shaped as expected.
+	// Keep as console.debug to avoid noisy prod logs.
+	console.debug('[process-ws]', conn.processId, message.kind, message)
 	for (const subscriber of conn.subscribers) {
-		subscriber.onEvent?.(message)
+		subscriber.onMessage?.(message)
 	}
 }
 
@@ -94,17 +109,20 @@ function ensureConnected(conn: Connection) {
 				return
 			}
 
+			console.debug('[process-ws] connecting', conn.processId, url)
 			const ws = new WebSocket(url)
 			conn.ws = ws
 
 			ws.onopen = () => {
 				conn.connecting = false
 				conn.reconnectAttempts = 0
+				console.debug('[process-ws] socket open', conn.processId)
 				notifyStatus(conn, 'open')
 			}
 
 			ws.onmessage = (event) => {
 				if (typeof event.data !== 'string') return
+				console.debug('[process-ws] raw message', conn.processId, event.data)
 				const message = parseMessage(event.data)
 				if (message) {
 					dispatchMessage(conn, message)
@@ -112,13 +130,15 @@ function ensureConnected(conn: Connection) {
 			}
 
 			ws.onerror = () => {
+				console.debug('[process-ws] socket error', conn.processId)
 				notifyStatus(conn, 'error')
 				if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
 					ws.close()
 				}
 			}
 
-			ws.onclose = () => {
+			ws.onclose = (event) => {
+				console.debug('[process-ws] socket closed', conn.processId, event.code, event.reason)
 				conn.ws = null
 				conn.connecting = false
 				notifyStatus(conn, 'closed')
@@ -126,6 +146,7 @@ function ensureConnected(conn: Connection) {
 			}
 		})
 		.catch(() => {
+			console.debug('[process-ws] failed to resolve WS URL', conn.processId)
 			conn.connecting = false
 			scheduleReconnect(conn)
 		})

@@ -11,7 +11,7 @@
 	import {errorToast, getStatusIcon, infoToast} from '$lib/duui/utils/ui'
 	import { isDarkModeStore, userSession } from '$lib/store'
 	import { subscribeProcessEvents } from '$lib/ws/processEvents'
-	import type { WsEventEnvelope } from '$lib/ws/eventDispatcher'
+	import type { DUUIContext, TimelineEntry } from '$lib/ws/eventTypes'
 	import {
 		faChevronDown,
 		faClose,
@@ -56,7 +56,7 @@
 	let downloading: boolean = false
 
 	let unsubscribe: (() => void) | null = null
-	let documentEvents: WsEventEnvelope[] = []
+	let documentEvents: TimelineEntry[] = []
 
 	function getOutputName(
 		name: string,
@@ -343,17 +343,18 @@
 		}
 	}
 
-		function matchesDocumentEvent(envelope: WsEventEnvelope, path: string): boolean {
-			const ctx: any = envelope?.event?.context
+		function matchesDocumentEvent(ctx: DUUIContext, path: string): boolean {
 			if (!ctx) return false
 
 			switch (ctx.kind) {
 				case 'DocumentContext':
 					return ctx.path === path
 				case 'DocumentProcessContext':
-					return ctx.document?.path === path
+					return ctx.document.path === path
 				case 'DocumentComponentProcessContext':
-					return ctx.document?.document?.path === path
+					return ctx.document.document.path === path
+				case 'ReaderDocumentContext':
+					return ctx.document.path === path
 				default:
 					return false
 			}
@@ -372,14 +373,32 @@
 
 		loadApexCharts()
 
-			// Live events WebSocket – URL resolved via API layer
+		documentEvents = _document.events ?? []
+
+		// Live events WebSocket – URL resolved via API layer
+		if (!process.is_finished) {
 			unsubscribe = subscribeProcessEvents(process.oid, {
-				onEvent: (data: WsEventEnvelope) => {
-					if (matchesDocumentEvent(data, _document.path)) {
-						documentEvents = [...documentEvents, data]
+				onMessage: (msg) => {
+					if (msg.kind === 'update') {
+						const terminal = msg.updates.some(
+							(u) => u.kind === 'ProcessUpdate' && Boolean(u.process.is_terminal)
+						)
+						if (terminal) {
+							unsubscribe?.()
+							unsubscribe = null
+						}
+						return
+					}
+
+					if (msg.kind === 'event') {
+						const ctx = msg.event.context
+						if (matchesDocumentEvent(ctx, _document.path)) {
+							documentEvents = [...documentEvents, { timestamp: msg.timestamp, event: msg.event }]
+						}
 					}
 				}
 			})
+		}
 
 		if (hasOutputStorage) {
 			preprocessDocument()

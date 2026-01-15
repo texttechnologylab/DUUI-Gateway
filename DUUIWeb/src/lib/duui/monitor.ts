@@ -1,6 +1,6 @@
-import type { WsEventEnvelope } from '$lib/ws/eventDispatcher'
+import type { TimelineEntry } from '$lib/ws/eventTypes'
 
-export type DUUIEvent = WsEventEnvelope
+export type DUUIEvent = TimelineEntry
 
 export const statusNames: string[] = [
 	'Active',

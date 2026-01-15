@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { IO, type DUUIDocument } from '$lib/duui/io.js'
-	import { Status, isActive } from '$lib/duui/monitor.js'
+	import { Status } from '$lib/duui/monitor.js'
 	import { processToSeachParams } from '$lib/duui/process.js'
 	import { equals, formatFileSize, snakeToTitleCase } from '$lib/duui/utils/text'
 	import { getDuration } from '$lib/duui/utils/time'
@@ -44,21 +44,13 @@
 		subscribeProcessEvents,
 		type WebSocketStatus
 	} from '$lib/ws/processEvents'
+	import { createLiveProcessStore } from '$lib/ws/liveProcess'
 	import { computeProcessTotals } from '$lib/ws/processTotals'
 	import { onDestroy, onMount } from 'svelte'
 	import Fa from 'svelte-fa'
-	import { writable, type Writable } from 'svelte/store'
+	import { get } from 'svelte/store'
 	import DocumentRow from './DocumentRow.svelte'
-	import {
-		createEventDispatcher,
-		type ComposerContext,
-		type DocumentContext,
-		type ReaderContext,
-		type DriverContext,
-		type WorkerContext,
-		type ComponentContext,
-		type InstantiatedComponentContext
-	} from '$lib/ws/eventDispatcher'
+	import type { DocumentRowState } from './DocumentRow.svelte'
 
 	export let data
 	const toastStore = getToastStore()
@@ -66,6 +58,7 @@
 	let { pipeline, process } = data
 	let documents: DUUIDocument[] = []
 	let count: number = 0
+	let liveDocuments: DUUIDocument[] = []
 
 	let tableHeader: string[] = ['Name', 'Progress', 'Status', 'File Size', 'Duration']
 
@@ -96,30 +89,51 @@
 
 	let unsubscribe: (() => void) | null = null
 	let documentsTotal = process.document_names?.length || 0
-	const composerContextStore: Writable<ComposerContext | null> = writable(null)
-	const readerContextStore: Writable<ReaderContext | null> = writable(null)
-	const driverContextStores = new Map<string, Writable<DriverContext>>()
-	const workerContextStores = new Map<string, Writable<WorkerContext>>()
-	const documentContextStores = new Map<string, Writable<DocumentContext>>()
-	const componentContextStores = new Map<string, Writable<ComponentContext>>()
-	const componentInstanceContextStores = new Map<string, Writable<InstantiatedComponentContext>>()
 
-	const dispatcher = createEventDispatcher({
-		composerContextStore,
-		driverContextStores,
-		workerContextStores,
-		documentContextStores,
-		componentContextStores,
-		componentInstanceContextStores,
-		readerContextStore
-	})
+	const live = createLiveProcessStore(process)
+	const processStore = live.process
+	const liveDocumentsStore = live.documents
 
-	$: processStatus = $composerContextStore?.status ?? process.status
-	$: processProgress = $composerContextStore?.progress ?? process.progress
-	$: processPipelineStatus = $composerContextStore?.pipeline_status ?? process.pipeline_status
+	$: process = $processStore
+	$: liveDocuments = $liveDocumentsStore
+
+	const toRowStateFromLive = (doc: DUUIDocument): DocumentRowState => {
+		return {
+			path: doc.path,
+			name: doc.name,
+			progress: doc.progress,
+			status: doc.status,
+			size: doc.size,
+			started_at: doc.started_at,
+			finished_at: doc.finished_at
+		}
+	}
+
+	const toRowStateFromRest = (doc: DUUIDocument): DocumentRowState => {
+		return {
+			path: doc.path,
+			name: doc.name,
+			progress: doc.progress,
+			status: doc.status,
+			size: doc.size,
+			started_at: doc.started_at,
+			finished_at: doc.finished_at
+		}
+	}
+
+	$: activeTableRows = liveDocuments.map(toRowStateFromLive)
+	$: finishedTableRows = documents.map(toRowStateFromRest)
+	$: tableRows = processIsFinished ? finishedTableRows : activeTableRows
+
+	$: if (!processIsFinished) {
+		paginationSettings.total = tableRows.length
+	}
+
+	$: processStatus = $processStore.status
+	$: processProgress = $processStore.progress
 	$: processIsFinished =
 		processStatus === Status.Completed || processStatus === Status.Cancelled || processStatus === Status.Failed
-	$: documentsTotal = $readerContextStore?.total ?? documentsTotal
+	$: documentsTotal = $processStore.total ?? documentsTotal
 
 	$: totals = computeProcessTotals(
 		{ ...process, status: processStatus, progress: processProgress, is_finished: processIsFinished },
@@ -128,23 +142,46 @@
 	)
 
 	onMount(() => {
-		// Initial document load
-		updateTable()
+		console.debug('[process-page] mount', process.oid, { status: processStatus, isFinished: processIsFinished })
 
-		// Live process updates via WebSocket
-		unsubscribe = subscribeProcessEvents(process.oid, {
-			onEvent: (msg) => {
-				dispatcher.dispatchEvent(msg)
-				if (!isActive(processStatus)) {
-					updateTable()
+		// REST is only used once the process is finished.
+		if (processIsFinished) updateTable()
+
+		if (!processIsFinished) {
+			// Live process updates via WebSocket
+			console.debug('[process-page] subscribing websocket', process.oid)
+			unsubscribe = subscribeProcessEvents(process.oid, {
+				onMessage: (msg) => {
+					console.debug('[process-page] ws message', process.oid, msg.kind, msg)
+					live.apply(msg)
+
+					if (msg.kind === 'event') {
+						const sender = msg.event.sender ? `${msg.event.sender}: ` : ''
+						const text = `${sender}${msg.event.message}`
+						toastStore.trigger(infoToast(text))
+					}
+
+					const current = get(processStore)
+					const finished =
+						current.is_terminal ||
+						current.is_finished ||
+						current.status === Status.Completed ||
+						current.status === Status.Cancelled ||
+						current.status === Status.Failed
+					if (finished) {
+						console.debug('[process-page] ws terminal => unsubscribe', process.oid, current)
+						unsubscribe?.()
+						unsubscribe = null
+					}
+				},
+				onStatus: (status: WebSocketStatus) => {
+					console.debug('[process-page] ws status', process.oid, status)
+					if (status === 'closed' && processIsFinished) {
+						updateTable()
+					}
 				}
-			},
-			onStatus: (status: WebSocketStatus) => {
-				if (status === 'closed' && processIsFinished) {
-					updateTable()
-				}
-			}
-		})
+			})
+		}
 	})
 
 	onDestroy(() => {
@@ -199,6 +236,7 @@
 	}
 
 	const updateTable = async () => {
+		if (!processIsFinished) return;
 		const lastFilter: string | undefined = filter.at(-1)
 
 		if (equals(lastFilter || '', Status.Any) || filter.length === 0) {
@@ -246,6 +284,10 @@
 		}
 
 		drawerStore.open(drawer)
+	}
+
+	const showDocumentModalFromState = (document: DUUIDocument) => {
+		showDocumentModal(document)
 	}
 
 	const sortTable = (index: number) => {
@@ -410,12 +452,19 @@
 						</div>
 
 						<div class="overflow-hidden flex flex-col">
-							{#each documents as document}
+							{#each tableRows as row}
 								<DocumentRow
-									document={document}
-									ctxStore={documentContextStores.get(document.path)}
+									state={row}
 									maxProgress={maxProgress}
-									onClick={() => showDocumentModal(document)}
+									onClick={() => {
+										if (processIsFinished) {
+											const doc = documents.find((d) => d.path === row.path)
+											if (doc) showDocumentModal(doc)
+											return
+										}
+										const doc = liveDocuments.find((d) => d.path === row.path)
+										if (doc) showDocumentModalFromState(doc)
+									}}
 								/>
 							{/each}
 						</div>

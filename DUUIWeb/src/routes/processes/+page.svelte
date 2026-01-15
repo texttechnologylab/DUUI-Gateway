@@ -456,11 +456,11 @@ import {
 	}
 
 	$: isInputError  =
-		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.input.provider as IO) &&
+		![IO.File, IO.Text, IO.None, IO.LocalDrive, IO.Prompt].includes($processSettingsStore.input.provider as IO) &&
 		!hasConnections($processSettingsStore.input.provider.toLowerCase());
 
 	$: isOutputError =
-		![IO.File, IO.Text, IO.None, IO.LocalDrive].includes($processSettingsStore.output.provider as IO) &&
+		![IO.File, IO.Text, IO.None, IO.LocalDrive, IO.Prompt].includes($processSettingsStore.output.provider as IO) &&
 		!hasConnections($processSettingsStore.output.provider.toLowerCase());
 
 	$: isFileUploadError = 

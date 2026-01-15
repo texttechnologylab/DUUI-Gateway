@@ -5,8 +5,33 @@
 import { equals } from '$lib/duui/utils/text'
 import type { DUUIEvent } from './monitor'
 
+export type DocumentPayloadKind =
+	| 'STACKTRACE'
+	| 'LUA'
+	| 'TYPESYSTEM'
+	| 'RESPONSE'
+	| 'LOGS'
+	| 'GENERIC'
+	| 'METRIC_MILLIS'
+	| 'NONE'
+
+export type DocumentPayload = {
+	kind: DocumentPayloadKind
+	content: string
+}
+
+export type DUUIDocumentComponentState = {
+	is_segmented: boolean
+	payload: DocumentPayload
+	duration_wait: number
+	duration_serialize: number
+	duration_process: number
+	duration_deserialize: number
+	duration_lua_process: number
+}
+
 export interface DUUIDocument {
-	oid: string
+	oid?: string
 	name: string
 	path: string
 	status: string
@@ -17,14 +42,19 @@ export interface DUUIDocument {
 	duration_deserialize: number
 	duration_wait: number
 	duration_process: number
-	duration: number
+	progress_upload?: number
+	progress_download?: number
 	size: number
 	started_at: number
 	finished_at: number
-	annotations: {
-		[key: string]: number
-	}
-	events: DUUIEvent[]
+	last_updated_at?: number
+	last_event_id?: number
+	thread?: string
+	status_durations?: Record<string, number>
+	components?: Record<string, DUUIDocumentComponentState>
+	annotations?: Record<string, number>
+	annotations_new?: Record<string, { state: 'BASELINE' | 'NEW' | 'MODIFIED'; count: number }>
+	events?: DUUIEvent[]
 }
 
 export type DUUIDocumentProvider = {

@@ -47,6 +47,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -245,6 +246,37 @@ public class DUUIProcessController {
                 ),
                 Updates.set(key, value)
             );
+    }
+
+    /**
+     * Sets a value at a nested path on the process document.
+     */
+    public static UpdateResult upsertPath(String id, String key, Object value) {
+        if (id == null || id.isBlank() || key == null || key.isBlank()) return null;
+        return DUUIMongoDBStorage
+            .Processses()
+            .updateOne(
+                Filters.eq(new ObjectId(id)),
+                Updates.set(key, value),
+                new UpdateOptions().upsert(true)
+            );
+    }
+
+    /**
+     * Applies a "$set" update for all fields contained in {@code fields}.
+     */
+    public static UpdateResult updateFields(String id, Document fields) {
+        if (id == null || id.isBlank() || fields == null || fields.isEmpty()) return null;
+        List<Bson> sets = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
+            String key = entry.getKey();
+            if (key == null || key.isBlank()) continue;
+            sets.add(Updates.set(key, entry.getValue()));
+        }
+        if (sets.isEmpty()) return null;
+        return DUUIMongoDBStorage
+            .Processses()
+            .updateOne(Filters.eq(new ObjectId(id)), Updates.combine(sets));
     }
 
     /**

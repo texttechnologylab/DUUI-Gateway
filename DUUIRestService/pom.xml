@@ -422,12 +422,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.texttechnologylab</groupId>
-            <!-- <groupId>com.github.dterefe</groupId> -->
+            <!-- <groupId>org.texttechnologylab</groupId> -->
+            <groupId>com.github.dterefe</groupId>
             <!-- <groupId>com.github.texttechnologylab</groupId> -->
             <artifactId>DockerUnifiedUIMAInterface</artifactId>
-            <version>1.5.3</version>
+            <!-- <version>1.5.3</version> -->
             <!-- <version>${duui.version}</version> -->
+            <version>c75cc33d3c33fa395a6a222de1f2cfe19498b1e0</version>
         </dependency>
 
         <dependency>

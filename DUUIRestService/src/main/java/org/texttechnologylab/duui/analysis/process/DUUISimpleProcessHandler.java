@@ -9,13 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.Vector;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
@@ -29,6 +28,7 @@ import org.texttechnologylab.DockerUnifiedUIMAInterface.document_handler.IDUUIFo
 import org.texttechnologylab.DockerUnifiedUIMAInterface.io.reader.DUUIDocumentReader;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.lua.DUUILuaContext;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIEvent;
+import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIProcess;
 import org.texttechnologylab.DockerUnifiedUIMAInterface.monitoring.DUUIStatus;
 import org.texttechnologylab.duui.analysis.document.DUUIDocumentProvider;
 import org.texttechnologylab.duui.analysis.document.Provider;
@@ -39,6 +39,7 @@ import org.texttechnologylab.duui.api.controllers.pipelines.DUUIPipelineControll
 import org.texttechnologylab.duui.api.controllers.processes.DUUIProcessController;
 import org.texttechnologylab.duui.api.controllers.users.DUUIUserController;
 import org.texttechnologylab.duui.api.metrics.providers.DUUIProcessMetrics;
+import org.texttechnologylab.duui.api.websocket.ProcessWebSocketRegistry;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.files.WriteMode;
@@ -52,11 +53,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
  * @author Cedric Borkowski
  */
 public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHandler {
-
-    /**
-     * The scheduled future for the updater task.
-     */
-    private final ScheduledFuture<?> updater;
 
     /**
      * The composer for handling the process.
@@ -147,7 +143,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
         composer = new DUUIComposer()
             .withSkipVerification(true)
-            .withDebugLevel(DUUIComposer.DebugLevel.DEBUG)
+            .withDebugLevel(DUUIComposer.DebugLevel.NONE)
             .withIgnoreErrors(ignoreErrors)
 //            TODO versions of DUUI and API are incompatible
 //            .withStorageBackend(
@@ -155,9 +151,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 //                    DUUIMongoDBStorage.getConnectionURI()))
             .withLuaContext(new DUUILuaContext().withJsonLibrary());
 
-        updater = Executors
-            .newScheduledThreadPool(1)
-            .scheduleAtFixedRate(this::update, 0, 2, TimeUnit.SECONDS);
+        composer.addProcessObserver(this::onProcessUpdates);
 
         shutdownOnExit = true;
         start();
@@ -184,7 +178,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         composer = new DUUIComposer()
             .withInstantiatedPipeline(instantiatedPipeline)
             .withSkipVerification(true)
-            .withDebugLevel(DUUIComposer.DebugLevel.DEBUG)
+            .withDebugLevel(DUUIComposer.DebugLevel.NONE)
             .asService(true)
             .withLuaContext(new DUUILuaContext().withJsonLibrary());
 
@@ -194,9 +188,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         input = new DUUIDocumentProvider(process.get("input", Document.class));
         output = new DUUIDocumentProvider(process.get("output", Document.class));
 
-        updater = Executors
-            .newScheduledThreadPool(1)
-            .scheduleAtFixedRate(this::update, 0, 2, TimeUnit.SECONDS);
+        composer.addProcessObserver(this::onProcessUpdates);
 
         shutdownOnExit = false;
         start();
@@ -392,13 +384,7 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
      */
     @Override
     public void update() {
-        if (composer == null) return;
-
-        DUUIProcessController.updatePipelineStatus(getProcessID(), composer.getPipelineStatus());
-        DUUIProcessController.setProgress(getProcessID(), composer.getProgress());
-        DUUIDocumentController.updateMany(getProcessID(), composer.getDocuments());
-        DUUIEventController.insertMany(getProcessID(), composer.getEvents());
-        DUUIProcessController.insertAnnotations(getProcessID(), composer.getDocuments());
+        // Live state is persisted via DUUIProcess observer (onProcessUpdates).
     }
 
     /**
@@ -516,21 +502,12 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
 
             try {
                 composer.asService(!shutdownOnExit).shutdown();
-                update();
-
             } catch (UnknownHostException | NullPointerException ignored) {
             }
 
             DUUIProcessController.removeProcess(getProcessID());
-            DUUIProcessController.updatePipelineStatus(getProcessID(), composer.getPipelineStatus());
-            DUUIEventController.insertMany(getProcessID(), composer.getEvents());
-            DUUIProcessController.insertAnnotations(getProcessID(), composer.getDocuments());
 
             // TODO: Add a method to the DUUIComposer to remove the installed shutdown hook...
-        }
-
-        if (updater != null) {
-            updater.cancel(true);
         }
 
         try {
@@ -544,6 +521,123 @@ public class DUUISimpleProcessHandler extends Thread implements IDUUIProcessHand
         
         threadCount = 0;
         interrupt();
+    }
+
+    private void onProcessUpdates(DUUIEvent event, List<DUUIProcess.Update> updates) {
+        if (event == null || updates == null || updates.isEmpty()) return;
+
+        String processId = getProcessID();
+        if (processId == null || processId.isBlank()) return;
+
+        Document eventMessage = DUUIEventController.insert(processId, event);
+        if (eventMessage != null) {
+            ProcessWebSocketRegistry.getInstance().broadcast(processId, eventMessage.toJson());
+        }
+
+        applyUpdatesToMongo(processId, updates);
+
+        Document updateMessage = serializeUpdateMessage(processId, updates);
+        ProcessWebSocketRegistry.getInstance().broadcast(processId, updateMessage.toJson());
+    }
+
+    private void applyUpdatesToMongo(String processId, List<DUUIProcess.Update> updates) {
+        for (DUUIProcess.Update u : updates) {
+            if (u == null) continue;
+            switch (u) {
+                case DUUIProcess.Update.ProcessUpdate(var meta, var processDoc) -> {
+                    DUUIProcessController.updateFields(processId, processDoc);
+                }
+                case DUUIProcess.Update.WorkerUpsert(var meta, var workerName, var workerDoc) -> {
+                    DUUIProcessController.upsertPath(
+                        processId,
+                        "process_state.workers." + escapeMongoKey(workerName),
+                        workerDoc
+                    );
+                }
+                case DUUIProcess.Update.DriverUpsert(var meta, var driverName, var driverDoc) -> {
+                    DUUIProcessController.upsertPath(
+                        processId,
+                        "process_state.drivers." + escapeMongoKey(driverName),
+                        driverDoc
+                    );
+                }
+                case DUUIProcess.Update.ComponentUpsert(var meta, var componentId, var componentDoc) -> {
+                    DUUIProcessController.upsertPath(
+                        processId,
+                        "process_state.components." + escapeMongoKey(componentId),
+                        componentDoc
+                    );
+                }
+                case DUUIProcess.Update.InstanceUpsert(var meta, var componentId, var instanceId, var instanceDoc) -> {
+                    DUUIProcessController.upsertPath(
+                        processId,
+                        "process_state.components." + escapeMongoKey(componentId) + ".instances." + escapeMongoKey(instanceId),
+                        instanceDoc
+                    );
+                }
+                case DUUIProcess.Update.DocumentUpsert(var meta, var documentKey, var documentDoc) -> {
+                    DUUIDocumentController.upsertState(processId, documentKey, documentDoc);
+                }
+                default -> {
+                }
+            }
+        }
+    }
+
+    private static String escapeMongoKey(String raw) {
+        if (raw == null) return "_";
+        return raw
+            .replace(".", "\uFF0E")
+            .replace("$", "\uFF04");
+    }
+
+    private Document serializeUpdateMessage(String processId, List<DUUIProcess.Update> updates) {
+        return new Document("kind", "update")
+            .append("process_id", processId)
+            .append("updates", updates.stream().map(this::serializeUpdate).toList());
+    }
+
+    private Document serializeUpdate(DUUIProcess.Update u) {
+        return switch (u) {
+            case DUUIProcess.Update.ProcessUpdate(var meta, var processDoc) ->
+                new Document("kind", "ProcessUpdate")
+                    .append("meta", serializeMeta(meta))
+                    .append("process", processDoc);
+            case DUUIProcess.Update.WorkerUpsert(var meta, var workerName, var workerDoc) ->
+                new Document("kind", "WorkerUpsert")
+                    .append("meta", serializeMeta(meta))
+                    .append("workerName", workerName)
+                    .append("worker", workerDoc);
+            case DUUIProcess.Update.DriverUpsert(var meta, var driverName, var driverDoc) ->
+                new Document("kind", "DriverUpsert")
+                    .append("meta", serializeMeta(meta))
+                    .append("driverName", driverName)
+                    .append("driver", driverDoc);
+            case DUUIProcess.Update.ComponentUpsert(var meta, var componentId, var componentDoc) ->
+                new Document("kind", "ComponentUpsert")
+                    .append("meta", serializeMeta(meta))
+                    .append("componentId", componentId)
+                    .append("component", componentDoc);
+            case DUUIProcess.Update.InstanceUpsert(var meta, var componentId, var instanceId, var instanceDoc) ->
+                new Document("kind", "InstanceUpsert")
+                    .append("meta", serializeMeta(meta))
+                    .append("componentId", componentId)
+                    .append("instanceId", instanceId)
+                    .append("instance", instanceDoc);
+            case DUUIProcess.Update.DocumentUpsert(var meta, var documentKey, var documentDoc) ->
+                new Document("kind", "DocumentUpsert")
+                    .append("meta", serializeMeta(meta))
+                    .append("documentKey", documentKey)
+                    .append("document", documentDoc);
+            default ->
+                new Document("kind", "Unknown");
+        };
+    }
+
+    private Document serializeMeta(DUUIProcess.Update.Meta meta) {
+        return new Document("runKey", meta.runKey())
+            .append("eventId", meta.eventId())
+            .append("timestamp", meta.timestamp());
     }
     
     /**
