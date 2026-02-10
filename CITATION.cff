@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Borkowski"
+  given-names: "Cedric"
+- family-names: "Abrami"
+  given-names: "Giuseppe"
+  orcid: "https://orcid.org/0000-0002-7084-4909"
+- family-names: "Terefe"
+  given-names: "Dawit"
+  orcid: "https://orcid.org/0009-0006-1090-745X"
+- family-names: "Baumartz"
+  given-names: "Daniel"
+  orcid: "https://orcid.org/0009-0001-7105-5020"
+- family-names: "Mehler"
+  given-names: "Alexander"
+  orcid: "https://orcid.org/0000-0003-2567-7539"
+title: "DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP"
+version: 1.0
+date-released: 2026-02-10
+license: AGPLv3
+preferred-citation:
+  authors:
+  - family-names: "Borkowski"
+    given-names: "Cedric"
+  - family-names: "Abrami"
+    given-names: "Giuseppe"
+    orcid: "https://orcid.org/0000-0002-7084-4909"
+  - family-names: "Terefe"
+    given-names: "Dawit"
+    orcid: "https://orcid.org/0009-0006-1090-745X"
+  - family-names: "Baumartz"
+    given-names: "Daniel"
+    orcid: "https://orcid.org/0009-0001-7105-5020"
+  - family-names: "Mehler"
+    given-names: "Alexander"
+    orcid: "https://orcid.org/0000-0003-2567-7539"
+  title: "DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP"
+  year: 2023
+  journal: "SoftwareX"
+  type: article
+url: "https://github.com/texttechnologylab/DUUI-Gateway"
