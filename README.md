@@ -36,7 +36,7 @@ To use DUUIGateway, you only need Docker or podman to run a Compose setup. After
 # Cite
 If you want to use the project please quote this as follows:
 
-Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander Mehler. 2026. "DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP". SoftwareX. 
+Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander Mehler. 2026. "DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP". SoftwareX. _accepted_
 
 ## BibTeX
 ```
