@@ -45,9 +45,7 @@ Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander M
   journal   = {SoftwareX},
   year      = {2026},
   issn      = {2352-7110},
-  author    = {Borkowski, Cedric and Abrami, Giuseppe and Terefe, Dawit and Baumartz, Daniel
-               and Mehler, Alexander},
-  keywords  = {duui, neglab},
+  author    = {Borkowski, Cedric and Abrami, Giuseppe and Terefe, Dawit and Baumartz, Daniel and Mehler, Alexander},
   abstract  = {Distributed processing of unstructured text data is a challenge
                in the rapidly changing and evolving natural language processing
                (NLP) landscape. This landscape is characterized by heterogeneous
