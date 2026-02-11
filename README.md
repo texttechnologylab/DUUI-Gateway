@@ -36,16 +36,22 @@ To use DUUIGateway, you only need Docker or podman to run a Compose setup. After
 # Cite
 If you want to use the project please quote this as follows:
 
-Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander Mehler. 2026. "DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP". SoftwareX. _accepted_
+Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander Mehler. 2026. DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP. SoftwareX, 34:102549. [PDF](https://www.sciencedirect.com/science/article/pii/S2352711026000439/pdfft?md5=def3fdbbf7b93bcbbac0ad6b96c444f1&pid=1-s2.0-S2352711026000439-main.pdf) [LINK](https://doi.org/10.1016/j.softx.2026.102549)
 
 ## BibTeX
 ```
 @article{Borkowski:et:al:2026,
   title     = {DUUIgateway: A Web Service for Platform-independent, Ubiquitous Big Data NLP},
   journal   = {SoftwareX},
-  year      = {2026},
-  issn      = {2352-7110},
-  author    = {Borkowski, Cedric and Abrami, Giuseppe and Terefe, Dawit and Baumartz, Daniel and Mehler, Alexander},
+  volume = {34},
+  pages = {102549},
+  year = {2026},
+  issn = {2352-7110},
+  doi = {https://doi.org/10.1016/j.softx.2026.102549},
+  url = {https://www.sciencedirect.com/science/article/pii/S2352711026000439},
+  author    = {Borkowski, Cedric and Abrami, Giuseppe and Terefe, Dawit and Baumartz, Daniel
+               and Mehler, Alexander},
+  keywords  = {duui, neglab},
   abstract  = {Distributed processing of unstructured text data is a challenge
                in the rapidly changing and evolving natural language processing
                (NLP) landscape. This landscape is characterized by heterogeneous
@@ -65,8 +71,7 @@ Cedric Borkowski, Giuseppe Abrami, Dawit Terefe, Daniel Baumartz and Alexander M
                the NLP framework DUUI. We illustrate DUUIgateway in the field
                of process modeling in higher education and show how it closes
                the latter gap in NLP by making a variety of systems for processing
-               text and multimodal data accessible to non-experts.},
-  note      = {accepted}
+               text and multimodal data accessible to non-experts.}
 }
 
 
